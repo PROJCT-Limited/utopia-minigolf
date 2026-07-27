@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { JOURNEY_STATIONS } from "./content/journey";
 import { NotifyMeForm } from "./components/NotifyMeForm";
+import { SiteFooter } from "./components/SiteFooter";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import styles from "./page.module.css";
 
@@ -267,24 +268,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="sitefoot">
-        <div className="wrap">
-          <div className="in">
-            <div className="big">
-              Play the <em>trail.</em>
-            </div>
-            <div className="fr">
-              <span>UTOPIA — a Minigolf Social Club by PROJCT</span>
-              <span>189 Queen&rsquo;s Road West · Sai Ying Pun, Hong Kong · Opening Sep 2026</span>
-              <span>
-                <Link href="/about">About PROJCT</Link> · <Link href="/terms">Terms</Link> ·{" "}
-                <Link href="/privacy">Privacy</Link>
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
