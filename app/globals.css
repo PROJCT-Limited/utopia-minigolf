@@ -116,6 +116,11 @@ button {
   letter-spacing: -0.03em;
 }
 
+.hint {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
 .lbl {
   font-family: var(--font-body);
   font-size: 12px;

@@ -5,6 +5,7 @@ import { groupByWeek, groupByMonth, type WaveView } from "@/lib/booking/waves";
 import { computeBookingTotalCents, PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent, type PairingInput } from "@/lib/booking/createBooking";
+import { formatWaveDate, formatWeekLabel, formatMonthLabel } from "../utils/formatWave";
 import { PaymentStep } from "./PaymentStep";
 import styles from "./book.module.css";
 
@@ -20,26 +21,6 @@ const INTEREST_TAGS = ["Nightlife", "Sports", "Art & design", "Food & drink", "M
 const AGE_BANDS = ["18–24", "25–34", "35–44", "45+"];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function formatWaveDate(dateStr: string): string {
-  return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function formatWeekLabel(mondayKey: string): string {
-  return `Week of ${formatWaveDate(mondayKey)}`;
-}
-
-function formatMonthLabel(monthKey: string): string {
-  return new Date(`${monthKey}-01T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 function formatMoney(cents: number): string {
   return `HKD ${(cents / 100).toFixed(0)}`;
