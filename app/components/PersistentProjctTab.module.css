@@ -1,0 +1,88 @@
+.wrap {
+  position: fixed;
+  z-index: 200;
+  display: flex;
+  align-items: stretch;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%) translateX(calc(100% - 64px));
+  transition: transform 0.28s ease;
+}
+
+@media (hover: hover) {
+  .wrap:hover {
+    transform: translateY(-50%) translateX(0);
+  }
+}
+.wrap:focus-within,
+.wrap.open {
+  transform: translateY(-50%) translateX(0);
+}
+
+.panel {
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  border-radius: 16px 0 0 16px;
+}
+
+.link {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 16px 20px;
+  width: 240px;
+}
+.link:hover {
+  color: var(--blue-wash);
+}
+
+.toggle {
+  flex-shrink: 0;
+  width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.mark {
+  display: block;
+  filter: brightness(0) invert(1); /* render the cobalt wordmark white on the dark tab */
+}
+
+@media (max-width: 620px) {
+  .wrap {
+    top: auto;
+    right: 16px;
+    bottom: 0;
+    transform: translateY(calc(100% - 52px));
+    flex-direction: column;
+  }
+  @media (hover: hover) {
+    .wrap:hover {
+      transform: translateY(0);
+    }
+  }
+  .wrap:focus-within,
+  .wrap.open {
+    transform: translateY(0);
+  }
+  .panel {
+    border-radius: 16px 16px 0 0;
+  }
+  .toggle {
+    width: auto;
+    height: 52px;
+    padding: 0 20px;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px 16px 0 0;
+  }
+}
