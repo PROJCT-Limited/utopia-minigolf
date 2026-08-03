@@ -1,24 +1,23 @@
-// FILE: lib/email/BookingConfirmation.tsx
+// FILE: lib/email/HostSessionCreated.tsx
 // -----------------------------------------------------------------------------
-// React Email template sent the moment a booking is paid. Confirms the
-// reservation and the payment, is explicit that the exact date/time is still
-// provisional, and hands over the manage-booking link. Rendered to HTML by
-// lib/email/send.ts and sent via Resend.
+// React Email template sent the moment a session host's own payment succeeds.
+// Leads with the share link — the durable copy of what's also shown on the
+// session page right after payment — and explains the public-session rules.
+// Rendered to HTML by lib/email/send.ts and sent via Resend.
 // -----------------------------------------------------------------------------
 
 import { Heading, Hr, Text } from "@react-email/components";
-import { formatMoney, partyTypeLabels } from "./format";
+import { formatMoney } from "./format";
 import { EmailShell } from "./components/EmailShell";
 import { EmailButton } from "./components/EmailButton";
 import { colors, fontStack } from "./components/theme";
-import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { DATE_TBC_NOTICE, PUBLIC_SESSION_EXPLAINER } from "@/lib/booking/copy";
 
-export interface BookingConfirmationEmailProps {
-  leadName: string;
-  partyType: "solo" | "pair" | "group";
-  headcount: number;
+export interface HostSessionCreatedEmailProps {
+  hostName: string;
   amountPaidCents: number;
   currency: string;
+  shareUrl: string;
   manageUrl: string;
 }
 
@@ -41,25 +40,26 @@ const noticeBox = {
   color: colors.ink,
 };
 
-export function BookingConfirmationEmail({
-  leadName,
-  partyType,
-  headcount,
+export function HostSessionCreatedEmail({
+  hostName,
   amountPaidCents,
   currency,
+  shareUrl,
   manageUrl,
-}: BookingConfirmationEmailProps) {
-  const firstName = leadName.trim().split(/\s+/)[0] || leadName;
+}: HostSessionCreatedEmailProps) {
+  const firstName = hostName.trim().split(/\s+/)[0] || hostName;
 
   return (
-    <EmailShell previewText="Your UTOPIA reservation is confirmed" manageUrl={manageUrl}>
+    <EmailShell previewText="Your UTOPIA session is live — share your link" manageUrl={manageUrl}>
       <Heading style={{ margin: "0 0 12px", fontFamily: fontStack, fontSize: "20px", color: colors.ink }}>
-        You're in, {firstName}.
+        You&rsquo;re in, {firstName} — now share your link.
       </Heading>
       <Text style={bodyText}>
-        Your UTOPIA reservation is confirmed and paid in full — {partyTypeLabels[partyType]},{" "}
-        {headcount} {headcount === 1 ? "player" : "players"}.
+        Your place is paid and your session is live. Send the link below to anyone you want along — each person
+        pays for their own place when they join.
       </Text>
+
+      <EmailButton href={shareUrl}>Open your session</EmailButton>
 
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
       <Text style={{ ...bodyText, margin: "0 0 4px" }}>
@@ -70,16 +70,12 @@ export function BookingConfirmationEmail({
       </Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
 
+      <Text style={noticeBox}>{PUBLIC_SESSION_EXPLAINER}</Text>
       <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>
-      <Text style={bodyText}>{RESCHEDULE_NOTICE}</Text>
 
-      <EmailButton href={manageUrl}>Manage your booking</EmailButton>
-
-      <Text style={bodyText}>
-        See you on the trail. Come as a group, or come alone — we'll pair you up.
-      </Text>
+      <Text style={bodyText}>See you on the trail.</Text>
     </EmailShell>
   );
 }
 
-export default BookingConfirmationEmail;
+export default HostSessionCreatedEmail;

@@ -7,11 +7,18 @@
 
 import { render } from "@react-email/components";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { fetchWaveById } from "@/lib/booking/wavesRepo";
+import { fetchSessionById, countPaidParticipants } from "@/lib/sessions/sessionsRepo";
 import { sendEmailOnce } from "./sendEmailOnce";
+import { resend } from "./resendClient";
 import { BookingConfirmationEmail } from "./BookingConfirmation";
+import { BookingRescheduledEmail } from "./BookingRescheduled";
+import { HostSessionCreatedEmail } from "./HostSessionCreated";
+import { SessionParticipantJoinedEmail } from "./SessionParticipantJoined";
 
 export interface BookingForEmail {
   id: string;
+  waveId: string;
   leadEmail: string;
   leadName: string;
   partyType: "solo" | "pair" | "group";
@@ -24,7 +31,7 @@ export interface BookingForEmail {
 async function loadBookingForEmail(bookingId: string): Promise<BookingForEmail | null> {
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("id, lead_email, lead_name, party_type, headcount, amount_paid_cents, currency, manage_token")
+    .select("id, wave_id, lead_email, lead_name, party_type, headcount, amount_paid_cents, currency, manage_token")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -35,6 +42,7 @@ async function loadBookingForEmail(bookingId: string): Promise<BookingForEmail |
 
   return {
     id: data.id,
+    waveId: data.wave_id,
     leadEmail: data.lead_email,
     leadName: data.lead_name,
     partyType: data.party_type,
@@ -47,6 +55,10 @@ async function loadBookingForEmail(bookingId: string): Promise<BookingForEmail |
 
 function manageUrlFor(manageToken: string): string {
   return `${process.env.NEXT_PUBLIC_SITE_URL}/manage/${manageToken}`;
+}
+
+function shareUrlFor(shareToken: string): string {
+  return `${process.env.NEXT_PUBLIC_SITE_URL}/session/${shareToken}`;
 }
 
 export async function sendBookingConfirmation(bookingId: string): Promise<{ sent: boolean }> {
@@ -69,4 +81,155 @@ export async function sendBookingConfirmation(bookingId: string): Promise<{ sent
       })
     ),
   }));
+}
+
+// Fires once from rescheduleBooking() (lib/booking/reschedule.ts) right after
+// a self-serve reschedule succeeds — booking.waveId is already the *new*
+// wave by the time this runs, so this always describes where the guest is
+// rescheduled to, never the wave they left.
+export async function sendBookingRescheduled(bookingId: string): Promise<{ sent: boolean }> {
+  const booking = await loadBookingForEmail(bookingId);
+  if (!booking) return { sent: false };
+
+  const wave = await fetchWaveById(booking.waveId);
+  if (!wave) return { sent: false };
+
+  const manageUrl = manageUrlFor(booking.manageToken);
+  const waveIsConfirmed = wave.status === "confirmed" || wave.status === "full";
+
+  return sendEmailOnce(booking.id, "booking_rescheduled", async () => ({
+    to: booking.leadEmail,
+    subject: "Your UTOPIA reservation has been rescheduled",
+    html: await render(
+      BookingRescheduledEmail({
+        leadName: booking.leadName,
+        partyType: booking.partyType,
+        headcount: booking.headcount,
+        manageUrl,
+        newWaveDate: wave.date,
+        newWaveTimeLabel: wave.timeLabel,
+        newWaveIsConfirmed: waveIsConfirmed,
+      })
+    ),
+  }));
+}
+
+// -----------------------------------------------------------------------------
+// Session participant emails. Unlike bookings, these don't go through
+// sendEmailOnce/email_events (which has a hard FK to bookings.id) — each
+// participant gets exactly one email, mutually exclusive by is_host, so a
+// plain `email_sent` flag on the row is enough. See migration
+// 003_public_sessions.sql for why.
+// -----------------------------------------------------------------------------
+
+interface SessionParticipantForEmail {
+  id: string;
+  sessionId: string;
+  name: string;
+  email: string;
+  amountPaidCents: number;
+  currency: string;
+  manageToken: string;
+  emailSent: boolean;
+}
+
+async function loadSessionParticipantForEmail(participantId: string): Promise<SessionParticipantForEmail | null> {
+  const { data, error } = await supabaseAdmin
+    .from("session_participants")
+    .select("id, session_id, name, email, amount_paid_cents, currency, manage_token, email_sent")
+    .eq("id", participantId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("loadSessionParticipantForEmail: participant not found", participantId, error?.message);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    sessionId: data.session_id,
+    name: data.name,
+    email: data.email,
+    amountPaidCents: data.amount_paid_cents,
+    currency: data.currency,
+    manageToken: data.manage_token,
+    emailSent: data.email_sent,
+  };
+}
+
+async function markSessionParticipantEmailSent(participantId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("session_participants")
+    .update({ email_sent: true, updated_at: new Date().toISOString() })
+    .eq("id", participantId);
+  if (error) {
+    console.error("markSessionParticipantEmailSent: update failed:", error.message);
+  }
+}
+
+export async function sendHostSessionCreated(participantId: string): Promise<{ sent: boolean }> {
+  const participant = await loadSessionParticipantForEmail(participantId);
+  if (!participant || participant.emailSent) return { sent: false };
+
+  const session = await fetchSessionById(participant.sessionId);
+  if (!session) return { sent: false };
+
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM!,
+      to: participant.email,
+      subject: "Your UTOPIA session is live — share your link",
+      html: await render(
+        HostSessionCreatedEmail({
+          hostName: participant.name,
+          amountPaidCents: participant.amountPaidCents,
+          currency: participant.currency,
+          shareUrl: shareUrlFor(session.share_token),
+          manageUrl: manageUrlFor(participant.manageToken),
+        })
+      ),
+    });
+    if (error) return { sent: false };
+  } catch (err) {
+    console.error("sendHostSessionCreated: send failed:", (err as Error).message);
+    return { sent: false };
+  }
+
+  await markSessionParticipantEmailSent(participant.id);
+  return { sent: true };
+}
+
+export async function sendSessionParticipantJoined(participantId: string): Promise<{ sent: boolean }> {
+  const participant = await loadSessionParticipantForEmail(participantId);
+  if (!participant || participant.emailSent) return { sent: false };
+
+  const session = await fetchSessionById(participant.sessionId);
+  if (!session) return { sent: false };
+
+  const paidCount = await countPaidParticipants(session.id);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM!,
+      to: participant.email,
+      subject: "You're in — your UTOPIA session place is confirmed",
+      html: await render(
+        SessionParticipantJoinedEmail({
+          participantName: participant.name,
+          amountPaidCents: participant.amountPaidCents,
+          currency: participant.currency,
+          paidCount,
+          maxPlayers: session.max_players,
+          manageUrl: manageUrlFor(participant.manageToken),
+        })
+      ),
+    });
+    if (error) return { sent: false };
+  } catch (err) {
+    console.error("sendSessionParticipantJoined: send failed:", (err as Error).message);
+    return { sent: false };
+  }
+
+  await markSessionParticipantEmailSent(participant.id);
+  return { sent: true };
 }

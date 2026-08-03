@@ -1,52 +1,41 @@
+import Image from "next/image";
 import Link from "next/link";
-import { JOURNEY_STATIONS } from "./content/journey";
+import { Leaderboard } from "./components/Leaderboard";
 import { NotifyMeForm } from "./components/NotifyMeForm";
 import { SiteFooter } from "./components/SiteFooter";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import styles from "./page.module.css";
 
-const MAP_POINTS = [
-  { x: 80, y: 190 },
-  { x: 340, y: 150 },
-  { x: 600, y: 110 },
-  { x: 860, y: 40 },
-  { x: 1120, y: 165 },
-];
-
-function mapPathD(): string {
-  return MAP_POINTS.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-}
-
 const ADDITIONAL_ELEMENTS = [
   {
     k: "Scoring",
     title: "Automatic scoring",
-    body: "Every stroke counts itself as you play. No pencils, no arguing about the number at the end.",
+    body: "Shots are tracked and displayed on screen as you play.",
   },
   {
     k: "Onboarding",
-    title: "Digital onboarding",
-    body: "Tap in at Trailhead and the course explains itself, station by station, as you go.",
+    title: "Partner integration",
+    body: "Sponsors are built into the stations through randomised ball drops, keeping brand presence playful.",
   },
   {
     k: "Fit",
-    title: "Shoe matching",
-    body: "We'll get you into the right pair before you play a single station.",
+    title: "Solo pairing",
+    body: "Anyone arriving alone is matched into a team, so the course works as a way to meet people.",
   },
   {
     k: "Boards",
     title: "Leaderboards",
-    body: "Daily, monthly and all-time boards — see who made it round fastest.",
+    body: "Daily and monthly boards let players track results and challenge the best scores by invite.",
   },
   {
     k: "Partners",
-    title: "Partner integration",
-    body: "Built-in moments along the trail for brand and drink partners to show up in the game itself.",
+    title: "Shoe matching",
+    body: "Every player is fitted with a HOKA to suit them, so the shoe becomes part of how they play the trail.",
   },
   {
     k: "Solo",
-    title: "Solo pairing",
-    body: "Come alone and we'll put you on a team before Trailhead — no waiting around.",
+    title: "Digital onboarding",
+    body: "A registration screen signs your team in and dispenses your ball in one step.",
   },
 ];
 
@@ -57,25 +46,19 @@ export default function HomePage() {
       <header className={styles.hero}>
         <div className="wrap">
           <div className={styles.frame}>
-            <svg className={styles.contours} viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-              {[80, 160, 240, 320, 400, 480].map((r, i) => (
-                <ellipse
-                  key={r}
-                  cx="600"
-                  cy="120"
-                  rx={r * 1.3}
-                  ry={r}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.5)"
-                  strokeWidth="1.5"
-                  opacity={0.5 - i * 0.06}
-                />
-              ))}
-            </svg>
+            {/* Placeholder concept render — swap for real venue photography once available */}
+            <Image
+              src="/hero-course.png"
+              alt="UTOPIA mini-golf course concept render"
+              fill
+              priority
+              sizes="100vw"
+              className={styles.heroImage}
+            />
             <div className={styles.topbar}>
               <span className={styles.heroBrand}>UTOPIA</span>
               <nav className={styles.heroNav}>
-                <a href="#journey">The Journey</a>
+                <a href="#leaderboard">Leaderboard</a>
                 <a href="#pricing">Pricing</a>
                 <Link className={styles.heroNavCta} href="/book">
                   Reserve
@@ -86,8 +69,9 @@ export default function HomePage() {
               <div className={styles.kick}>Minigolf Social Club by PROJCT</div>
               <h1>Come as you are. Play the trail.</h1>
               <p>
-                A 30-minute, five-station indoor mini-golf journey — Trailhead, Stream, Rockfall, The Summit, The
-                Descent. Come as a group, or come alone and we&rsquo;ll pair you up.
+                This PROJCT social club delivers an intense mini-golf experience, pulling you inside a world of
+                motion, speed, and excitement. Another high-visibility social experience in the middle of the Sai
+                Ying Pun community.
               </p>
               <div className={styles.row}>
                 <Link href="/book" className="btn btn-light">
@@ -111,78 +95,27 @@ export default function HomePage() {
             <span className="plus" style={{ top: 24, right: 24 }} />
             <div className="lbl">The idea</div>
             <h2>
-              A social mini-golf club built around one trail, five stations, and a drink at the end.{" "}
-              <b className={styles.c}>Come with your people, or come alone — we&rsquo;ll pair you with new ones.</b>
+              A five-station mini golf journey structured as a topographic landscape, where contour lines function
+              as both visual guidance and physical terrain. Each station represents a shift in elevation and
+              difficulty. The journey leads you upward to the summit, where the last putt captures that feeling of
+              conquering the highest point.
             </h2>
           </div>
         </div>
       </section>
 
-      {/* THE JOURNEY */}
-      <section className="sec" id="journey">
+      {/* LEADERBOARD */}
+      <section className="sec" id="leaderboard">
         <div className="wrap">
           <div className="sechead">
             <div>
-              <span className="lbl">The journey</span>
+              <span className="lbl">Leaderboard</span>
               <h2>
-                Five stations. <em>One trail.</em>
-              </h2>
-            </div>
-            <p className="r">
-              Each station plays differently — a putt, a crossing, a wheel, a climb, a drop. Follow the trail from
-              Trailhead to The Descent.
-            </p>
-          </div>
-          <div className="tilegrid">
-            {JOURNEY_STATIONS.map((s) => (
-              <div className="tilecard" key={s.number}>
-                <div className="ph">
-                  <span className="no">{String(s.number).padStart(2, "0")}</span>
-                </div>
-                <div className="bd">
-                  <span className="k">Station {s.number}</span>
-                  <h3 className="nm">{s.name}</h3>
-                  <p className="d">{s.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* MAP */}
-      <section className="sec">
-        <div className="wrap">
-          <div className="sechead">
-            <div>
-              <span className="lbl">The course</span>
-              <h2>
-                Follow the <em>trail.</em>
+                See who <em>scored.</em>
               </h2>
             </div>
           </div>
-          <div className={styles.mapcard}>
-            <svg className={styles.mapPath} viewBox="0 0 1200 230" role="img" aria-label="Map of the five UTOPIA stations in order">
-              <path d={mapPathD()} fill="none" stroke="var(--line)" strokeWidth="3" strokeDasharray="2 10" strokeLinecap="round" />
-              <path d={mapPathD()} fill="none" stroke="var(--blue)" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
-              {MAP_POINTS.map((p, i) => (
-                <g key={i}>
-                  <circle cx={p.x} cy={p.y} r="22" fill="var(--ink)" />
-                  <text x={p.x} y={p.y + 6} textAnchor="middle" fontSize="18" fontWeight="800" fill="#fff">
-                    {i + 1}
-                  </text>
-                </g>
-              ))}
-            </svg>
-            <ul className={styles.mapLegend}>
-              {JOURNEY_STATIONS.map((s) => (
-                <li key={s.number}>
-                  <b>{s.name}</b>
-                  Station {s.number}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Leaderboard />
         </div>
       </section>
 
@@ -237,7 +170,7 @@ export default function HomePage() {
                 Per person
               </div>
               <div className="big">HKD 160</div>
-              <div className="small">30 minutes · 5 stations + 1 drink</div>
+              <div className="small">30 minutes, 5 stations + 1 drink</div>
               <div className="cta">
                 <Link href="/book" className="btn btn-light" style={{ width: "100%" }}>
                   Reserve your place <span className="btn-icon">→</span>

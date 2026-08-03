@@ -10,6 +10,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "./wavesRepo";
 import type { WaveView } from "./waves";
 import { RESCHEDULE_CUTOFF_DAYS } from "./copy";
+import { sendBookingRescheduled } from "@/lib/email/send";
 
 export interface BookingForManage {
   id: string;
@@ -107,6 +108,8 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
       status: newBooked >= newWave.capacity ? "full" : newWave.status,
     })
     .eq("id", newWave.id);
+
+  await sendBookingRescheduled(booking.id);
 
   return { ok: true };
 }

@@ -25,11 +25,17 @@ export default function AboutPage() {
             models, and we&rsquo;re devoted to sustainable growth through purpose and quality.
           </p>
 
-          <h2>UTOPIA is one of ours</h2>
+          <h2>UTOPIA is one of our projects</h2>
           <p>
-            UTOPIA is a PROJCT venture — designed, built, staffed, and operated end to end from PROJCT Lab at 189
-            Queen&rsquo;s Road West, Sai Ying Pun. It sits alongside our other work: brand activations, spatial
-            installations, and social experiences built for people to actually show up to.
+            QUALITY OUTPUT is what we care about — but we also care about the long term strategic value for
+            ourselves and brand partners. The Minigolf Social Club is a fun and engaging activation, at the
+            highest level of taste and custom brand elevation, and it is a research project.
+          </p>
+          <p>
+            While rolling out the social club, we ask ourselves and visitors &ldquo;what is connecting in the
+            world today? How do we create more opportunities to bring people together around what matters to
+            us?&rdquo; We will deliver actionable strategies to answer these questions as an output to build on
+            for years to come.
           </p>
 
           <h2>PROJCT Lab</h2>

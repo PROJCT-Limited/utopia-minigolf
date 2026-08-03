@@ -1,7 +1,7 @@
 // FILE: lib/booking/createBooking.ts
 // -----------------------------------------------------------------------------
 // Server action behind booking Step 4 ("Pay"): validates the wizard's choices
-// against the server's own view of the wave/pricing/18+ rules (never trusts
+// against the server's own view of the wave/pricing rules (never trusts
 // anything the client computed), creates the pending booking row, and opens a
 // Stripe PaymentIntent for it. Nothing here marks the booking paid — only the
 // webhook (app/api/webhooks/stripe/route.ts) does that, after Stripe confirms.
@@ -14,21 +14,12 @@ import { computeBookingTotalCents, isValidHeadcountForPartyType, CURRENCY } from
 import { generateManageToken } from "./token";
 import { fetchWaveById } from "./wavesRepo";
 
-export interface PairingInput {
-  ageBand: string | null;
-  interests: string[];
-  bio: string | null;
-  overEighteen: boolean;
-  pairOptIn: boolean;
-}
-
 export interface CreateBookingInput {
   waveId: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
   leadName: string;
   leadEmail: string;
-  pairing: PairingInput | null;
 }
 
 export type CreateBookingResult =
@@ -38,17 +29,13 @@ export type CreateBookingResult =
 export async function createBookingWithPaymentIntent(
   input: CreateBookingInput
 ): Promise<CreateBookingResult> {
-  const { waveId, partyType, headcount, leadName, leadEmail, pairing } = input;
+  const { waveId, partyType, headcount, leadName, leadEmail } = input;
 
   if (!leadName.trim() || !leadEmail.trim()) {
     return { ok: false, error: "Name and email are required." };
   }
   if (!isValidHeadcountForPartyType(partyType, headcount)) {
     return { ok: false, error: "Party size doesn't match the selected party type." };
-  }
-  // "Pair me up" requires the 18+ checkbox — enforced here too, not just in the UI.
-  if (pairing?.pairOptIn && !pairing.overEighteen) {
-    return { ok: false, error: "Pairing requires confirming you're 18 or over." };
   }
 
   const wave = await fetchWaveById(waveId);
@@ -72,7 +59,6 @@ export async function createBookingWithPaymentIntent(
       currency: CURRENCY,
       status: "pending",
       manage_token: manageToken,
-      pair_opt_in: pairing?.pairOptIn ?? false,
     })
     .select("id")
     .single();
@@ -80,23 +66,6 @@ export async function createBookingWithPaymentIntent(
   if (insertError || !booking) {
     console.error("createBookingWithPaymentIntent: booking insert failed:", insertError?.message);
     return { ok: false, error: "Couldn't create the booking. Please try again." };
-  }
-
-  // Pairing data is only worth storing if the guest actually opted in — it
-  // exists purely to help staff pair people on the day (never shown publicly
-  // or to other guests), so an unopted-in "about you" section isn't persisted.
-  if (pairing?.pairOptIn) {
-    const { error: pairingError } = await supabaseAdmin.from("pairing_profiles").insert({
-      booking_id: booking.id,
-      age_band: pairing.ageBand,
-      interests: pairing.interests,
-      bio: pairing.bio,
-      over_18: pairing.overEighteen,
-    });
-    if (pairingError) {
-      console.error("createBookingWithPaymentIntent: pairing_profiles insert failed:", pairingError.message);
-      // Not fatal to the booking itself — pairing is a nice-to-have, payment isn't.
-    }
   }
 
   let paymentIntent;

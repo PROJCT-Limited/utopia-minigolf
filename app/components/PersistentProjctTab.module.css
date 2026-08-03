@@ -3,31 +3,52 @@
   z-index: 200;
   display: flex;
   align-items: stretch;
-  top: 50%;
+  overflow: hidden;
+  background: var(--projct-blue);
+  top: 74%;
   right: 0;
-  transform: translateY(-50%) translateX(calc(100% - 64px));
-  transition: transform 0.28s ease;
+  width: 36px;
+  transform: translateY(-50%);
+  transition:
+    width 0.28s ease,
+    border-radius 0.28s ease;
 }
 
 @media (hover: hover) {
   .wrap:hover {
-    transform: translateY(-50%) translateX(0);
+    width: 276px;
+    border-radius: 16px 0 0 16px;
   }
 }
 .wrap:focus-within,
 .wrap.open {
-  transform: translateY(-50%) translateX(0);
-}
-
-.panel {
-  background: var(--ink);
-  display: flex;
-  align-items: center;
+  width: 276px;
   border-radius: 16px 0 0 16px;
 }
 
-.link {
+.toggle {
+  flex-shrink: 0;
+  width: 36px;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.mark {
   display: block;
+  transform: rotate(90deg);
+  filter: brightness(0) invert(1); /* the source SVG is PROJCT blue; force white to sit on the blue tab */
+}
+
+.link {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   color: #fff;
   text-decoration: none;
   font-size: 13px;
@@ -40,49 +61,39 @@
   color: var(--blue-wash);
 }
 
-.toggle {
-  flex-shrink: 0;
-  width: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ink);
-  border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  cursor: pointer;
-}
-
-.mark {
-  display: block;
-  filter: brightness(0) invert(1); /* render the cobalt wordmark white on the dark tab */
-}
-
 @media (max-width: 620px) {
   .wrap {
     top: auto;
     right: 16px;
     bottom: 0;
-    transform: translateY(calc(100% - 52px));
+    width: auto;
+    height: 34px;
     flex-direction: column;
+    transform: none;
+    transition: height 0.28s ease;
+    border-radius: 16px 16px 0 0;
   }
   @media (hover: hover) {
     .wrap:hover {
-      transform: translateY(0);
+      height: 124px;
     }
   }
   .wrap:focus-within,
   .wrap.open {
-    transform: translateY(0);
-  }
-  .panel {
-    border-radius: 16px 16px 0 0;
+    height: 124px;
   }
   .toggle {
     width: auto;
-    height: 52px;
+    height: 34px;
+    min-height: 0;
     padding: 0 20px;
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 16px 16px 0 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  .mark {
+    transform: none;
+  }
+  .link {
+    width: auto;
   }
 }

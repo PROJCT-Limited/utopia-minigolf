@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { adminLoginAction } from "@/lib/admin/loginAction";
 import styles from "../admin.module.css";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -21,16 +19,12 @@ export default function AdminLoginPage() {
     formData.set("user", user);
     formData.set("pass", pass);
 
+    // On success, adminLoginAction redirects server-side and this call never
+    // resolves normally — only a failure (rate-limited/bad credentials) ever
+    // reaches this line.
     const result = await adminLoginAction(formData);
     setSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error ?? "Something went wrong.");
-      return;
-    }
-
-    router.push("/admin");
-    router.refresh();
+    setError(result.error);
   }
 
   return (

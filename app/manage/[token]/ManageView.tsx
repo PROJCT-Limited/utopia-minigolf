@@ -4,21 +4,90 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { WaveView } from "@/lib/booking/waves";
 import type { BookingForManage } from "@/lib/booking/reschedule";
+import type { SessionForManage } from "@/lib/sessions/sessionsRepo";
 import { rescheduleBookingAction } from "@/lib/booking/rescheduleAction";
 import { formatWaveDate } from "../../utils/formatWave";
 import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import confirmationStyles from "../../confirmation.module.css";
 import bookStyles from "../../book/book.module.css";
 
-interface ManageViewProps {
-  token: string;
-  booking: BookingForManage;
-  currentWave: WaveView | null;
-  eligibleForReschedule: boolean;
-  availableWaves: WaveView[];
+type ManageViewProps =
+  | {
+      kind: "booking";
+      token: string;
+      booking: BookingForManage;
+      currentWave: WaveView | null;
+      eligibleForReschedule: boolean;
+      availableWaves: WaveView[];
+    }
+  | {
+      kind: "session";
+      participant: SessionForManage["participant"];
+      session: SessionForManage["session"];
+      wave: WaveView | null;
+    };
+
+export function ManageView(props: ManageViewProps) {
+  if (props.kind === "session") {
+    return <SessionParticipantManageView {...props} />;
+  }
+  return <BookingManageView {...props} />;
 }
 
-export function ManageView({ token, booking, currentWave, eligibleForReschedule, availableWaves }: ManageViewProps) {
+function SessionParticipantManageView({
+  participant,
+  session,
+  wave,
+}: Extract<ManageViewProps, { kind: "session" }>) {
+  function formatMoney(cents: number, currency: string): string {
+    return new Intl.NumberFormat("en-HK", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
+  }
+
+  if (participant.status !== "paid") {
+    return (
+      <div className={confirmationStyles.card}>
+        <h1 className={confirmationStyles.title}>This place isn&rsquo;t confirmed yet</h1>
+        <p>If you just paid, give it a moment and refresh this page.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={confirmationStyles.card}>
+      <span className="lbl">Your place</span>
+      <h1 className={confirmationStyles.title}>
+        {participant.isHost ? "You're hosting this session." : "You're in."}
+      </h1>
+
+      <div className={confirmationStyles.row}>
+        <span>Booked for</span>
+        <span>{wave ? `${formatWaveDate(wave.date)}, ${wave.timeLabel}` : "To be confirmed"}</span>
+      </div>
+      <div className={confirmationStyles.row}>
+        <span>You</span>
+        <span>
+          {participant.name}, {participant.email}
+        </span>
+      </div>
+      <div className={confirmationStyles.row}>
+        <span>Amount paid</span>
+        <span>{formatMoney(participant.amountPaidCents, participant.currency)}</span>
+      </div>
+      <div className={confirmationStyles.row}>
+        <span>Spots filled</span>
+        <span>
+          {session.paidCount} of {session.maxPlayers}
+        </span>
+      </div>
+
+      <p style={{ marginTop: 20, fontSize: 14, color: "var(--ink-2)" }}>
+        This is a public session — reply to your confirmation email if you need to make a change to your place.
+      </p>
+    </div>
+  );
+}
+
+function BookingManageView({ token, booking, currentWave, eligibleForReschedule, availableWaves }: Extract<ManageViewProps, { kind: "booking" }>) {
   const router = useRouter();
   const [selectedWaveId, setSelectedWaveId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -52,19 +121,19 @@ export function ManageView({ token, booking, currentWave, eligibleForReschedule,
     <div className={confirmationStyles.card}>
       <span className="lbl">Manage your booking</span>
       <h1 className={confirmationStyles.title}>
-        {booking.partyType} · {booking.headcount} {booking.headcount === 1 ? "player" : "players"}
+        {booking.partyType}, {booking.headcount} {booking.headcount === 1 ? "player" : "players"}
       </h1>
 
       <div className={confirmationStyles.row}>
         <span>Booked for</span>
         <span>
-          {currentWave ? `${formatWaveDate(currentWave.date)} · ${currentWave.timeLabel}` : "To be confirmed"}
+          {currentWave ? `${formatWaveDate(currentWave.date)}, ${currentWave.timeLabel}` : "To be confirmed"}
         </span>
       </div>
       <div className={confirmationStyles.row}>
         <span>Lead booker</span>
         <span>
-          {booking.leadName} · {booking.leadEmail}
+          {booking.leadName}, {booking.leadEmail}
         </span>
       </div>
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Archivo } from "next/font/google";
+import localFont from "next/font/local";
 import { PersistentProjctTab } from "./components/PersistentProjctTab";
 import "./globals.css";
 
@@ -15,6 +16,23 @@ const archivo = Archivo({
   weight: ["600", "700", "800", "900"],
 });
 
+// Self-hosted Futura Book. Provenance: this file's own bundled readme (see
+// app/fonts/futura-book-SOURCE-fontsgeek-readme.html) states it was pulled
+// from fontsgeek.com, a font-piracy aggregator with no rights to redistribute
+// Futura — a licensed Monotype/Bauer typeface. Kept here at the site owner's
+// explicit direction, accepting that risk; swap for a properly licensed file
+// before relying on this in a way that matters legally.
+// Only one static weight exists in this file, so it's registered across a wide
+// weight range (100–900) — every heading rule below keeps its own font-weight
+// number for hierarchy, but they all resolve to this same face rather than
+// falling back to Archivo the moment a heading asks for a heavier weight.
+const futuraBook = localFont({
+  src: "./fonts/futura-book.otf",
+  variable: "--font-futura-book",
+  weight: "100 900",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "UTOPIA — Minigolf Social Club",
   description:
@@ -27,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${archivo.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${archivo.variable} ${futuraBook.variable}`}>
       <body>
         {children}
         <PersistentProjctTab />

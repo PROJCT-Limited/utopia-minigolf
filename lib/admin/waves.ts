@@ -53,13 +53,30 @@ export interface AdminBookingRow {
   status: "pending" | "paid" | "cancelled";
   amountPaidCents: number;
   currency: string;
-  pairOptIn: boolean;
-  pairing: { ageBand: string | null; interests: string[]; bio: string | null } | null;
+}
+
+export interface AdminSessionParticipantRow {
+  id: string;
+  name: string;
+  email: string;
+  status: "pending" | "paid" | "cancelled";
+  amountPaidCents: number;
+  currency: string;
+  isHost: boolean;
+}
+
+export interface AdminSessionRow {
+  id: string;
+  shareToken: string;
+  maxPlayers: number;
+  status: "open" | "full";
+  participants: AdminSessionParticipantRow[];
 }
 
 export interface AdminWaveDetail {
   wave: WaveView;
   bookings: AdminBookingRow[];
+  sessions: AdminSessionRow[];
 }
 
 export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDetail | null> {
@@ -73,9 +90,7 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
 
   const { data: bookingRows, error: bookingsError } = await supabaseAdmin
     .from("bookings")
-    .select(
-      "id, lead_name, lead_email, party_type, headcount, status, amount_paid_cents, currency, pair_opt_in, pairing_profiles(age_band, interests, bio)"
-    )
+    .select("id, lead_name, lead_email, party_type, headcount, status, amount_paid_cents, currency")
     .eq("wave_id", waveId)
     .order("created_at", { ascending: true });
 
@@ -83,21 +98,44 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     console.error("fetchWaveAdminDetail: bookings query failed:", bookingsError.message);
   }
 
-  const bookings: AdminBookingRow[] = (bookingRows ?? []).map((b) => {
-    const pairing = Array.isArray(b.pairing_profiles) ? b.pairing_profiles[0] : b.pairing_profiles;
-    return {
-      id: b.id,
-      leadName: b.lead_name,
-      leadEmail: b.lead_email,
-      partyType: b.party_type,
-      headcount: b.headcount,
-      status: b.status,
-      amountPaidCents: b.amount_paid_cents,
-      currency: b.currency,
-      pairOptIn: b.pair_opt_in,
-      pairing: pairing ? { ageBand: pairing.age_band, interests: pairing.interests, bio: pairing.bio } : null,
-    };
-  });
+  const bookings: AdminBookingRow[] = (bookingRows ?? []).map((b) => ({
+    id: b.id,
+    leadName: b.lead_name,
+    leadEmail: b.lead_email,
+    partyType: b.party_type,
+    headcount: b.headcount,
+    status: b.status,
+    amountPaidCents: b.amount_paid_cents,
+    currency: b.currency,
+  }));
 
-  return { wave: toWaveView(waveRow as WaveRow), bookings };
+  const { data: sessionRows, error: sessionsError } = await supabaseAdmin
+    .from("sessions")
+    .select(
+      "id, share_token, max_players, status, session_participants(id, name, email, status, amount_paid_cents, currency, is_host)"
+    )
+    .eq("wave_id", waveId)
+    .order("created_at", { ascending: true });
+
+  if (sessionsError) {
+    console.error("fetchWaveAdminDetail: sessions query failed:", sessionsError.message);
+  }
+
+  const sessions: AdminSessionRow[] = (sessionRows ?? []).map((s) => ({
+    id: s.id,
+    shareToken: s.share_token,
+    maxPlayers: s.max_players,
+    status: s.status,
+    participants: (s.session_participants ?? []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      status: p.status,
+      amountPaidCents: p.amount_paid_cents,
+      currency: p.currency,
+      isHost: p.is_host,
+    })),
+  }));
+
+  return { wave: toWaveView(waveRow as WaveRow), bookings, sessions };
 }

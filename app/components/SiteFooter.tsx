@@ -9,10 +9,11 @@ export function SiteFooter() {
             Play the <em>trail.</em>
           </div>
           <div className="fr">
-            <span>UTOPIA — a Minigolf Social Club by PROJCT</span>
-            <span>189 Queen&rsquo;s Road West · Sai Ying Pun, Hong Kong · Opening Sep 2026</span>
-            <span>
-              <Link href="/about">About PROJCT</Link> · <Link href="/terms">Terms</Link> ·{" "}
+            <span>Minigolf Social Club by PROJCT</span>
+            <span>189 Queen&rsquo;s Road West, Sai Ying Pun, Hong Kong, Opening Sep 2026</span>
+            <span className="navLinks">
+              <Link href="/about">About PROJCT</Link>
+              <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
             </span>
           </div>

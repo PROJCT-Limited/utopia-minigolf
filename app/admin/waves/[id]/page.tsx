@@ -16,7 +16,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
   const detail = await fetchWaveAdminDetail(id);
   if (!detail) notFound();
 
-  const { wave, bookings } = detail;
+  const { wave, bookings, sessions } = detail;
 
   return (
     <main className={`wrap ${styles.page}`}>
@@ -26,7 +26,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
             ← All waves
           </Link>
           <h1 className={styles.title} style={{ marginTop: 8 }}>
-            {wave.date} · {wave.startTime.slice(0, 5)}
+            {wave.date}, {wave.startTime.slice(0, 5)}
           </h1>
         </div>
       </div>
@@ -37,7 +37,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Bookings ({bookings.length})</h3>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Private bookings ({bookings.length})</h3>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -45,7 +45,6 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
               <th>Party</th>
               <th>Status</th>
               <th>Paid</th>
-              <th>Pairing</th>
             </tr>
           </thead>
           <tbody>
@@ -57,32 +56,67 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                   <span className="hint">{b.leadEmail}</span>
                 </td>
                 <td>
-                  {b.partyType} · {b.headcount}
+                  {b.partyType}, {b.headcount}
                 </td>
                 <td>
                   <span className={styles.badge}>{b.status}</span>
                 </td>
                 <td>{formatMoney(b.amountPaidCents, b.currency)}</td>
-                <td>
-                  {b.pairOptIn && b.pairing ? (
-                    <div className={styles.pairingNote}>
-                      {b.pairing.ageBand && <div>{b.pairing.ageBand}</div>}
-                      {b.pairing.interests.length > 0 && <div>{b.pairing.interests.join(", ")}</div>}
-                      {b.pairing.bio && <div>&ldquo;{b.pairing.bio}&rdquo;</div>}
-                    </div>
-                  ) : (
-                    <span className="hint">—</span>
-                  )}
-                </td>
               </tr>
             ))}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={5}>No bookings yet.</td>
+                <td colSpan={4}>No bookings yet.</td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className={styles.card}>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Public sessions ({sessions.length})</h3>
+        {sessions.length === 0 && <p className="hint">No sessions yet.</p>}
+        {sessions.map((s) => (
+          <div key={s.id} style={{ marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <span className={styles.badge}>{s.status}</span>
+              <span className="hint">
+                {s.participants.filter((p) => p.status === "paid").length} of {s.maxPlayers} filled
+              </span>
+            </div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Participant</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {s.participants.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      {p.name}
+                      <br />
+                      <span className="hint">{p.email}</span>
+                    </td>
+                    <td>{p.isHost ? "Host" : "Joiner"}</td>
+                    <td>
+                      <span className={styles.badge}>{p.status}</span>
+                    </td>
+                    <td>{formatMoney(p.amountPaidCents, p.currency)}</td>
+                  </tr>
+                ))}
+                {s.participants.length === 0 && (
+                  <tr>
+                    <td colSpan={4}>No participants yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
     </main>
   );

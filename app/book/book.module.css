@@ -35,6 +35,9 @@
   gap: 12px;
   margin-bottom: 8px;
 }
+.modeGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
 .partyOption {
   border: 1.5px solid var(--line);
   border-radius: var(--r-sm);

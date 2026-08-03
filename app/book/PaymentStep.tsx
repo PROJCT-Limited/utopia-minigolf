@@ -10,17 +10,27 @@ interface PaymentStepProps {
   bookingId: string;
   clientSecret: string;
   amountLabel: string;
+  /** Defaults to the private-booking confirmation page. */
+  returnPath?: string;
 }
 
-export function PaymentStep({ bookingId, clientSecret, amountLabel }: PaymentStepProps) {
+export function PaymentStep({ bookingId, clientSecret, amountLabel, returnPath }: PaymentStepProps) {
   return (
     <Elements stripe={getStripe()} options={{ clientSecret }}>
-      <PaymentForm bookingId={bookingId} amountLabel={amountLabel} />
+      <PaymentForm bookingId={bookingId} amountLabel={amountLabel} returnPath={returnPath} />
     </Elements>
   );
 }
 
-function PaymentForm({ bookingId, amountLabel }: { bookingId: string; amountLabel: string }) {
+function PaymentForm({
+  bookingId,
+  amountLabel,
+  returnPath,
+}: {
+  bookingId: string;
+  amountLabel: string;
+  returnPath?: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -34,13 +44,15 @@ function PaymentForm({ bookingId, amountLabel }: { bookingId: string; amountLabe
     setSubmitting(true);
     setError(null);
 
-    // The booking is only ever marked paid by the Stripe webhook, after
-    // Stripe confirms — this client-side result just decides where to send
-    // the guest next.
+    const path = returnPath ?? `/confirmation/${bookingId}`;
+
+    // The booking/participant is only ever marked paid by the Stripe
+    // webhook, after Stripe confirms — this client-side result just decides
+    // where to send the guest next.
     const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/confirmation/${bookingId}`,
+        return_url: `${window.location.origin}${path}`,
       },
       redirect: "if_required",
     });
@@ -52,7 +64,7 @@ function PaymentForm({ bookingId, amountLabel }: { bookingId: string; amountLabe
     }
 
     if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
-      router.push(`/confirmation/${bookingId}`);
+      router.push(path);
       return;
     }
 

@@ -1,9 +1,11 @@
 // FILE: lib/admin/session.ts
 // -----------------------------------------------------------------------------
 // HMAC-signed admin session cookie. Verified via Web Crypto (SubtleCrypto),
-// not node:crypto, so the exact same check runs in both the login route
-// handler and proxy.ts's Edge-runtime middleware. Single-operator, pre-launch
-// tool — one shared ADMIN_USER/ADMIN_PASSWORD, no per-admin accounts.
+// not node:crypto, so the exact same check runs in both the login Server
+// Action and proxy.ts (Node.js runtime by default as of Next.js 16 — see
+// node_modules/next/dist/docs/.../proxy.md — not Edge). Single-operator,
+// pre-launch tool — one shared ADMIN_USER/ADMIN_PASSWORD, no per-admin
+// accounts.
 // -----------------------------------------------------------------------------
 
 export const ADMIN_SESSION_COOKIE = "utopia_admin_session";

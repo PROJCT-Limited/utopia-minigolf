@@ -8,7 +8,7 @@ export function SiteHeader() {
           UTOPIA
         </Link>
         <nav>
-          <Link href="/#journey">The Journey</Link>
+          <Link href="/#leaderboard">Leaderboard</Link>
           <Link href="/#pricing">Pricing</Link>
           <Link href="/book" className="solid">
             Reserve

@@ -87,7 +87,7 @@ export function ConfirmationView({
       <div className={styles.row}>
         <span>Party</span>
         <span>
-          {initialBooking.partyType} · {initialBooking.headcount} {initialBooking.headcount === 1 ? "player" : "players"}
+          {initialBooking.partyType}, {initialBooking.headcount} {initialBooking.headcount === 1 ? "player" : "players"}
         </span>
       </div>
       <div className={styles.row}>

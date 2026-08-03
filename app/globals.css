@@ -28,8 +28,18 @@
   --r: 28px;
   --r-sm: 16px;
 
+  /* PROJCT's own brand blue (from projct-logo-blue.svg) — distinct from
+     UTOPIA's cobalt --blue above. Used for parent-brand touchpoints only,
+     e.g. the persistent PROJCT tab. */
+  --projct-blue: #0e50c8;
+
   --font-body: var(--font-manrope), sans-serif;
-  --font-display: var(--font-archivo), sans-serif;
+  /* Futura Book, self-hosted via next/font/local — see the provenance note
+     on `futuraBook` in app/layout.tsx (unverified/likely-unlicensed source,
+     kept at the site owner's explicit direction). Falls back to a
+     locally-installed system Futura, then Archivo (self-hosted via
+     next/font), for any environment where the local font file didn't load. */
+  --font-display: var(--font-futura-book), "Futura Medium", Futura, var(--font-archivo), sans-serif;
 }
 
 html {
@@ -220,79 +230,99 @@ button {
   border-radius: var(--r);
 }
 
-/* numbered station / feature card (The Journey, Additional elements) */
-.tilecard {
+/* ---------- leaderboard (Home) ---------- */
+.board {
   background: var(--panel);
   border-radius: var(--r);
-  overflow: hidden;
-  transition: 0.22s;
+  padding: 40px 40px 32px;
+}
+.tabs {
   display: flex;
-  flex-direction: column;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
-.tilecard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 26px 52px rgba(18, 21, 28, 0.14);
+.tab {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: 0.15s;
 }
-.tilecard .ph {
-  position: relative;
-  aspect-ratio: 1/0.8;
-  overflow: hidden;
-  background: linear-gradient(155deg, #0b2a9e, #1b4dff);
+.tab:hover {
+  border-color: var(--ink);
+  color: var(--ink);
 }
-.tilecard .ph .no {
-  position: absolute;
-  top: 14px;
-  left: 18px;
+.tab.on {
+  background: var(--ink);
   color: #fff;
-  font-family: var(--font-display);
-  font-size: 46px;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  z-index: 2;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  border-color: var(--ink);
 }
-.tilecard .ph .icon {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 64px;
-  opacity: 0.9;
-}
-.tilecard .bd {
-  padding: 22px 22px 24px;
+.lbrows {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  gap: 4px;
 }
-.tilecard .bd .k {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.lbrow {
+  display: grid;
+  grid-template-columns: 54px 1fr 170px 90px 70px;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 16px;
+  border-radius: var(--r-sm);
+  transition: 0.15s;
+}
+.lbrow:hover {
+  background: var(--panel-2);
+}
+.lbrow.lead {
+  background: var(--blue-wash);
+}
+.lbrow .rk {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ink-3);
+}
+.lbrow.lead .rk {
   color: var(--blue);
 }
-.tilecard .bd .nm {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 8px 0 3px;
+.lbrow .pl {
+  font-size: 16px;
+  font-weight: 700;
 }
-.tilecard .bd .d {
+.lbrow .ctx {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.lbrow .str {
   font-size: 14px;
-  line-height: 1.55;
+  font-weight: 600;
   color: var(--ink-2);
-  margin-top: 12px;
-  flex: 1;
+  text-align: right;
 }
-
-.tilegrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+.lbrow .par {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--blue);
+  text-align: right;
+}
+@media (max-width: 620px) {
+  .board {
+    padding: 28px 20px;
+  }
+  .lbrow {
+    grid-template-columns: 30px 1fr 60px;
+  }
+  .lbrow .ctx,
+  .lbrow .str {
+    display: none;
+  }
 }
 
 /* ---------- booking panel (party/wave picker) ---------- */
@@ -586,6 +616,11 @@ footer.sitefoot .fr {
 footer.sitefoot .fr a:hover {
   color: #fff;
 }
+footer.sitefoot .fr .navLinks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
 
 /* ---------- simple top nav (non-hero pages) ---------- */
 .topnav {
@@ -639,9 +674,6 @@ footer.sitefoot .fr a:hover {
 }
 
 @media (max-width: 1000px) {
-  .tilegrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .pricegrid {
     grid-template-columns: 1fr;
   }
@@ -652,9 +684,6 @@ footer.sitefoot .fr a:hover {
   }
   .topnav nav {
     display: none;
-  }
-  .tilegrid {
-    grid-template-columns: 1fr;
   }
   footer.sitefoot .in {
     padding: 40px 24px;

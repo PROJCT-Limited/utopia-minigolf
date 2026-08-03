@@ -17,7 +17,7 @@ export default function TermsPage() {
           <h2>Bookings &amp; payment</h2>
           <p>
             A UTOPIA reservation costs HKD 160 per person, charged in full at the time of booking. This covers 30
-            minutes of play across all five stations plus one drink. No card details are stored by UTOPIA — payment
+            minutes of play across all five stations plus one drink. No card details are stored by UTOPIA, payment
             is processed securely by Stripe.
           </p>
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <h2>At the venue</h2>
           <p>
-            Please arrive on time for your wave — late arrival may shorten your play time. UTOPIA reserves the right
+            Please arrive on time for your wave, late arrival may shorten your play time. UTOPIA reserves the right
             to refuse entry to anyone who is intoxicated, disruptive, or a safety risk to staff or other guests.
           </p>
 
