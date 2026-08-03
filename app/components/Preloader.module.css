@@ -1,0 +1,46 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+.overlay.fading {
+  opacity: 0;
+}
+
+.ball {
+  animation: roll 2.8s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes roll {
+  0% {
+    transform: translateX(-75vw) rotate(0deg);
+  }
+  40% {
+    transform: translateX(0) rotate(920deg);
+  }
+  55% {
+    transform: translateX(0) rotate(950deg);
+  }
+  100% {
+    transform: translateX(75vw) rotate(1870deg);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

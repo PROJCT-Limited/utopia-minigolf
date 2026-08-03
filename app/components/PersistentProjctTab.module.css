@@ -9,21 +9,17 @@
   right: 0;
   width: 36px;
   transform: translateY(-50%);
-  transition:
-    width 0.28s ease,
-    border-radius 0.28s ease;
+  transition: width 0.28s ease;
 }
 
 @media (hover: hover) {
   .wrap:hover {
     width: 276px;
-    border-radius: 16px 0 0 16px;
   }
 }
 .wrap:focus-within,
 .wrap.open {
   width: 276px;
-  border-radius: 16px 0 0 16px;
 }
 
 .toggle {
@@ -71,7 +67,6 @@
     flex-direction: column;
     transform: none;
     transition: height 0.28s ease;
-    border-radius: 16px 16px 0 0;
   }
   @media (hover: hover) {
     .wrap:hover {

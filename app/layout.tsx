@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Archivo } from "next/font/google";
 import localFont from "next/font/local";
 import { PersistentProjctTab } from "./components/PersistentProjctTab";
+import { Preloader } from "./components/Preloader";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -47,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${archivo.variable} ${futuraBook.variable}`}>
       <body>
+        <Preloader />
         {children}
         <PersistentProjctTab />
       </body>
