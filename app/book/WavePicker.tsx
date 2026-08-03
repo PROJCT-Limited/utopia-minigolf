@@ -1,24 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { groupByWeek, groupByMonth, type WaveView } from "@/lib/booking/waves";
-import { formatWaveDate, formatWeekLabel, formatMonthLabel } from "../utils/formatWave";
+import { groupByWeek, type WaveView } from "@/lib/booking/waves";
+import { formatWeekLabel } from "../utils/formatWave";
+import { WaveRow } from "./WaveRow";
+import { MonthCalendar } from "./MonthCalendar";
 import styles from "./book.module.css";
 
 export function WavePicker({
   waves,
   selectedWaveId,
   onSelect,
+  takenWaveIds,
 }: {
   waves: WaveView[];
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
+  /** Wave IDs that already have a public session — shown as "Taken", not selectable. */
+  takenWaveIds?: string[];
 }) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
 
   const weekGroups = useMemo(() => groupByWeek(waves), [waves]);
-  const monthGroups = useMemo(() => groupByMonth(waves), [waves]);
-  const groups = viewMode === "week" ? weekGroups : monthGroups;
+  const takenSet = useMemo(() => new Set(takenWaveIds ?? []), [takenWaveIds]);
 
   return (
     <>
@@ -30,36 +34,24 @@ export function WavePicker({
           Month
         </button>
       </div>
-      <div className={styles.waveGroups}>
-        {groups.length === 0 && <p className="hint">No waves available yet — check back soon.</p>}
-        {groups.map((g) => (
-          <div key={g.key} className={styles.waveGroup}>
-            <h4>{viewMode === "week" ? formatWeekLabel(g.key) : formatMonthLabel(g.key)}</h4>
-            <div className={styles.waveList}>
-              {g.waves.map((w) => (
-                <div key={w.id} className={styles.waveRow}>
-                  <span className={styles.waveDate}>{formatWaveDate(w.date)}</span>
-                  <button
-                    type="button"
-                    className={`bwave ${selectedWaveId === w.id ? "on" : ""}`}
-                    disabled={w.isFull}
-                    onClick={() => onSelect(w.id)}
-                    style={{ flex: 1 }}
-                  >
-                    <span className={`dot ${w.isFull ? "out" : w.isLowAvailability ? "low" : ""}`} />
-                    <div>
-                      <div className="tm">{w.timeLabel}</div>
-                    </div>
-                    <span className={`st ${w.isLowAvailability ? "low" : ""}`}>
-                      {w.isFull ? "Full" : `${w.spotsLeft} spot${w.spotsLeft === 1 ? "" : "s"} left`}
-                    </span>
-                  </button>
-                </div>
-              ))}
+
+      {viewMode === "month" ? (
+        <MonthCalendar waves={waves} selectedWaveId={selectedWaveId} onSelect={onSelect} takenWaveIds={takenSet} />
+      ) : (
+        <div className={styles.waveGroups}>
+          {weekGroups.length === 0 && <p className="hint">No waves available yet — check back soon.</p>}
+          {weekGroups.map((g) => (
+            <div key={g.key} className={styles.waveGroup}>
+              <h4>{formatWeekLabel(g.key)}</h4>
+              <div className={styles.waveList}>
+                {g.waves.map((w) => (
+                  <WaveRow key={w.id} wave={w} selected={selectedWaveId === w.id} onSelect={onSelect} taken={takenSet.has(w.id)} />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

@@ -40,6 +40,18 @@ export async function createSessionWithPaymentIntent(
     return { ok: false, error: "Not enough spots left in that wave." };
   }
 
+  const { data: existingSessions, error: existingSessionError } = await supabaseAdmin
+    .from("sessions")
+    .select("id")
+    .eq("wave_id", waveId)
+    .limit(1);
+  if (existingSessionError) {
+    console.error("createSessionWithPaymentIntent: existing-session check failed:", existingSessionError.message);
+  }
+  if (existingSessions && existingSessions.length > 0) {
+    return { ok: false, error: "This wave already has a public session — join it via its link, or pick another wave." };
+  }
+
   const shareToken = generateManageToken();
 
   const { data: session, error: sessionInsertError } = await supabaseAdmin
@@ -48,8 +60,16 @@ export async function createSessionWithPaymentIntent(
     .select("id")
     .single();
 
-  if (sessionInsertError || !session) {
-    console.error("createSessionWithPaymentIntent: session insert failed:", sessionInsertError?.message);
+  if (sessionInsertError) {
+    // Unique violation on wave_id => a concurrent request just created this
+    // wave's session first (see migrations/006_one_session_per_wave.sql).
+    if (sessionInsertError.code === "23505") {
+      return { ok: false, error: "This wave already has a public session — join it via its link, or pick another wave." };
+    }
+    console.error("createSessionWithPaymentIntent: session insert failed:", sessionInsertError.message);
+    return { ok: false, error: "Couldn't create the session. Please try again." };
+  }
+  if (!session) {
     return { ok: false, error: "Couldn't create the session. Please try again." };
   }
 

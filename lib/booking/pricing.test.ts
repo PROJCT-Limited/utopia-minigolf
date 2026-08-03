@@ -2,7 +2,8 @@
 import { describe, it, expect } from "vitest";
 import {
   computeBookingTotalCents,
-  isValidHeadcountForPartyType,
+  isValidHeadcount,
+  derivePartyTypeFromHeadcount,
   PRICE_PER_PERSON_CENTS,
 } from "./pricing";
 
@@ -11,32 +12,34 @@ describe("computeBookingTotalCents", () => {
     expect(PRICE_PER_PERSON_CENTS).toBe(16000);
     expect(computeBookingTotalCents(1)).toBe(16000);
     expect(computeBookingTotalCents(2)).toBe(32000);
-    expect(computeBookingTotalCents(4)).toBe(64000);
+    expect(computeBookingTotalCents(5)).toBe(80000);
   });
 
-  it("rejects headcounts outside 1-4", () => {
+  it("rejects headcounts outside 1-5", () => {
     expect(() => computeBookingTotalCents(0)).toThrow();
-    expect(() => computeBookingTotalCents(5)).toThrow();
+    expect(() => computeBookingTotalCents(6)).toThrow();
     expect(() => computeBookingTotalCents(1.5)).toThrow();
   });
 });
 
-describe("isValidHeadcountForPartyType", () => {
-  it("solo is exactly 1", () => {
-    expect(isValidHeadcountForPartyType("solo", 1)).toBe(true);
-    expect(isValidHeadcountForPartyType("solo", 2)).toBe(false);
+describe("isValidHeadcount", () => {
+  it("accepts 1 through 5", () => {
+    expect(isValidHeadcount(1)).toBe(true);
+    expect(isValidHeadcount(5)).toBe(true);
   });
 
-  it("pair is exactly 2", () => {
-    expect(isValidHeadcountForPartyType("pair", 2)).toBe(true);
-    expect(isValidHeadcountForPartyType("pair", 1)).toBe(false);
-    expect(isValidHeadcountForPartyType("pair", 3)).toBe(false);
+  it("rejects outside that range or non-integers", () => {
+    expect(isValidHeadcount(0)).toBe(false);
+    expect(isValidHeadcount(6)).toBe(false);
+    expect(isValidHeadcount(2.5)).toBe(false);
   });
+});
 
-  it("group is 3-4", () => {
-    expect(isValidHeadcountForPartyType("group", 3)).toBe(true);
-    expect(isValidHeadcountForPartyType("group", 4)).toBe(true);
-    expect(isValidHeadcountForPartyType("group", 2)).toBe(false);
-    expect(isValidHeadcountForPartyType("group", 5)).toBe(false);
+describe("derivePartyTypeFromHeadcount", () => {
+  it("maps 1 to solo, 2 to pair, 3+ to group", () => {
+    expect(derivePartyTypeFromHeadcount(1)).toBe("solo");
+    expect(derivePartyTypeFromHeadcount(2)).toBe("pair");
+    expect(derivePartyTypeFromHeadcount(3)).toBe("group");
+    expect(derivePartyTypeFromHeadcount(5)).toBe("group");
   });
 });

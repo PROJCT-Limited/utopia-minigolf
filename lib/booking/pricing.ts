@@ -8,25 +8,28 @@
 export const PRICE_PER_PERSON_CENTS = 160_00; // HKD 160
 export const CURRENCY = "hkd";
 
-export const PARTY_TYPE_HEADCOUNT_RANGE: Record<
-  "solo" | "pair" | "group",
-  { min: number; max: number }
-> = {
-  solo: { min: 1, max: 1 },
-  pair: { min: 2, max: 2 },
-  group: { min: 3, max: 4 },
-};
+export const MIN_PRIVATE_GROUP_HEADCOUNT = 1;
+export const MAX_PRIVATE_GROUP_HEADCOUNT = 5;
 
-export function isValidHeadcountForPartyType(
-  partyType: "solo" | "pair" | "group",
-  headcount: number
-): boolean {
-  const range = PARTY_TYPE_HEADCOUNT_RANGE[partyType];
-  return Number.isInteger(headcount) && headcount >= range.min && headcount <= range.max;
+export function isValidHeadcount(headcount: number): boolean {
+  return (
+    Number.isInteger(headcount) &&
+    headcount >= MIN_PRIVATE_GROUP_HEADCOUNT &&
+    headcount <= MAX_PRIVATE_GROUP_HEADCOUNT
+  );
+}
+
+// party_type is no longer a guest choice — the booking wizard just asks for
+// headcount — but the column stays (bookings.party_type, still read by
+// admin/emails/confirmation) so it's derived here rather than dropped.
+export function derivePartyTypeFromHeadcount(headcount: number): "solo" | "pair" | "group" {
+  if (headcount === 1) return "solo";
+  if (headcount === 2) return "pair";
+  return "group";
 }
 
 export function computeBookingTotalCents(headcount: number): number {
-  if (!Number.isInteger(headcount) || headcount < 1 || headcount > 4) {
+  if (!isValidHeadcount(headcount)) {
     throw new Error(`computeBookingTotalCents: invalid headcount ${headcount}`);
   }
   return PRICE_PER_PERSON_CENTS * headcount;

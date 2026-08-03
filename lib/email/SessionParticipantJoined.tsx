@@ -10,6 +10,7 @@ import { formatMoney } from "./format";
 import { EmailShell } from "./components/EmailShell";
 import { colors, fontStack } from "./components/theme";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
+import { formatWaveDate } from "@/app/utils/formatWave";
 
 export interface SessionParticipantJoinedEmailProps {
   participantName: string;
@@ -17,6 +18,9 @@ export interface SessionParticipantJoinedEmailProps {
   currency: string;
   paidCount: number;
   maxPlayers: number;
+  waveDate: string | null;
+  waveTimeLabel: string | null;
+  waveIsConfirmed: boolean;
   manageUrl: string;
 }
 
@@ -45,6 +49,9 @@ export function SessionParticipantJoinedEmail({
   currency,
   paidCount,
   maxPlayers,
+  waveDate,
+  waveTimeLabel,
+  waveIsConfirmed,
   manageUrl,
 }: SessionParticipantJoinedEmailProps) {
   const firstName = participantName.trim().split(/\s+/)[0] || participantName;
@@ -67,8 +74,15 @@ export function SessionParticipantJoinedEmail({
         {formatMoney(amountPaidCents, currency)}
       </Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
+      <Text style={{ ...bodyText, margin: "0 0 4px" }}>
+        <strong>Wave</strong>
+      </Text>
+      <Text style={{ ...bodyText, margin: "0 0 20px", fontSize: "20px", fontWeight: 700 }}>
+        {waveIsConfirmed && waveDate ? `${formatWaveDate(waveDate)}, ${waveTimeLabel}` : "To be confirmed"}
+      </Text>
+      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
 
-      <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>
+      {!waveIsConfirmed && <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>}
 
       <Text style={bodyText}>See you on the trail.</Text>
     </EmailShell>

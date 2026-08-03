@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Leaderboard } from "./components/Leaderboard";
 import { NotifyMeForm } from "./components/NotifyMeForm";
 import { SiteFooter } from "./components/SiteFooter";
-import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import styles from "./page.module.css";
 
 const ADDITIONAL_ELEMENTS = [
@@ -187,7 +186,7 @@ export default function HomePage() {
           <div className={styles.teaserSplit}>
             <div className={styles.teaserCard}>
               <h2>Ready to play?</h2>
-              <p>{DATE_TBC_NOTICE}</p>
+              <p>Pick a wave and reserve your place — every round starts on the hour, 12pm to 10pm.</p>
               <Link href="/book" className="btn btn-light" style={{ alignSelf: "flex-start" }}>
                 Reserve your place <span className="btn-icon">→</span>
               </Link>

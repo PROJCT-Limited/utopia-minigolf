@@ -89,6 +89,96 @@
   border-color: var(--ink);
 }
 
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 12px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+}
+.calendarNav {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-2);
+}
+.calendarNav:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 6px;
+}
+.calendarWeekdays span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.calendarCell {
+  aspect-ratio: 1;
+  min-height: 0;
+}
+.calendarDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid transparent;
+  background: var(--panel-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+.calendarDay:hover:not(:disabled) {
+  border-color: var(--blue);
+}
+.calendarDay:disabled {
+  color: var(--ink-3);
+  opacity: 0.4;
+  cursor: default;
+}
+.calendarDayOn {
+  border-color: var(--blue);
+  background: var(--blue-wash);
+}
+.calendarDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.busy-quiet {
+  background: #2fbf63;
+}
+.busy-busy {
+  background: var(--blue);
+}
+.busy-full {
+  background: var(--ink-3);
+}
+
 .waveGroups {
   max-height: 420px;
   overflow-y: auto;

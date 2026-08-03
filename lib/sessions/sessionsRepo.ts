@@ -39,6 +39,20 @@ export interface SessionForView {
 
 const SESSION_COLUMNS = "id, wave_id, max_players, share_token, status";
 
+// A wave can have at most one public session (open or full) — starting a
+// second one on the same wave would mean two unrelated share links both
+// claiming the same physical round. Used to grey out "taken" waves in the
+// public-session wave picker, and mirrored server-side in createSession.ts
+// as the authoritative check.
+export async function fetchWaveIdsWithSessions(): Promise<string[]> {
+  const { data, error } = await supabaseAdmin.from("sessions").select("wave_id");
+  if (error) {
+    console.error("fetchWaveIdsWithSessions: query failed:", error.message);
+    return [];
+  }
+  return Array.from(new Set((data ?? []).map((s) => s.wave_id)));
+}
+
 function toParticipantNames(rows: { name: string }[]): string[] {
   return rows.map((r) => r.name.trim().split(/\s+/)[0] || r.name);
 }

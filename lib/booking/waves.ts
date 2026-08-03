@@ -30,7 +30,7 @@ export interface WaveView {
   timeLabel: string;
 }
 
-const LOW_AVAILABILITY_THRESHOLD = 4;
+const LOW_AVAILABILITY_THRESHOLD = 2;
 export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
 export function toWaveView(row: WaveRow): WaveView {
@@ -98,4 +98,68 @@ function groupBy(waves: WaveView[], keyFn: (w: WaveView) => string): WaveGroup[]
   return Array.from(groups.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, waves]) => ({ key, waves }));
+}
+
+// -----------------------------------------------------------------------------
+// Month-calendar view: a day-level "how busy is this day" summary (for the
+// heatmap grid) plus the pure date-grid math to lay out a calendar month.
+// -----------------------------------------------------------------------------
+
+export interface DaySummary {
+  date: string;
+  waveCount: number;
+  spotsLeft: number;
+  capacity: number;
+}
+
+export function summarizeWavesByDay(waves: WaveView[]): Map<string, DaySummary> {
+  const byDate = new Map<string, DaySummary>();
+  for (const w of waves) {
+    const existing = byDate.get(w.date) ?? { date: w.date, waveCount: 0, spotsLeft: 0, capacity: 0 };
+    existing.waveCount += 1;
+    existing.spotsLeft += w.spotsLeft;
+    existing.capacity += w.capacity;
+    byDate.set(w.date, existing);
+  }
+  return byDate;
+}
+
+export type DayBusyness = "none" | "quiet" | "busy" | "full";
+
+const BUSY_SPOTS_LEFT_RATIO = 0.3;
+
+/** How full a day is, at a glance — for the month calendar's heatmap dots. */
+export function busynessForDay(summary: DaySummary | undefined): DayBusyness {
+  if (!summary || summary.waveCount === 0) return "none";
+  if (summary.spotsLeft === 0) return "full";
+  return summary.spotsLeft / summary.capacity <= BUSY_SPOTS_LEFT_RATIO ? "busy" : "quiet";
+}
+
+/**
+ * A Monday-start calendar grid for `monthKey` ("YYYY-MM"): one entry per
+ * cell, `null` for the leading/trailing padding days outside the month, in
+ * whole weeks (length is always a multiple of 7).
+ */
+export function monthGridDays(monthKey: string): (string | null)[] {
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr); // 1-indexed
+
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0 = Sunday
+  const leadingBlanks = (firstWeekday + 6) % 7; // Monday-start offset
+
+  const cells: (string | null)[] = new Array(leadingBlanks).fill(null);
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push(`${yearStr}-${monthStr}-${String(day).padStart(2, "0")}`);
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+/** The next/previous "YYYY-MM" key relative to `monthKey`. */
+export function shiftMonthKey(monthKey: string, delta: number): string {
+  const [yearStr, monthStr] = monthKey.split("-");
+  const d = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }

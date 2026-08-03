@@ -10,13 +10,12 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe/server";
-import { computeBookingTotalCents, isValidHeadcountForPartyType, CURRENCY } from "./pricing";
+import { computeBookingTotalCents, derivePartyTypeFromHeadcount, isValidHeadcount, CURRENCY } from "./pricing";
 import { generateManageToken } from "./token";
 import { fetchWaveById } from "./wavesRepo";
 
 export interface CreateBookingInput {
   waveId: string;
-  partyType: "solo" | "pair" | "group";
   headcount: number;
   leadName: string;
   leadEmail: string;
@@ -29,13 +28,13 @@ export type CreateBookingResult =
 export async function createBookingWithPaymentIntent(
   input: CreateBookingInput
 ): Promise<CreateBookingResult> {
-  const { waveId, partyType, headcount, leadName, leadEmail } = input;
+  const { waveId, headcount, leadName, leadEmail } = input;
 
   if (!leadName.trim() || !leadEmail.trim()) {
     return { ok: false, error: "Name and email are required." };
   }
-  if (!isValidHeadcountForPartyType(partyType, headcount)) {
-    return { ok: false, error: "Party size doesn't match the selected party type." };
+  if (!isValidHeadcount(headcount)) {
+    return { ok: false, error: "Party size must be between 1 and 5." };
   }
 
   const wave = await fetchWaveById(waveId);
@@ -53,7 +52,7 @@ export async function createBookingWithPaymentIntent(
       wave_id: waveId,
       lead_name: leadName.trim(),
       lead_email: leadEmail.trim(),
-      party_type: partyType,
+      party_type: derivePartyTypeFromHeadcount(headcount),
       headcount,
       amount_paid_cents: amountCents,
       currency: CURRENCY,

@@ -65,7 +65,9 @@ export async function sendBookingConfirmation(bookingId: string): Promise<{ sent
   const booking = await loadBookingForEmail(bookingId);
   if (!booking) return { sent: false };
 
+  const wave = await fetchWaveById(booking.waveId);
   const manageUrl = manageUrlFor(booking.manageToken);
+  const waveIsConfirmed = wave?.status === "confirmed" || wave?.status === "full";
 
   return sendEmailOnce(booking.id, "booking_confirmation", async () => ({
     to: booking.leadEmail,
@@ -77,6 +79,9 @@ export async function sendBookingConfirmation(bookingId: string): Promise<{ sent
         headcount: booking.headcount,
         amountPaidCents: booking.amountPaidCents,
         currency: booking.currency,
+        waveDate: wave?.date ?? null,
+        waveTimeLabel: wave?.timeLabel ?? null,
+        waveIsConfirmed,
         manageUrl,
       })
     ),
@@ -174,6 +179,9 @@ export async function sendHostSessionCreated(participantId: string): Promise<{ s
   const session = await fetchSessionById(participant.sessionId);
   if (!session) return { sent: false };
 
+  const wave = await fetchWaveById(session.wave_id);
+  const waveIsConfirmed = wave?.status === "confirmed" || wave?.status === "full";
+
   try {
     const { error } = await resend.emails.send({
       from: process.env.EMAIL_FROM!,
@@ -184,6 +192,9 @@ export async function sendHostSessionCreated(participantId: string): Promise<{ s
           hostName: participant.name,
           amountPaidCents: participant.amountPaidCents,
           currency: participant.currency,
+          waveDate: wave?.date ?? null,
+          waveTimeLabel: wave?.timeLabel ?? null,
+          waveIsConfirmed,
           shareUrl: shareUrlFor(session.share_token),
           manageUrl: manageUrlFor(participant.manageToken),
         })
@@ -207,6 +218,8 @@ export async function sendSessionParticipantJoined(participantId: string): Promi
   if (!session) return { sent: false };
 
   const paidCount = await countPaidParticipants(session.id);
+  const wave = await fetchWaveById(session.wave_id);
+  const waveIsConfirmed = wave?.status === "confirmed" || wave?.status === "full";
 
   try {
     const { error } = await resend.emails.send({
@@ -220,6 +233,9 @@ export async function sendSessionParticipantJoined(participantId: string): Promi
           currency: participant.currency,
           paidCount,
           maxPlayers: session.max_players,
+          waveDate: wave?.date ?? null,
+          waveTimeLabel: wave?.timeLabel ?? null,
+          waveIsConfirmed,
           manageUrl: manageUrlFor(participant.manageToken),
         })
       ),

@@ -16,7 +16,15 @@ function formatMoney(cents: number): string {
   return `HKD ${(cents / 100).toFixed(0)}`;
 }
 
-export function PublicSessionWizard({ waves, onBack }: { waves: WaveView[]; onBack: () => void }) {
+export function PublicSessionWizard({
+  waves,
+  takenWaveIds,
+  onBack,
+}: {
+  waves: WaveView[];
+  takenWaveIds: string[];
+  onBack: () => void;
+}) {
   const [step, setStep] = useState(1);
   const [selectedWaveId, setSelectedWaveId] = useState<string | null>(null);
   const [hostName, setHostName] = useState("");
@@ -70,10 +78,12 @@ export function PublicSessionWizard({ waves, onBack }: { waves: WaveView[]; onBa
               <span className="lbl">Step 1 of 3</span>
               <h3>Pick a wave</h3>
             </div>
-            <p className="notice" style={{ marginBottom: 16 }}>
-              {DATE_TBC_NOTICE}
-            </p>
-            <WavePicker waves={waves} selectedWaveId={selectedWaveId} onSelect={setSelectedWaveId} />
+            <WavePicker
+              waves={waves}
+              selectedWaveId={selectedWaveId}
+              onSelect={setSelectedWaveId}
+              takenWaveIds={takenWaveIds}
+            />
           </>
         )}
 
@@ -105,7 +115,8 @@ export function PublicSessionWizard({ waves, onBack }: { waves: WaveView[]; onBa
               <h3>Review &amp; pay</h3>
             </div>
             <p className="notice" style={{ marginBottom: 16 }}>
-              {DATE_TBC_NOTICE} {PUBLIC_SESSION_EXPLAINER}
+              {selectedWave?.status === "provisional" && `${DATE_TBC_NOTICE} `}
+              {PUBLIC_SESSION_EXPLAINER}
             </p>
             <div className={styles.summaryRow}>
               <span>Wave</span>
@@ -132,7 +143,7 @@ export function PublicSessionWizard({ waves, onBack }: { waves: WaveView[]; onBa
             bookingId={payment.participantId}
             clientSecret={payment.clientSecret}
             amountLabel={formatMoney(PRICE_PER_PERSON_CENTS)}
-            returnPath={`/session/${payment.shareToken}?created=1`}
+            returnPath={`/session/${payment.shareToken}?created=1&p=${payment.participantId}`}
           />
         )}
 

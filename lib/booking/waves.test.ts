@@ -1,6 +1,16 @@
 // waves.test.ts
 import { describe, it, expect } from "vitest";
-import { toWaveView, groupByWeek, groupByMonth, PROVISIONAL_LABEL, type WaveRow } from "./waves";
+import {
+  toWaveView,
+  groupByWeek,
+  groupByMonth,
+  summarizeWavesByDay,
+  busynessForDay,
+  monthGridDays,
+  shiftMonthKey,
+  PROVISIONAL_LABEL,
+  type WaveRow,
+} from "./waves";
 
 function row(overrides: Partial<WaveRow> = {}): WaveRow {
   return {
@@ -47,9 +57,9 @@ describe("toWaveView", () => {
     expect(view.timeLabel).toBe("14:30");
   });
 
-  it("flags low availability at 4 spots or fewer, but not when full", () => {
-    expect(toWaveView(row({ capacity: 12, booked: 8 })).isLowAvailability).toBe(true); // 4 left
-    expect(toWaveView(row({ capacity: 12, booked: 7 })).isLowAvailability).toBe(false); // 5 left
+  it("flags low availability at 2 spots or fewer, but not when full", () => {
+    expect(toWaveView(row({ capacity: 12, booked: 10 })).isLowAvailability).toBe(true); // 2 left
+    expect(toWaveView(row({ capacity: 12, booked: 9 })).isLowAvailability).toBe(false); // 3 left
     expect(toWaveView(row({ capacity: 12, booked: 12 })).isLowAvailability).toBe(false); // full, not "low"
   });
 });
@@ -89,5 +99,53 @@ describe("groupByMonth", () => {
     const groups = groupByMonth(views);
     expect(groups.map((g) => g.key)).toEqual(["2026-09", "2026-10"]);
     expect(groups[0].waves.map((w) => w.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("summarizeWavesByDay + busynessForDay", () => {
+  it("aggregates spotsLeft/capacity across a day's waves", () => {
+    const views = [
+      toWaveView(row({ id: "a", date: "2026-09-05", capacity: 5, booked: 0 })),
+      toWaveView(row({ id: "b", date: "2026-09-05", capacity: 5, booked: 5, status: "confirmed" })),
+    ];
+    const byDay = summarizeWavesByDay(views);
+    const summary = byDay.get("2026-09-05");
+    expect(summary).toEqual({ date: "2026-09-05", waveCount: 2, spotsLeft: 5, capacity: 10 });
+  });
+
+  it("is 'none' for a day with no waves, 'full' when no spots left", () => {
+    expect(busynessForDay(undefined)).toBe("none");
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 0, capacity: 5 })).toBe("full");
+  });
+
+  it("is 'busy' at or below the 30% spots-left ratio, 'quiet' above it", () => {
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 1, capacity: 5 })).toBe("busy"); // 20%
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 3, capacity: 5 })).toBe("quiet"); // 60%
+  });
+});
+
+describe("monthGridDays", () => {
+  it("pads a month to whole Monday-start weeks", () => {
+    // September 2026: 1st is a Tuesday, 30 days.
+    const cells = monthGridDays("2026-09");
+    expect(cells.length % 7).toBe(0);
+    expect(cells[0]).toBeNull(); // Monday padding before Sep 1
+    expect(cells[1]).toBe("2026-09-01");
+    expect(cells[cells.length - 1] === null || cells[cells.length - 1] === "2026-09-30").toBe(true);
+    expect(cells.filter((c) => c !== null)).toHaveLength(30);
+  });
+
+  it("starts a month that opens on Monday with no leading blanks", () => {
+    // June 2026: 1st is a Monday.
+    const cells = monthGridDays("2026-06");
+    expect(cells[0]).toBe("2026-06-01");
+  });
+});
+
+describe("shiftMonthKey", () => {
+  it("moves forward and backward across year boundaries", () => {
+    expect(shiftMonthKey("2026-09", 1)).toBe("2026-10");
+    expect(shiftMonthKey("2026-12", 1)).toBe("2027-01");
+    expect(shiftMonthKey("2026-01", -1)).toBe("2025-12");
   });
 });

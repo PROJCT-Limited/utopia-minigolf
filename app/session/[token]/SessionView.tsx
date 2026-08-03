@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
 import type { WaveView } from "@/lib/booking/waves";
 import type { SessionForView } from "@/lib/sessions/sessionsRepo";
 import { PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
@@ -106,9 +107,11 @@ export function SessionView({
         <span>{session.paidParticipantNames.length > 0 ? session.paidParticipantNames.join(", ") : "Just you so far"}</span>
       </div>
 
-      <p className="notice" style={{ marginTop: 20 }}>
-        {DATE_TBC_NOTICE}
-      </p>
+      {wave?.status === "provisional" && (
+        <p className="notice" style={{ marginTop: 20 }}>
+          {DATE_TBC_NOTICE}
+        </p>
+      )}
 
       {!canJoin ? (
         <p style={{ marginTop: 20, fontSize: 14, color: "var(--ink-2)" }}>{SESSION_FULL_NOTICE}</p>
@@ -121,6 +124,21 @@ export function SessionView({
 
 function ShareLinkBanner({ shareUrl }: { shareUrl: string }) {
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    QRCode.toDataURL(shareUrl, { width: 208, margin: 1, color: { dark: "#12151c", light: "#ffffff" } })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        // QR generation failing is non-fatal — the link text is still copyable
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shareUrl]);
 
   async function handleCopy() {
     try {
@@ -134,12 +152,27 @@ function ShareLinkBanner({ shareUrl }: { shareUrl: string }) {
 
   return (
     <div className="notice" style={{ marginBottom: 20 }}>
-      <p style={{ marginBottom: 10, fontWeight: 600 }}>Your session is live — share this link:</p>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <code style={{ fontSize: 13, wordBreak: "break-all" }}>{shareUrl}</code>
-        <button type="button" className="btn btn-outline" onClick={handleCopy}>
-          {copied ? "Copied!" : "Copy link"}
-        </button>
+      <p style={{ marginBottom: 4, fontWeight: 700, fontSize: 16 }}>Congrats — your session is live!</p>
+      <p style={{ marginBottom: 14, fontSize: 13.5, color: "var(--ink-2)" }}>
+        Share this link or QR code so people can join and pay for their own place.
+      </p>
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+        {qrDataUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- data: URL generated client-side, next/image can't optimize it
+          <img
+            src={qrDataUrl}
+            alt="QR code to join this session"
+            width={104}
+            height={104}
+            style={{ borderRadius: 12, flexShrink: 0 }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <code style={{ fontSize: 13, wordBreak: "break-all", display: "block", marginBottom: 10 }}>{shareUrl}</code>
+          <button type="button" className="btn btn-outline" onClick={handleCopy}>
+            {copied ? "Copied!" : "Copy link"}
+          </button>
+        </div>
       </div>
     </div>
   );

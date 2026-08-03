@@ -12,6 +12,7 @@ import { EmailShell } from "./components/EmailShell";
 import { EmailButton } from "./components/EmailButton";
 import { colors, fontStack } from "./components/theme";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { formatWaveDate } from "@/app/utils/formatWave";
 
 export interface BookingConfirmationEmailProps {
   leadName: string;
@@ -19,6 +20,9 @@ export interface BookingConfirmationEmailProps {
   headcount: number;
   amountPaidCents: number;
   currency: string;
+  waveDate: string | null;
+  waveTimeLabel: string | null;
+  waveIsConfirmed: boolean;
   manageUrl: string;
 }
 
@@ -47,6 +51,9 @@ export function BookingConfirmationEmail({
   headcount,
   amountPaidCents,
   currency,
+  waveDate,
+  waveTimeLabel,
+  waveIsConfirmed,
   manageUrl,
 }: BookingConfirmationEmailProps) {
   const firstName = leadName.trim().split(/\s+/)[0] || leadName;
@@ -69,8 +76,15 @@ export function BookingConfirmationEmail({
         {formatMoney(amountPaidCents, currency)}
       </Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
+      <Text style={{ ...bodyText, margin: "0 0 4px" }}>
+        <strong>Wave</strong>
+      </Text>
+      <Text style={{ ...bodyText, margin: "0 0 20px", fontSize: "20px", fontWeight: 700 }}>
+        {waveIsConfirmed && waveDate ? `${formatWaveDate(waveDate)}, ${waveTimeLabel}` : "To be confirmed"}
+      </Text>
+      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
 
-      <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>
+      {!waveIsConfirmed && <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>}
       <Text style={bodyText}>{RESCHEDULE_NOTICE}</Text>
 
       <EmailButton href={manageUrl}>Manage your booking</EmailButton>

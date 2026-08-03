@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { formatWaveDate } from "../../utils/formatWave";
 import styles from "../../confirmation.module.css";
 
 interface BookingForView {
@@ -11,6 +12,9 @@ interface BookingForView {
   headcount: number;
   amountPaidCents: number;
   currency: string;
+  waveDate: string;
+  waveStartTime: string;
+  waveStatus: "provisional" | "confirmed" | "full";
 }
 
 const POLL_INTERVAL_MS = 2500;
@@ -78,6 +82,7 @@ export function ConfirmationView({
   }
 
   const firstName = initialBooking.leadName.trim().split(/\s+/)[0] || initialBooking.leadName;
+  const waveIsConfirmed = initialBooking.waveStatus === "confirmed" || initialBooking.waveStatus === "full";
 
   return (
     <div className={styles.card}>
@@ -91,13 +96,23 @@ export function ConfirmationView({
         </span>
       </div>
       <div className={styles.row}>
+        <span>Wave</span>
+        <span>
+          {waveIsConfirmed
+            ? `${formatWaveDate(initialBooking.waveDate)}, ${initialBooking.waveStartTime.slice(0, 5)}`
+            : "To be confirmed"}
+        </span>
+      </div>
+      <div className={styles.row}>
         <span>Amount paid</span>
         <span>{formatMoney(initialBooking.amountPaidCents, initialBooking.currency)}</span>
       </div>
 
-      <p className="notice" style={{ marginTop: 20 }}>
-        {DATE_TBC_NOTICE}
-      </p>
+      {!waveIsConfirmed && (
+        <p className="notice" style={{ marginTop: 20 }}>
+          {DATE_TBC_NOTICE}
+        </p>
+      )}
       <p style={{ marginTop: 14, fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6 }}>
         Check your email for a receipt and a link to manage or reschedule your booking. {RESCHEDULE_NOTICE}
       </p>
