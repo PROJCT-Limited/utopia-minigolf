@@ -56,39 +56,3 @@
 .link:hover {
   color: var(--blue-wash);
 }
-
-@media (max-width: 620px) {
-  .wrap {
-    top: auto;
-    right: 16px;
-    bottom: 0;
-    width: auto;
-    height: 34px;
-    flex-direction: column;
-    transform: none;
-    transition: height 0.28s ease;
-  }
-  @media (hover: hover) {
-    .wrap:hover {
-      height: 124px;
-    }
-  }
-  .wrap:focus-within,
-  .wrap.open {
-    height: 124px;
-  }
-  .toggle {
-    width: auto;
-    height: 34px;
-    min-height: 0;
-    padding: 0 20px;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  }
-  .mark {
-    transform: none;
-  }
-  .link {
-    width: auto;
-  }
-}
