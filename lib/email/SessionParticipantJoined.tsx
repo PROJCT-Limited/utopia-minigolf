@@ -46,7 +46,7 @@ const noticeBox = {
 const bigNumber = {
   fontFamily: displayFontStack,
   fontSize: "20px",
-  fontWeight: 800,
+  fontWeight: 500,
   color: colors.ink,
 };
 
@@ -65,7 +65,7 @@ export function SessionParticipantJoinedEmail({
 
   return (
     <EmailShell previewText="You're in — your UTOPIA session place is confirmed" manageUrl={manageUrl}>
-      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontSize: "20px", color: colors.ink }}>
+      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontWeight: 500, fontSize: "20px", color: colors.ink }}>
         You&rsquo;re in, {firstName}.
       </Heading>
       <Text style={bodyText}>

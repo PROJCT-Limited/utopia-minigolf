@@ -48,7 +48,7 @@ const noticeBox = {
 const bigNumber = {
   fontFamily: displayFontStack,
   fontSize: "20px",
-  fontWeight: 800,
+  fontWeight: 500,
   color: colors.ink,
 };
 
@@ -67,7 +67,7 @@ export function BookingConfirmationEmail({
 
   return (
     <EmailShell previewText="Your UTOPIA reservation is confirmed" manageUrl={manageUrl}>
-      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontSize: "20px", color: colors.ink }}>
+      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontWeight: 500, fontSize: "20px", color: colors.ink }}>
         You're in, {firstName}.
       </Heading>
       <Text style={bodyText}>

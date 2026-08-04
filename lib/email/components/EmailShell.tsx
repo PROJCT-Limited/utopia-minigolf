@@ -28,7 +28,7 @@ export function EmailShell({ previewText, manageUrl, children }: EmailShellProps
         {/* eslint-disable-next-line @next/next/no-page-custom-font -- this renders to a standalone email HTML string via Resend, not a Next.js page; the per-page-font-loading concern this rule guards against doesn't apply */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Archivo:wght@600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Archivo:wght@500&display=swap"
         />
       </Head>
       <Preview>{previewText}</Preview>
