@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 
 import { Button, Section } from "@react-email/components";
-import { colors, fontStack } from "./theme";
+import { colors, bodyFontStack } from "./theme";
 
 export interface EmailButtonProps {
   href: string;
@@ -22,7 +22,7 @@ export function EmailButton({ href, children }: EmailButtonProps) {
           color: "#ffffff",
           border: `1px solid ${colors.blue}`,
           borderRadius: "100px",
-          fontFamily: fontStack,
+          fontFamily: bodyFontStack,
           fontSize: "14px",
           fontWeight: 700,
           textDecoration: "none",

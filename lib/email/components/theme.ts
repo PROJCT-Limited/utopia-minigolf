@@ -14,8 +14,20 @@ export const colors = {
   blueWash: "#e7ecff",
 } as const;
 
-export const fontStack =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+// Mirrors the site's two font roles (app/globals.css --font-body /
+// --font-display). Manrope and Archivo are loaded from Google Fonts in
+// EmailShell's <Head> for clients that support it (Apple Mail, Gmail web,
+// Outlook.com); everywhere else these stacks fall back to the same system
+// fonts the site itself falls back to. Futura Book (the site's self-hosted
+// display face) isn't included here — it's only licensed for this site's
+// own hosting, not for embedding in outbound email — so headings fall back
+// to system Futura (macOS only) then Archivo, same as the site's own
+// --font-display fallback chain.
+export const bodyFontStack =
+  '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+
+export const displayFontStack =
+  '"Futura Medium", Futura, "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 

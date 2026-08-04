@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 
 import { Hr, Link, Section, Text } from "@react-email/components";
-import { aboutLine, colors, companyAddress, fontStack } from "./theme";
+import { aboutLine, colors, companyAddress, bodyFontStack } from "./theme";
 
 export interface EmailFooterProps {
   manageUrl?: string;
@@ -14,7 +14,7 @@ export interface EmailFooterProps {
 
 const footerTextStyle = {
   margin: "0 0 8px",
-  fontFamily: fontStack,
+  fontFamily: bodyFontStack,
   fontSize: "12px",
   lineHeight: "1.6",
   color: colors.inkSoft,

@@ -8,7 +8,7 @@
 import { Heading, Hr, Text } from "@react-email/components";
 import { formatMoney } from "./format";
 import { EmailShell } from "./components/EmailShell";
-import { colors, fontStack } from "./components/theme";
+import { colors, bodyFontStack, displayFontStack } from "./components/theme";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
@@ -26,7 +26,7 @@ export interface SessionParticipantJoinedEmailProps {
 
 const bodyText = {
   margin: "0 0 16px",
-  fontFamily: fontStack,
+  fontFamily: bodyFontStack,
   fontSize: "15px",
   lineHeight: "1.6",
   color: colors.ink,
@@ -37,9 +37,16 @@ const noticeBox = {
   padding: "16px 18px",
   borderRadius: "14px",
   backgroundColor: colors.blueWash,
-  fontFamily: fontStack,
+  fontFamily: bodyFontStack,
   fontSize: "14px",
   lineHeight: "1.55",
+  color: colors.ink,
+};
+
+const bigNumber = {
+  fontFamily: displayFontStack,
+  fontSize: "20px",
+  fontWeight: 800,
   color: colors.ink,
 };
 
@@ -58,7 +65,7 @@ export function SessionParticipantJoinedEmail({
 
   return (
     <EmailShell previewText="You're in — your UTOPIA session place is confirmed" manageUrl={manageUrl}>
-      <Heading style={{ margin: "0 0 12px", fontFamily: fontStack, fontSize: "20px", color: colors.ink }}>
+      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontSize: "20px", color: colors.ink }}>
         You&rsquo;re in, {firstName}.
       </Heading>
       <Text style={bodyText}>
@@ -70,14 +77,12 @@ export function SessionParticipantJoinedEmail({
       <Text style={{ ...bodyText, margin: "0 0 4px" }}>
         <strong>Amount paid</strong>
       </Text>
-      <Text style={{ ...bodyText, margin: "0 0 20px", fontSize: "20px", fontWeight: 700 }}>
-        {formatMoney(amountPaidCents, currency)}
-      </Text>
+      <Text style={{ ...bigNumber, margin: "0 0 20px" }}>{formatMoney(amountPaidCents, currency)}</Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
       <Text style={{ ...bodyText, margin: "0 0 4px" }}>
         <strong>Wave</strong>
       </Text>
-      <Text style={{ ...bodyText, margin: "0 0 20px", fontSize: "20px", fontWeight: 700 }}>
+      <Text style={{ ...bigNumber, margin: "0 0 20px" }}>
         {waveIsConfirmed && waveDate ? `${formatWaveDate(waveDate)}, ${waveTimeLabel}` : "To be confirmed"}
       </Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
