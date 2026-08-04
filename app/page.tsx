@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Leaderboard } from "./components/Leaderboard";
 import { NotifyMeForm } from "./components/NotifyMeForm";
 import { SiteFooter } from "./components/SiteFooter";
+import { Reveal, StaggerGroup, StaggerItem } from "./components/ScrollReveal";
 import styles from "./page.module.css";
 
 const ADDITIONAL_ELEMENTS = [
@@ -64,15 +65,19 @@ export default function HomePage() {
                 </Link>
               </nav>
             </div>
-            <div className={styles.heroPanel}>
-              <div className={styles.kick}>Minigolf Social Club by PROJCT</div>
-              <h1>Come as you are. Play the trail.</h1>
-              <p>
-                This PROJCT social club delivers an intense mini-golf experience, pulling you inside a world of
-                motion, speed, and excitement. Another high-visibility social experience in the middle of the Sai
-                Ying Pun community.
-              </p>
-              <div className={styles.row}>
+            <StaggerGroup className={styles.heroPanel} mode="mount">
+              <StaggerItem className={styles.kick}>Minigolf Social Club by PROJCT</StaggerItem>
+              <StaggerItem>
+                <h1>Come as you are. Play the trail.</h1>
+              </StaggerItem>
+              <StaggerItem>
+                <p>
+                  This PROJCT social club delivers an intense mini-golf experience, pulling you inside a world of
+                  motion, speed, and excitement. Another high-visibility social experience in the middle of the Sai
+                  Ying Pun community.
+                </p>
+              </StaggerItem>
+              <StaggerItem className={styles.row}>
                 <Link href="/book" className="btn btn-light">
                   Reserve your place <span className="btn-icon">→</span>
                 </Link>
@@ -80,8 +85,8 @@ export default function HomePage() {
                   from
                   <b>HKD 160</b>
                 </div>
-              </div>
-            </div>
+              </StaggerItem>
+            </StaggerGroup>
           </div>
         </div>
       </header>
@@ -92,13 +97,15 @@ export default function HomePage() {
           <div className={styles.introIn}>
             <span className="plus" style={{ top: 24, left: 24 }} />
             <span className="plus" style={{ top: 24, right: 24 }} />
-            <div className="lbl">The idea</div>
-            <h2>
-              A five-station mini golf journey structured as a topographic landscape, where contour lines function
-              as both visual guidance and physical terrain. Each station represents a shift in elevation and
-              difficulty. The journey leads you upward to the summit, where the last putt captures that feeling of
-              conquering the highest point.
-            </h2>
+            <Reveal>
+              <div className="lbl">The idea</div>
+              <h2>
+                A five-station mini golf journey structured as a topographic landscape, where contour lines function
+                as both visual guidance and physical terrain. Each station represents a shift in elevation and
+                difficulty. The journey leads you upward to the summit, where the last putt captures that feeling of
+                conquering the highest point.
+              </h2>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -106,14 +113,16 @@ export default function HomePage() {
       {/* LEADERBOARD */}
       <section className="sec" id="leaderboard">
         <div className="wrap">
-          <div className="sechead">
-            <div>
-              <span className="lbl">Leaderboard</span>
-              <h2>
-                See who <em>scored.</em>
-              </h2>
+          <Reveal>
+            <div className="sechead">
+              <div>
+                <span className="lbl">Leaderboard</span>
+                <h2>
+                  See who <em>scored.</em>
+                </h2>
+              </div>
             </div>
-          </div>
+          </Reveal>
           <Leaderboard />
         </div>
       </section>
@@ -121,39 +130,43 @@ export default function HomePage() {
       {/* ADDITIONAL ELEMENTS */}
       <section className="sec">
         <div className="wrap">
-          <div className="sechead">
-            <div>
-              <span className="lbl">Beyond the trail</span>
-              <h2>
-                Built for a <em>social</em> night.
-              </h2>
+          <Reveal>
+            <div className="sechead">
+              <div>
+                <span className="lbl">Beyond the trail</span>
+                <h2>
+                  Built for a <em>social</em> night.
+                </h2>
+              </div>
             </div>
-          </div>
-          <div className="featuregrid">
+          </Reveal>
+          <StaggerGroup className="featuregrid">
             {ADDITIONAL_ELEMENTS.map((f) => (
-              <div className="featurecard" key={f.title}>
+              <StaggerItem className="featurecard" key={f.title}>
                 <span className="k">{f.k}</span>
                 <h3>{f.title}</h3>
                 <p>{f.body}</p>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* PRICING */}
       <section className="sec" id="pricing">
         <div className="wrap">
-          <div className="sechead">
-            <div>
-              <span className="lbl">The ticket</span>
-              <h2>
-                Everything <em>included</em>
-              </h2>
+          <Reveal>
+            <div className="sechead">
+              <div>
+                <span className="lbl">The ticket</span>
+                <h2>
+                  Everything <em>included</em>
+                </h2>
+              </div>
             </div>
-          </div>
-          <div className="pricegrid">
-            <div className="pcard">
+          </Reveal>
+          <StaggerGroup className="pricegrid">
+            <StaggerItem className="pcard">
               <h3>What&rsquo;s in the round</h3>
               <ul>
                 <li>All 5 stations, 30 minutes of play</li>
@@ -163,8 +176,8 @@ export default function HomePage() {
                 <li>Live leaderboard</li>
                 <li>Come solo — we&rsquo;ll pair you with a team</li>
               </ul>
-            </div>
-            <div className="pcard blue">
+            </StaggerItem>
+            <StaggerItem className="pcard blue">
               <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
                 Per person
               </div>
@@ -175,28 +188,28 @@ export default function HomePage() {
                   Reserve your place <span className="btn-icon">→</span>
                 </Link>
               </div>
-            </div>
-          </div>
+            </StaggerItem>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* BOOKING TEASER + NOTIFY ME */}
       <section className="sec">
         <div className="wrap">
-          <div className={styles.teaserSplit}>
-            <div className={styles.teaserCard}>
+          <StaggerGroup className={styles.teaserSplit}>
+            <StaggerItem className={styles.teaserCard}>
               <h2>Ready to play?</h2>
               <p>Pick a wave and reserve your place — every round starts on the hour, 12pm to 10pm.</p>
               <Link href="/book" className="btn btn-light" style={{ alignSelf: "flex-start" }}>
                 Reserve your place <span className="btn-icon">→</span>
               </Link>
-            </div>
-            <div className={styles.notifyCard}>
+            </StaggerItem>
+            <StaggerItem className={styles.notifyCard}>
               <h3>Not ready yet?</h3>
               <p>Get launch updates the moment dates are confirmed — no payment needed.</p>
               <NotifyMeForm />
-            </div>
-          </div>
+            </StaggerItem>
+          </StaggerGroup>
         </div>
       </section>
 

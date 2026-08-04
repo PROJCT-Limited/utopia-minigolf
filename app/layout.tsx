@@ -48,6 +48,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${manrope.variable} ${archivo.variable} ${futuraBook.variable}`}>
       <body>
+        {/* Scroll/mount reveal animations (app/components/ScrollReveal.tsx)
+            ship opacity:0 in the server-rendered HTML and only animate back
+            in via JS — with JS disabled or unavailable to a crawler, that
+            content would stay invisible forever without this override. */}
+        <noscript>
+          <style>{".motionReveal { opacity: 1 !important; transform: none !important; }"}</style>
+        </noscript>
         <Preloader />
         {children}
         <PersistentProjctTab />
