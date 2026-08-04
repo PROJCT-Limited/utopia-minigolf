@@ -61,9 +61,8 @@ export async function markParticipantPaidByPaymentIntent(paymentIntentId: string
     }
   }
 
-  if (participant.is_host) {
-    await sendHostSessionCreated(participant.id);
-  } else {
-    await sendSessionParticipantJoined(participant.id);
-  }
+  const emailResult = participant.is_host
+    ? await sendHostSessionCreated(participant.id)
+    : await sendSessionParticipantJoined(participant.id);
+  console.log("markParticipantPaidByPaymentIntent: marked paid", participant.id, "email sent:", emailResult.sent);
 }

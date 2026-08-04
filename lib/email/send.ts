@@ -174,10 +174,17 @@ async function markSessionParticipantEmailSent(participantId: string): Promise<v
 
 export async function sendHostSessionCreated(participantId: string): Promise<{ sent: boolean }> {
   const participant = await loadSessionParticipantForEmail(participantId);
-  if (!participant || participant.emailSent) return { sent: false };
+  if (!participant) {
+    console.error("sendHostSessionCreated: participant not found", participantId);
+    return { sent: false };
+  }
+  if (participant.emailSent) return { sent: false };
 
   const session = await fetchSessionById(participant.sessionId);
-  if (!session) return { sent: false };
+  if (!session) {
+    console.error("sendHostSessionCreated: session not found for participant", participantId, participant.sessionId);
+    return { sent: false };
+  }
 
   const wave = await fetchWaveById(session.wave_id);
   const waveIsConfirmed = wave?.status === "confirmed" || wave?.status === "full";
@@ -200,9 +207,12 @@ export async function sendHostSessionCreated(participantId: string): Promise<{ s
         })
       ),
     });
-    if (error) return { sent: false };
+    if (error) {
+      console.error("sendHostSessionCreated: Resend returned an error:", JSON.stringify(error));
+      return { sent: false };
+    }
   } catch (err) {
-    console.error("sendHostSessionCreated: send failed:", (err as Error).message);
+    console.error("sendHostSessionCreated: send threw:", (err as Error).message);
     return { sent: false };
   }
 
@@ -212,10 +222,17 @@ export async function sendHostSessionCreated(participantId: string): Promise<{ s
 
 export async function sendSessionParticipantJoined(participantId: string): Promise<{ sent: boolean }> {
   const participant = await loadSessionParticipantForEmail(participantId);
-  if (!participant || participant.emailSent) return { sent: false };
+  if (!participant) {
+    console.error("sendSessionParticipantJoined: participant not found", participantId);
+    return { sent: false };
+  }
+  if (participant.emailSent) return { sent: false };
 
   const session = await fetchSessionById(participant.sessionId);
-  if (!session) return { sent: false };
+  if (!session) {
+    console.error("sendSessionParticipantJoined: session not found for participant", participantId, participant.sessionId);
+    return { sent: false };
+  }
 
   const paidCount = await countPaidParticipants(session.id);
   const wave = await fetchWaveById(session.wave_id);
@@ -240,9 +257,12 @@ export async function sendSessionParticipantJoined(participantId: string): Promi
         })
       ),
     });
-    if (error) return { sent: false };
+    if (error) {
+      console.error("sendSessionParticipantJoined: Resend returned an error:", JSON.stringify(error));
+      return { sent: false };
+    }
   } catch (err) {
-    console.error("sendSessionParticipantJoined: send failed:", (err as Error).message);
+    console.error("sendSessionParticipantJoined: send threw:", (err as Error).message);
     return { sent: false };
   }
 
