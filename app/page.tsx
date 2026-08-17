@@ -39,6 +39,24 @@ const ADDITIONAL_ELEMENTS = [
   },
 ];
 
+const EVENT_OCCASIONS = [
+  {
+    icon: "/icons/event-birthday.svg",
+    title: "Birthdays",
+    body: "Round up your crew for a birthday that isn't just dinner and drinks.",
+  },
+  {
+    icon: "/icons/event-group.svg",
+    title: "Work socials & team nights",
+    body: "Swap the usual bar night for something everyone actually talks about after.",
+  },
+  {
+    icon: "/icons/event-celebrate.svg",
+    title: "Celebrations & get-togethers",
+    body: "Any excuse to gather — we'll help you make it one to remember.",
+  },
+];
+
 export default function HomePage() {
   return (
     <>
@@ -149,6 +167,43 @@ export default function HomePage() {
               </StaggerItem>
             ))}
           </StaggerGroup>
+        </div>
+      </section>
+
+      {/* EVENTS & PARTIES */}
+      <section className="sec">
+        <div className="wrap">
+          <Reveal>
+            <div className="sechead">
+              <div>
+                <span className="lbl">Host something here</span>
+                <h2>
+                  More than <em>a round.</em>
+                </h2>
+              </div>
+              <p className="r">
+                UTOPIA is a place to come together, not just to play. Bring your people — PROJCT can put on the
+                occasion.
+              </p>
+            </div>
+          </Reveal>
+          <StaggerGroup className={styles.eventsgrid}>
+            {EVENT_OCCASIONS.map((o) => (
+              <StaggerItem className={styles.eventcard} key={o.title}>
+                <Image src={o.icon} alt="" width={48} height={48} className={styles.eventicon} />
+                <h3>{o.title}</h3>
+                <p>{o.body}</p>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+          <Reveal>
+            <div className={styles.eventscta}>
+              <p>Planning something? We&rsquo;d love to help you host it.</p>
+              <a href="mailto:hi@projct.co?subject=Hosting%20at%20UTOPIA" className="btn btn-primary">
+                Get in touch <span className="btn-icon">→</span>
+              </a>
+            </div>
+          </Reveal>
         </div>
       </section>
 

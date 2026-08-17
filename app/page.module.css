@@ -192,9 +192,63 @@
   line-height: 1.5;
 }
 
+/* ---------- events & parties ---------- */
+.eventsgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.eventcard {
+  background: var(--panel);
+  border-radius: var(--r);
+  padding: 30px 28px;
+}
+.eventicon {
+  margin-bottom: 16px;
+}
+.eventcard h3 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.eventcard p {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.eventscta {
+  background: var(--blue-wash);
+  border-radius: var(--r);
+  padding: 28px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.eventscta p {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 @media (max-width: 1000px) {
   .teaserSplit {
     grid-template-columns: 1fr;
+  }
+  .eventsgrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .eventsgrid {
+    grid-template-columns: 1fr;
+  }
+  .eventscta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 @media (max-width: 620px) {
