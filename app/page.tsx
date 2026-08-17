@@ -181,10 +181,6 @@ export default function HomePage() {
                   More than <em>a round.</em>
                 </h2>
               </div>
-              <p className="r">
-                UTOPIA is a place to come together, not just to play. Bring your people — PROJCT can put on the
-                occasion.
-              </p>
             </div>
           </Reveal>
           <StaggerGroup className={styles.eventsgrid}>
