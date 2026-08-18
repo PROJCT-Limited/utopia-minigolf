@@ -33,6 +33,9 @@ export interface WaveView {
 const LOW_AVAILABILITY_THRESHOLD = 2;
 export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
+/** First date the club is open — nothing earlier can be booked, blind or otherwise. */
+export const BOOKING_OPENS_ON = "2026-09-24";
+
 export function toWaveView(row: WaveRow): WaveView {
   const spotsLeft = Math.max(0, row.capacity - row.booked);
   const isFull = row.status === "full" || spotsLeft === 0;

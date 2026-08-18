@@ -38,7 +38,7 @@ export function CreateWaveForm() {
       </div>
       <div className={styles.field}>
         <label htmlFor="capacity">Capacity</label>
-        <input id="capacity" name="capacity" type="number" min={1} defaultValue={12} required />
+        <input id="capacity" name="capacity" type="number" min={1} defaultValue={5} required />
       </div>
       <div className={styles.field}>
         <label htmlFor="status">Status</label>
@@ -48,7 +48,7 @@ export function CreateWaveForm() {
         </select>
       </div>
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? "Adding…" : "Add wave"}
+        {submitting ? "Adding…" : "Add slot"}
       </button>
       {error && <p className={styles.error}>{error}</p>}
     </form>

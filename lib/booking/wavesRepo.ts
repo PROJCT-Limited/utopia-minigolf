@@ -6,12 +6,13 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { toWaveView, type WaveRow, type WaveView } from "./waves";
+import { BOOKING_OPENS_ON, toWaveView, type WaveRow, type WaveView } from "./waves";
 
 export async function fetchUpcomingWaves(): Promise<WaveView[]> {
   const { data, error } = await supabaseAdmin
     .from("waves")
     .select("id, date, start_time, capacity, booked, status")
+    .gte("date", BOOKING_OPENS_ON) // nothing before the club opens is bookable, blind or otherwise
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
