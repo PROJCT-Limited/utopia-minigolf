@@ -267,6 +267,16 @@ button {
   flex-direction: column;
   gap: 4px;
 }
+.lbempty {
+  padding: 48px 16px;
+  text-align: center;
+}
+.lbempty p {
+  font-size: 15px;
+  color: var(--ink-3);
+  max-width: 380px;
+  margin: 0 auto;
+}
 .lbrow {
   display: grid;
   grid-template-columns: 54px 1fr 170px 90px 70px;
