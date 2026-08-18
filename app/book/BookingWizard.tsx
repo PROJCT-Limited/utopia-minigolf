@@ -49,7 +49,7 @@ function BookingModePicker({ onSelect }: { onSelect: (mode: BookingMode) => void
         <div className={`${styles.partyGrid} ${styles.modeGrid}`}>
           <button type="button" className={styles.partyOption} onClick={() => onSelect("private")}>
             <h4>Private group</h4>
-            <p>Reserve a wave for your own party. You pay for everyone in one go.</p>
+            <p>Reserve a slot for your own party. You pay for everyone in one go.</p>
           </button>
           <button type="button" className={styles.partyOption} onClick={() => onSelect("public")}>
             <h4>Public session</h4>
@@ -109,7 +109,7 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
           <>
             <div className={styles.stepLabel}>
               <span className="lbl">Step 1 of 3</span>
-              <h3>Pick a wave</h3>
+              <h3>Pick a slot</h3>
             </div>
             <WavePicker waves={waves} selectedWaveId={selectedWaveId} onSelect={setSelectedWaveId} />
           </>
@@ -173,7 +173,7 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
               </span>
             </div>
             <div className={styles.summaryRow}>
-              <span>Wave</span>
+              <span>Slot</span>
               <span>{selectedWave ? `${formatWaveDate(selectedWave.date)}, ${selectedWave.timeLabel}` : "—"}</span>
             </div>
             <div className={styles.summaryRow}>

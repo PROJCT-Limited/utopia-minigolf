@@ -39,14 +39,14 @@ export async function joinSessionWithPaymentIntent(input: JoinSessionInput): Pro
   if (!session) return { ok: false, error: "That session doesn't exist." };
 
   const wave = await fetchWaveById(session.waveId);
-  if (!wave) return { ok: false, error: "That wave no longer exists." };
+  if (!wave) return { ok: false, error: "That slot no longer exists." };
 
   const paidCount = await countPaidParticipants(session.id);
   if (!isSessionJoinable({ status: session.status, paidCount, maxPlayers: session.maxPlayers, waveIsFull: wave.isFull })) {
     return { ok: false, error: "This session is full." };
   }
   if (wave.spotsLeft < 1) {
-    return { ok: false, error: "Not enough spots left in that wave." };
+    return { ok: false, error: "Not enough spots left in that slot." };
   }
 
   const manageToken = generateManageToken();

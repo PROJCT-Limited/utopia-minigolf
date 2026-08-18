@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
           <h2>What we collect</h2>
           <ul>
-            <li>Booking details: name, email, party type, headcount, and wave selection.</li>
+            <li>Booking details: name, email, party type, headcount, and slot selection.</li>
             <li>Payment confirmation from Stripe. We never see or store your card details.</li>
             <li>If you sign up for launch updates: your email and, optionally, your name.</li>
             <li>

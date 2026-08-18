@@ -15,12 +15,12 @@ export default async function AdminPage() {
       <div className={styles.headRow}>
         <div>
           <span className="lbl">UTOPIA Admin</span>
-          <h1 className={styles.title}>Waves</h1>
+          <h1 className={styles.title}>Slots</h1>
         </div>
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Add a wave</h3>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Add a slot</h3>
         <CreateWaveForm />
       </div>
 
@@ -55,7 +55,7 @@ export default async function AdminPage() {
             ))}
             {waves.length === 0 && (
               <tr>
-                <td colSpan={6}>No waves yet.</td>
+                <td colSpan={6}>No slots yet.</td>
               </tr>
             )}
           </tbody>

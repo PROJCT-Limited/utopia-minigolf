@@ -80,7 +80,7 @@ export function SessionParticipantJoinedEmail({
       <Text style={{ ...bigNumber, margin: "0 0 20px" }}>{formatMoney(amountPaidCents, currency)}</Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
       <Text style={{ ...bodyText, margin: "0 0 4px" }}>
-        <strong>Wave</strong>
+        <strong>Slot</strong>
       </Text>
       <Text style={{ ...bigNumber, margin: "0 0 20px" }}>
         {waveIsConfirmed && waveDate ? `${formatWaveDate(waveDate)}, ${waveTimeLabel}` : "To be confirmed"}

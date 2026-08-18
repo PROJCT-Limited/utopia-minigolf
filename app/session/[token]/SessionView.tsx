@@ -89,7 +89,7 @@ export function SessionView({
 
       <span className="lbl">Public session</span>
       <h1 className={confirmationStyles.title}>
-        {wave ? `${formatWaveDate(wave.date)}, ${wave.timeLabel}` : "Wave to be confirmed"}
+        {wave ? `${formatWaveDate(wave.date)}, ${wave.timeLabel}` : "Slot to be confirmed"}
       </h1>
 
       <p className="hint" style={{ marginBottom: 16 }}>

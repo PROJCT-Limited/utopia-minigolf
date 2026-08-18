@@ -4,7 +4,7 @@ import { fetchWaveAdminDetail } from "@/lib/admin/waves";
 import { AdminWaveForm } from "./AdminWaveForm";
 import styles from "../../admin.module.css";
 
-export const metadata = { title: "Manage wave — UTOPIA Admin" };
+export const metadata = { title: "Manage slot — UTOPIA Admin" };
 export const dynamic = "force-dynamic";
 
 function formatMoney(cents: number, currency: string): string {
@@ -23,7 +23,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
       <div className={styles.headRow}>
         <div>
           <Link href="/admin" className="hint">
-            ← All waves
+            ← All slots
           </Link>
           <h1 className={styles.title} style={{ marginTop: 8 }}>
             {wave.date}, {wave.startTime.slice(0, 5)}
@@ -32,7 +32,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Edit wave</h3>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Edit slot</h3>
         <AdminWaveForm waveId={wave.id} wave={wave} />
       </div>
 

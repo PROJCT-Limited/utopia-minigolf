@@ -76,7 +76,7 @@ export function PublicSessionWizard({
           <>
             <div className={styles.stepLabel}>
               <span className="lbl">Step 1 of 3</span>
-              <h3>Pick a wave</h3>
+              <h3>Pick a slot</h3>
             </div>
             <WavePicker
               waves={waves}
@@ -119,7 +119,7 @@ export function PublicSessionWizard({
               {PUBLIC_SESSION_EXPLAINER}
             </p>
             <div className={styles.summaryRow}>
-              <span>Wave</span>
+              <span>Slot</span>
               <span>{selectedWave ? `${formatWaveDate(selectedWave.date)}, ${selectedWave.timeLabel}` : "—"}</span>
             </div>
             <div className={styles.summaryRow}>

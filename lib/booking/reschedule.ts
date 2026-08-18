@@ -68,12 +68,12 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
   }
 
   const newWave = await fetchWaveById(newWaveId);
-  if (!newWave) return { ok: false, error: "That wave no longer exists." };
+  if (!newWave) return { ok: false, error: "That slot no longer exists." };
   if (newWave.isFull || newWave.spotsLeft < booking.headcount) {
-    return { ok: false, error: "Not enough spots left in that wave." };
+    return { ok: false, error: "Not enough spots left in that slot." };
   }
   if (isPastRescheduleCutoff(newWave)) {
-    return { ok: false, error: "That wave is too close to its date to book online — please contact us." };
+    return { ok: false, error: "That slot is too close to its date to book online — please contact us." };
   }
 
   const { error: bookingUpdateError } = await supabaseAdmin

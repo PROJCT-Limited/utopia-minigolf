@@ -38,9 +38,9 @@ export async function createBookingWithPaymentIntent(
   }
 
   const wave = await fetchWaveById(waveId);
-  if (!wave) return { ok: false, error: "That wave no longer exists." };
+  if (!wave) return { ok: false, error: "That slot no longer exists." };
   if (wave.isFull || wave.spotsLeft < headcount) {
-    return { ok: false, error: "Not enough spots left in that wave." };
+    return { ok: false, error: "Not enough spots left in that slot." };
   }
 
   const amountCents = computeBookingTotalCents(headcount);

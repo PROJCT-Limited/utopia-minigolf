@@ -156,7 +156,7 @@ function BookingManageView({ token, booking, currentWave, eligibleForReschedule,
           <p style={{ marginTop: 20, fontSize: 13.5, color: "var(--ink-2)" }}>{RESCHEDULE_NOTICE}</p>
           <div className={bookStyles.waveGroups} style={{ marginTop: 16, maxHeight: 320 }}>
             <div className={bookStyles.waveList}>
-              {availableWaves.length === 0 && <p className="hint">No other waves are available to move to right now.</p>}
+              {availableWaves.length === 0 && <p className="hint">No other slots are available to move to right now.</p>}
               {availableWaves.map((w) => (
                 <div key={w.id} className={bookStyles.waveRow}>
                   <span className={bookStyles.waveDate}>{formatWaveDate(w.date)}</span>

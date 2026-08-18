@@ -65,7 +65,7 @@ export async function createWaveAction(formData: FormData): Promise<UpdateWaveRe
 
   if (error) {
     console.error("createWaveAction: insert failed:", error.message);
-    return { ok: false, error: "Couldn't create wave." };
+    return { ok: false, error: "Couldn't create slot." };
   }
 
   revalidatePath("/admin");

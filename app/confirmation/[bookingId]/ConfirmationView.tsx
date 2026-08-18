@@ -96,7 +96,7 @@ export function ConfirmationView({
         </span>
       </div>
       <div className={styles.row}>
-        <span>Wave</span>
+        <span>Slot</span>
         <span>
           {waveIsConfirmed
             ? `${formatWaveDate(initialBooking.waveDate)}, ${initialBooking.waveStartTime.slice(0, 5)}`

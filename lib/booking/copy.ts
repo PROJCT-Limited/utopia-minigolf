@@ -11,7 +11,7 @@ export const RESCHEDULE_CUTOFF_DAYS = Number(process.env.RESCHEDULE_CUTOFF_DAYS 
 export const DATE_TBC_NOTICE =
   "Opening dates are still provisional. We'll email you the exact date and time slot as soon as it's confirmed.";
 
-export const RESCHEDULE_NOTICE = `Once your date is confirmed, you can reschedule to any available wave once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;
+export const RESCHEDULE_NOTICE = `Once your date is confirmed, you can reschedule to any available slot once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;
 
 // -----------------------------------------------------------------------------
 // Public sessions — the one place this copy is worded, reused by the booking
