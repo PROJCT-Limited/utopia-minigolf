@@ -94,9 +94,7 @@ export function BookingConfirmationEmail({
 
       <EmailButton href={manageUrl}>Manage your booking</EmailButton>
 
-      <Text style={bodyText}>
-        See you on the trail. Come as a group, or come alone — we'll pair you up.
-      </Text>
+      <Text style={bodyText}>See you on the trail.</Text>
     </EmailShell>
   );
 }
