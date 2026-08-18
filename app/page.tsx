@@ -100,6 +100,7 @@ export default function HomePage() {
                   Reserve your place <span className="btn-icon">→</span>
                 </Link>
                 <div className={styles.meta}>
+                  <span className={styles.earlyBird}>Early bird price</span>
                   from
                   <b>HKD 160</b>
                 </div>
@@ -228,7 +229,8 @@ export default function HomePage() {
                 <li>Come solo — we&rsquo;ll pair you with a team</li>
               </ul>
             </StaggerItem>
-            <StaggerItem className="pcard blue">
+            <StaggerItem className={`pcard blue ${styles.pcardRibbonHost}`}>
+              <span className={styles.earlyBirdRibbon}>Early bird price</span>
               <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
                 Per person
               </div>
@@ -250,7 +252,7 @@ export default function HomePage() {
           <StaggerGroup className={styles.teaserSplit}>
             <StaggerItem className={styles.teaserCard}>
               <h2>Ready to play?</h2>
-              <p>Pick a wave and reserve your place — every round starts on the hour, 12pm to 10pm.</p>
+              <p>Pick a slot and reserve your place — every round starts on the hour, 12pm to 10pm.</p>
               <Link href="/book" className="btn btn-light" style={{ alignSelf: "flex-start" }}>
                 Reserve your place <span className="btn-icon">→</span>
               </Link>
