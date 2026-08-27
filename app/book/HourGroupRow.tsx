@@ -43,9 +43,7 @@ export function HourGroupRow({
           <div>
             <div className="tm">{hourGroup.hour}</div>
           </div>
-          <span className="st">
-            {hourGroup.isFull ? "Full" : `${hourGroup.slotsLeft} group${hourGroup.slotsLeft === 1 ? "" : "s"} left`}
-          </span>
+          <span className="st">{hourGroup.isFull ? "Full" : "Available"}</span>
         </button>
       </div>
       {expanded && !hourGroup.isFull && (

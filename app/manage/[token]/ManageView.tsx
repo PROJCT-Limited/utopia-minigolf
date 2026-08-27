@@ -179,9 +179,7 @@ function BookingManageView({ token, booking, currentWave, eligibleForReschedule,
                     <div>
                       <div className="tm">{w.timeLabel}</div>
                     </div>
-                    <span className={`st ${w.isLowAvailability ? "low" : ""}`}>
-                      {w.slotsLeft} group{w.slotsLeft === 1 ? "" : "s"} left
-                    </span>
+                    <span className={`st ${w.isLowAvailability ? "low" : ""}`}>Available</span>
                   </button>
                 </div>
               ))}
