@@ -1,11 +1,26 @@
 // FILE: lib/booking/pricing.ts
 // -----------------------------------------------------------------------------
 // The golden rule: the booking wizard may *display* a total, but the number
-// that's ever charged is recomputed here, on the server, from headcount alone.
-// The client total is decoration; this file is truth.
+// that's ever charged is recomputed here, on the server, from ticket type and
+// headcount alone. The client total is decoration; this file is truth.
 // -----------------------------------------------------------------------------
 
-export const PRICE_PER_PERSON_CENTS = 160_00; // HKD 160
+export const TICKET_TYPES = ["standard", "unlimited"] as const;
+export type TicketType = (typeof TICKET_TYPES)[number];
+
+// Standard: one 30-min run (all 5 stations) + 1 drink.
+// Unlimited: a standing slot held for the full hour (re-entry every cycle) +
+// bottomless drinks.
+export const TICKET_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
+  standard: 150_00,
+  unlimited: 220_00,
+};
+
+export const TICKET_TYPE_LABELS: Record<TicketType, string> = {
+  standard: "Standard",
+  unlimited: "Unlimited",
+};
+
 export const CURRENCY = "hkd";
 
 export const MIN_PRIVATE_GROUP_HEADCOUNT = 1;
@@ -19,6 +34,10 @@ export function isValidHeadcount(headcount: number): boolean {
   );
 }
 
+export function isValidTicketType(value: string): value is TicketType {
+  return (TICKET_TYPES as readonly string[]).includes(value);
+}
+
 // party_type is no longer a guest choice — the booking wizard just asks for
 // headcount — but the column stays (bookings.party_type, still read by
 // admin/emails/confirmation) so it's derived here rather than dropped.
@@ -28,9 +47,12 @@ export function derivePartyTypeFromHeadcount(headcount: number): "solo" | "pair"
   return "group";
 }
 
-export function computeBookingTotalCents(headcount: number): number {
+export function computeBookingTotalCents(ticketType: TicketType, headcount: number): number {
+  if (!isValidTicketType(ticketType)) {
+    throw new Error(`computeBookingTotalCents: invalid ticket type ${ticketType}`);
+  }
   if (!isValidHeadcount(headcount)) {
     throw new Error(`computeBookingTotalCents: invalid headcount ${headcount}`);
   }
-  return PRICE_PER_PERSON_CENTS * headcount;
+  return TICKET_PRICE_PER_PERSON_CENTS[ticketType] * headcount;
 }

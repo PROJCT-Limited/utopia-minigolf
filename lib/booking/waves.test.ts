@@ -4,6 +4,7 @@ import {
   toWaveView,
   groupByWeek,
   groupByMonth,
+  groupByHour,
   summarizeWavesByDay,
   busynessForDay,
   monthGridDays,
@@ -15,36 +16,36 @@ import {
 function row(overrides: Partial<WaveRow> = {}): WaveRow {
   return {
     id: "wave-1",
-    date: "2026-09-05",
-    start_time: "10:00:00",
-    capacity: 12,
-    booked: 0,
-    status: "provisional",
+    date: "2026-09-30",
+    start_time: "16:00:00",
+    total_wave_slots: 10,
+    wave_slots_used: 0,
+    status: "confirmed",
     ...overrides,
   };
 }
 
 describe("toWaveView", () => {
-  it("computes spots left from capacity minus booked", () => {
-    const view = toWaveView(row({ capacity: 12, booked: 5 }));
-    expect(view.spotsLeft).toBe(7);
+  it("computes slots left from total wave-slots minus wave-slots used", () => {
+    const view = toWaveView(row({ total_wave_slots: 10, wave_slots_used: 4 }));
+    expect(view.slotsLeft).toBe(6);
     expect(view.isFull).toBe(false);
   });
 
-  it("is full when status is 'full', even if spotsLeft would be > 0", () => {
-    const view = toWaveView(row({ status: "full", capacity: 12, booked: 3 }));
+  it("is full when status is 'full', even if slotsLeft would be > 0", () => {
+    const view = toWaveView(row({ status: "full", total_wave_slots: 10, wave_slots_used: 3 }));
     expect(view.isFull).toBe(true);
   });
 
-  it("is full when booked reaches capacity, regardless of status", () => {
-    const view = toWaveView(row({ status: "confirmed", capacity: 12, booked: 12 }));
+  it("is full when wave_slots_used reaches total_wave_slots, regardless of status", () => {
+    const view = toWaveView(row({ status: "confirmed", total_wave_slots: 10, wave_slots_used: 10 }));
     expect(view.isFull).toBe(true);
-    expect(view.spotsLeft).toBe(0);
+    expect(view.slotsLeft).toBe(0);
   });
 
-  it("never reports negative spots left if overbooked", () => {
-    const view = toWaveView(row({ capacity: 12, booked: 15 }));
-    expect(view.spotsLeft).toBe(0);
+  it("never reports negative slots left if overbooked", () => {
+    const view = toWaveView(row({ total_wave_slots: 10, wave_slots_used: 12 }));
+    expect(view.slotsLeft).toBe(0);
   });
 
   it("shows the provisional label instead of a time for provisional waves", () => {
@@ -57,10 +58,10 @@ describe("toWaveView", () => {
     expect(view.timeLabel).toBe("14:30");
   });
 
-  it("flags low availability at 2 spots or fewer, but not when full", () => {
-    expect(toWaveView(row({ capacity: 12, booked: 10 })).isLowAvailability).toBe(true); // 2 left
-    expect(toWaveView(row({ capacity: 12, booked: 9 })).isLowAvailability).toBe(false); // 3 left
-    expect(toWaveView(row({ capacity: 12, booked: 12 })).isLowAvailability).toBe(false); // full, not "low"
+  it("flags low availability at 1 wave-slot left, but not when full", () => {
+    expect(toWaveView(row({ total_wave_slots: 3, wave_slots_used: 2 })).isLowAvailability).toBe(true); // 1 left
+    expect(toWaveView(row({ total_wave_slots: 3, wave_slots_used: 1 })).isLowAvailability).toBe(false); // 2 left
+    expect(toWaveView(row({ total_wave_slots: 3, wave_slots_used: 3 })).isLowAvailability).toBe(false); // full, not "low"
   });
 });
 
@@ -102,25 +103,69 @@ describe("groupByMonth", () => {
   });
 });
 
-describe("summarizeWavesByDay + busynessForDay", () => {
-  it("aggregates spotsLeft/capacity across a day's waves", () => {
+describe("groupByHour", () => {
+  it("groups the four quarter-hour start times under their containing hour", () => {
     const views = [
-      toWaveView(row({ id: "a", date: "2026-09-05", capacity: 5, booked: 0 })),
-      toWaveView(row({ id: "b", date: "2026-09-05", capacity: 5, booked: 5, status: "confirmed" })),
+      toWaveView(row({ id: "a", start_time: "16:00:00", total_wave_slots: 3, wave_slots_used: 0 })),
+      toWaveView(row({ id: "b", start_time: "16:15:00", total_wave_slots: 2, wave_slots_used: 0 })),
+      toWaveView(row({ id: "c", start_time: "16:30:00", total_wave_slots: 3, wave_slots_used: 0 })),
+      toWaveView(row({ id: "d", start_time: "16:45:00", total_wave_slots: 2, wave_slots_used: 0 })),
+      toWaveView(row({ id: "e", start_time: "17:00:00", total_wave_slots: 3, wave_slots_used: 0 })),
+    ];
+    const groups = groupByHour(views);
+    expect(groups).toHaveLength(2);
+    expect(groups[0].hour).toBe("16:00");
+    expect(groups[0].waves.map((w) => w.id)).toEqual(["a", "b", "c", "d"]);
+    expect(groups[0].slotsLeft).toBe(10); // 3+2+3+2
+    expect(groups[0].totalWaveSlots).toBe(10);
+    expect(groups[1].hour).toBe("17:00");
+    expect(groups[1].waves.map((w) => w.id)).toEqual(["e"]);
+  });
+
+  it("is full only when every start time in the hour is full", () => {
+    const partiallyFull = groupByHour([
+      toWaveView(row({ id: "a", start_time: "16:00:00", total_wave_slots: 3, wave_slots_used: 3 })), // full
+      toWaveView(row({ id: "b", start_time: "16:15:00", total_wave_slots: 2, wave_slots_used: 0 })),
+    ]);
+    expect(partiallyFull[0].isFull).toBe(false);
+    expect(partiallyFull[0].slotsLeft).toBe(2); // the full one contributes 0
+
+    const fullyFull = groupByHour([
+      toWaveView(row({ id: "a", start_time: "16:00:00", total_wave_slots: 3, wave_slots_used: 3 })),
+      toWaveView(row({ id: "b", start_time: "16:15:00", total_wave_slots: 2, wave_slots_used: 2 })),
+    ]);
+    expect(fullyFull[0].isFull).toBe(true);
+  });
+
+  it("keeps different dates in separate hour groups", () => {
+    const groups = groupByHour([
+      toWaveView(row({ id: "a", date: "2026-09-30", start_time: "16:00:00" })),
+      toWaveView(row({ id: "b", date: "2026-10-01", start_time: "16:00:00" })),
+    ]);
+    expect(groups).toHaveLength(2);
+    expect(groups.map((g) => g.date)).toEqual(["2026-09-30", "2026-10-01"]);
+  });
+});
+
+describe("summarizeWavesByDay + busynessForDay", () => {
+  it("aggregates slotsLeft/totalWaveSlots across a day's waves", () => {
+    const views = [
+      toWaveView(row({ id: "a", date: "2026-09-05", total_wave_slots: 5, wave_slots_used: 0 })),
+      toWaveView(row({ id: "b", date: "2026-09-05", total_wave_slots: 5, wave_slots_used: 5, status: "confirmed" })),
     ];
     const byDay = summarizeWavesByDay(views);
     const summary = byDay.get("2026-09-05");
-    expect(summary).toEqual({ date: "2026-09-05", waveCount: 2, spotsLeft: 5, capacity: 10 });
+    expect(summary).toEqual({ date: "2026-09-05", waveCount: 2, slotsLeft: 5, totalWaveSlots: 10 });
   });
 
-  it("is 'none' for a day with no waves, 'full' when no spots left", () => {
+  it("is 'none' for a day with no waves, 'full' when no slots left", () => {
     expect(busynessForDay(undefined)).toBe("none");
-    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 0, capacity: 5 })).toBe("full");
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, slotsLeft: 0, totalWaveSlots: 5 })).toBe("full");
   });
 
-  it("is 'busy' at or below the 30% spots-left ratio, 'quiet' above it", () => {
-    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 1, capacity: 5 })).toBe("busy"); // 20%
-    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, spotsLeft: 3, capacity: 5 })).toBe("quiet"); // 60%
+  it("is 'busy' at or below the 30% slots-left ratio, 'quiet' above it", () => {
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, slotsLeft: 1, totalWaveSlots: 5 })).toBe("busy"); // 20%
+    expect(busynessForDay({ date: "2026-09-05", waveCount: 1, slotsLeft: 3, totalWaveSlots: 5 })).toBe("quiet"); // 60%
   });
 });
 

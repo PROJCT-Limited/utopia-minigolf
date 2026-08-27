@@ -213,6 +213,18 @@
   flex-shrink: 0;
 }
 
+.hourGroup {
+  margin-bottom: 8px;
+}
+.hourGroupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 16px;
+  border-left: 2px solid var(--line);
+}
+
 .field {
   display: flex;
   flex-direction: column;

@@ -7,6 +7,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { toWaveView, type WaveRow, type WaveView } from "@/lib/booking/waves";
+import type { TicketType } from "@/lib/booking/pricing";
 
 export interface AdminWaveListItem extends WaveView {
   paidBookingCount: number;
@@ -15,7 +16,7 @@ export interface AdminWaveListItem extends WaveView {
 export async function listWavesForAdmin(): Promise<AdminWaveListItem[]> {
   const { data: waveRows, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, capacity, booked, status")
+    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -50,6 +51,7 @@ export interface AdminBookingRow {
   leadEmail: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   status: "pending" | "paid" | "cancelled";
   amountPaidCents: number;
   currency: string;
@@ -70,6 +72,7 @@ export interface AdminSessionRow {
   shareToken: string;
   maxPlayers: number;
   status: "open" | "full";
+  ticketType: TicketType;
   participants: AdminSessionParticipantRow[];
 }
 
@@ -82,7 +85,7 @@ export interface AdminWaveDetail {
 export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDetail | null> {
   const { data: waveRow, error: waveError } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, capacity, booked, status")
+    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
     .eq("id", waveId)
     .maybeSingle();
 
@@ -90,7 +93,7 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
 
   const { data: bookingRows, error: bookingsError } = await supabaseAdmin
     .from("bookings")
-    .select("id, lead_name, lead_email, party_type, headcount, status, amount_paid_cents, currency")
+    .select("id, lead_name, lead_email, party_type, headcount, ticket_type, status, amount_paid_cents, currency")
     .eq("wave_id", waveId)
     .order("created_at", { ascending: true });
 
@@ -104,6 +107,7 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     leadEmail: b.lead_email,
     partyType: b.party_type,
     headcount: b.headcount,
+    ticketType: b.ticket_type,
     status: b.status,
     amountPaidCents: b.amount_paid_cents,
     currency: b.currency,
@@ -112,7 +116,7 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
   const { data: sessionRows, error: sessionsError } = await supabaseAdmin
     .from("sessions")
     .select(
-      "id, share_token, max_players, status, session_participants(id, name, email, status, amount_paid_cents, currency, is_host)"
+      "id, share_token, max_players, status, ticket_type, session_participants(id, name, email, status, amount_paid_cents, currency, is_host)"
     )
     .eq("wave_id", waveId)
     .order("created_at", { ascending: true });
@@ -126,6 +130,7 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     shareToken: s.share_token,
     maxPlayers: s.max_players,
     status: s.status,
+    ticketType: s.ticket_type,
     participants: (s.session_participants ?? []).map((p) => ({
       id: p.id,
       name: p.name,

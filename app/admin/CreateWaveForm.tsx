@@ -37,8 +37,8 @@ export function CreateWaveForm() {
         <input id="startTime" name="startTime" type="time" required />
       </div>
       <div className={styles.field}>
-        <label htmlFor="capacity">Capacity</label>
-        <input id="capacity" name="capacity" type="number" min={1} defaultValue={5} required />
+        <label htmlFor="totalWaveSlots">Total wave-slots</label>
+        <input id="totalWaveSlots" name="totalWaveSlots" type="number" min={1} defaultValue={3} required />
       </div>
       <div className={styles.field}>
         <label htmlFor="status">Status</label>

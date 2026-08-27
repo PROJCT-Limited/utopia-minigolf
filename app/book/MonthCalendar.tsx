@@ -6,10 +6,11 @@ import {
   busynessForDay,
   monthGridDays,
   shiftMonthKey,
+  groupByHour,
   type WaveView,
 } from "@/lib/booking/waves";
 import { formatMonthLabel } from "../utils/formatWave";
-import { WaveRow } from "./WaveRow";
+import { HourGroupRow } from "./HourGroupRow";
 import styles from "./book.module.css";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -35,11 +36,8 @@ export function MonthCalendar({
 
   const daySummaries = useMemo(() => summarizeWavesByDay(waves), [waves]);
   const gridDays = useMemo(() => monthGridDays(viewMonth), [viewMonth]);
-  const dayWaves = useMemo(
-    () =>
-      selectedDate
-        ? waves.filter((w) => w.date === selectedDate).sort((a, b) => a.startTime.localeCompare(b.startTime))
-        : [],
+  const dayHourGroups = useMemo(
+    () => (selectedDate ? groupByHour(waves.filter((w) => w.date === selectedDate)) : []),
     [waves, selectedDate]
   );
 
@@ -83,17 +81,17 @@ export function MonthCalendar({
 
       {selectedDate && (
         <div className={styles.waveList} style={{ marginTop: 16 }}>
-          {dayWaves.length === 0 ? (
+          {dayHourGroups.length === 0 ? (
             <p className="hint">No slots that day.</p>
           ) : (
-            dayWaves.map((w) => (
-              <WaveRow
-                key={w.id}
-                wave={w}
-                selected={selectedWaveId === w.id}
+            dayHourGroups.map((hourGroup) => (
+              <HourGroupRow
+                key={hourGroup.key}
+                hourGroup={hourGroup}
+                selectedWaveId={selectedWaveId}
                 onSelect={onSelect}
                 showDate={false}
-                taken={takenWaveIds?.has(w.id) ?? false}
+                takenWaveIds={takenWaveIds}
               />
             ))
           )}

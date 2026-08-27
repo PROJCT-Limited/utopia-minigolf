@@ -8,6 +8,7 @@ import type { SessionForManage } from "@/lib/sessions/sessionsRepo";
 import { rescheduleBookingAction } from "@/lib/booking/rescheduleAction";
 import { formatWaveDate } from "../../utils/formatWave";
 import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
 import confirmationStyles from "../../confirmation.module.css";
 import bookStyles from "../../book/book.module.css";
 
@@ -59,6 +60,10 @@ function SessionParticipantManageView({
         {participant.isHost ? "You're hosting this session." : "You're in."}
       </h1>
 
+      <div className={confirmationStyles.row}>
+        <span>Ticket</span>
+        <span>{TICKET_TYPE_LABELS[session.ticketType]}</span>
+      </div>
       <div className={confirmationStyles.row}>
         <span>Booked for</span>
         <span>{wave ? `${formatWaveDate(wave.date)}, ${wave.timeLabel}` : "To be confirmed"}</span>
@@ -125,6 +130,10 @@ function BookingManageView({ token, booking, currentWave, eligibleForReschedule,
       </h1>
 
       <div className={confirmationStyles.row}>
+        <span>Ticket</span>
+        <span>{TICKET_TYPE_LABELS[booking.ticketType]}</span>
+      </div>
+      <div className={confirmationStyles.row}>
         <span>Booked for</span>
         <span>
           {currentWave ? `${formatWaveDate(currentWave.date)}, ${currentWave.timeLabel}` : "To be confirmed"}
@@ -171,7 +180,7 @@ function BookingManageView({ token, booking, currentWave, eligibleForReschedule,
                       <div className="tm">{w.timeLabel}</div>
                     </div>
                     <span className={`st ${w.isLowAvailability ? "low" : ""}`}>
-                      {w.spotsLeft} spot{w.spotsLeft === 1 ? "" : "s"} left
+                      {w.slotsLeft} group{w.slotsLeft === 1 ? "" : "s"} left
                     </span>
                   </button>
                 </div>

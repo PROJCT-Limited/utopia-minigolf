@@ -3,22 +3,33 @@ import { describe, it, expect } from "vitest";
 import {
   computeBookingTotalCents,
   isValidHeadcount,
+  isValidTicketType,
   derivePartyTypeFromHeadcount,
-  PRICE_PER_PERSON_CENTS,
+  TICKET_PRICE_PER_PERSON_CENTS,
 } from "./pricing";
 
 describe("computeBookingTotalCents", () => {
-  it("charges HKD 160 per person", () => {
-    expect(PRICE_PER_PERSON_CENTS).toBe(16000);
-    expect(computeBookingTotalCents(1)).toBe(16000);
-    expect(computeBookingTotalCents(2)).toBe(32000);
-    expect(computeBookingTotalCents(5)).toBe(80000);
+  it("charges HKD 150 per person for standard", () => {
+    expect(TICKET_PRICE_PER_PERSON_CENTS.standard).toBe(15000);
+    expect(computeBookingTotalCents("standard", 1)).toBe(15000);
+    expect(computeBookingTotalCents("standard", 2)).toBe(30000);
+    expect(computeBookingTotalCents("standard", 5)).toBe(75000);
+  });
+
+  it("charges HKD 220 per person for unlimited", () => {
+    expect(TICKET_PRICE_PER_PERSON_CENTS.unlimited).toBe(22000);
+    expect(computeBookingTotalCents("unlimited", 1)).toBe(22000);
+    expect(computeBookingTotalCents("unlimited", 5)).toBe(110000);
   });
 
   it("rejects headcounts outside 1-5", () => {
-    expect(() => computeBookingTotalCents(0)).toThrow();
-    expect(() => computeBookingTotalCents(6)).toThrow();
-    expect(() => computeBookingTotalCents(1.5)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 0)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 6)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 1.5)).toThrow();
+  });
+
+  it("rejects invalid ticket types", () => {
+    expect(() => computeBookingTotalCents("premium" as never, 2)).toThrow();
   });
 });
 
@@ -32,6 +43,18 @@ describe("isValidHeadcount", () => {
     expect(isValidHeadcount(0)).toBe(false);
     expect(isValidHeadcount(6)).toBe(false);
     expect(isValidHeadcount(2.5)).toBe(false);
+  });
+});
+
+describe("isValidTicketType", () => {
+  it("accepts standard and unlimited", () => {
+    expect(isValidTicketType("standard")).toBe(true);
+    expect(isValidTicketType("unlimited")).toBe(true);
+  });
+
+  it("rejects anything else", () => {
+    expect(isValidTicketType("premium")).toBe(false);
+    expect(isValidTicketType("")).toBe(false);
   });
 });
 

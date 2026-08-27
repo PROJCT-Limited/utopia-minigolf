@@ -4,14 +4,17 @@ import { useState } from "react";
 import type { WaveView } from "@/lib/booking/waves";
 import {
   computeBookingTotalCents,
-  PRICE_PER_PERSON_CENTS,
+  TICKET_PRICE_PER_PERSON_CENTS,
+  TICKET_TYPE_LABELS,
   MIN_PRIVATE_GROUP_HEADCOUNT,
   MAX_PRIVATE_GROUP_HEADCOUNT,
+  type TicketType,
 } from "@/lib/booking/pricing";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import { WavePicker } from "./WavePicker";
+import { TicketTypeStep } from "./TicketTypeStep";
 import { PaymentStep } from "./PaymentStep";
 import { PublicSessionWizard } from "./PublicSessionWizard";
 import styles from "./book.module.css";
@@ -63,6 +66,7 @@ function BookingModePicker({ onSelect }: { onSelect: (mode: BookingMode) => void
 
 function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () => void }) {
   const [step, setStep] = useState(1);
+  const [ticketType, setTicketType] = useState<TicketType | null>(null);
   const [headcount, setHeadcount] = useState(1);
   const [selectedWaveId, setSelectedWaveId] = useState<string | null>(null);
   const [leadName, setLeadName] = useState("");
@@ -73,16 +77,18 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
 
   const selectedWave = waves.find((w) => w.id === selectedWaveId) ?? null;
 
-  const step1Valid = selectedWaveId !== null;
-  const step2Valid = leadName.trim().length > 0 && EMAIL_RE.test(leadEmail.trim());
+  const step1Valid = ticketType !== null;
+  const step2Valid = selectedWaveId !== null;
+  const step3Valid = leadName.trim().length > 0 && EMAIL_RE.test(leadEmail.trim());
 
   async function handlePay() {
-    if (!selectedWaveId) return;
+    if (!selectedWaveId || !ticketType) return;
     setSubmitting(true);
     setError(null);
 
     const result = await createBookingWithPaymentIntent({
       waveId: selectedWaveId,
+      ticketType,
       headcount,
       leadName,
       leadEmail,
@@ -99,7 +105,7 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
   return (
     <div className={styles.panel}>
       <div className={styles.steps}>
-        {[1, 2, 3].map((n) => (
+        {[1, 2, 3, 4].map((n) => (
           <div key={n} className={`${styles.stepdot} ${n < step ? styles.done : n === step ? styles.on : ""}`} />
         ))}
       </div>
@@ -108,17 +114,27 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
         {step === 1 && (
           <>
             <div className={styles.stepLabel}>
-              <span className="lbl">Step 1 of 3</span>
-              <h3>Pick a slot</h3>
+              <span className="lbl">Step 1 of 4</span>
+              <h3>Choose your ticket</h3>
             </div>
-            <WavePicker waves={waves} selectedWaveId={selectedWaveId} onSelect={setSelectedWaveId} />
+            <TicketTypeStep selected={ticketType} onSelect={setTicketType} />
           </>
         )}
 
         {step === 2 && (
           <>
             <div className={styles.stepLabel}>
-              <span className="lbl">Step 2 of 3</span>
+              <span className="lbl">Step 2 of 4</span>
+              <h3>Pick a slot</h3>
+            </div>
+            <WavePicker waves={waves} selectedWaveId={selectedWaveId} onSelect={setSelectedWaveId} />
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <div className={styles.stepLabel}>
+              <span className="lbl">Step 3 of 4</span>
               <h3>Your details</h3>
             </div>
 
@@ -156,16 +172,20 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
           </>
         )}
 
-        {step === 3 && !payment && (
+        {step === 4 && !payment && ticketType && (
           <>
             <div className={styles.stepLabel}>
-              <span className="lbl">Step 3 of 3</span>
+              <span className="lbl">Step 4 of 4</span>
               <h3>Review &amp; pay</h3>
             </div>
             <p className="notice" style={{ marginBottom: 16 }}>
               {selectedWave?.status === "provisional" && `${DATE_TBC_NOTICE} `}
               {RESCHEDULE_NOTICE}
             </p>
+            <div className={styles.summaryRow}>
+              <span>Ticket</span>
+              <span>{TICKET_TYPE_LABELS[ticketType]}</span>
+            </div>
             <div className={styles.summaryRow}>
               <span>Party</span>
               <span>
@@ -179,12 +199,12 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
             <div className={styles.summaryRow}>
               <span>Price</span>
               <span>
-                {formatMoney(PRICE_PER_PERSON_CENTS)} × {headcount}
+                {formatMoney(TICKET_PRICE_PER_PERSON_CENTS[ticketType])} × {headcount}
               </span>
             </div>
             <div className={styles.summaryRow}>
               <span className={styles.summaryTotal}>Total</span>
-              <span className={styles.summaryTotal}>{formatMoney(computeBookingTotalCents(headcount))}</span>
+              <span className={styles.summaryTotal}>{formatMoney(computeBookingTotalCents(ticketType, headcount))}</span>
             </div>
 
             <button type="button" className="btn btn-primary" style={{ width: "100%", marginTop: 18 }} onClick={handlePay} disabled={submitting}>
@@ -194,15 +214,15 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
           </>
         )}
 
-        {step === 3 && payment && (
+        {step === 4 && payment && ticketType && (
           <PaymentStep
             bookingId={payment.bookingId}
             clientSecret={payment.clientSecret}
-            amountLabel={formatMoney(computeBookingTotalCents(headcount))}
+            amountLabel={formatMoney(computeBookingTotalCents(ticketType, headcount))}
           />
         )}
 
-        {!(step === 3 && payment) && (
+        {!(step === 4 && payment) && (
           <div className={styles.footerNav}>
             <button
               type="button"
@@ -211,12 +231,12 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
             >
               Back
             </button>
-            {step < 3 && (
+            {step < 4 && (
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => setStep((s) => Math.min(3, s + 1))}
-                disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid)}
+                onClick={() => setStep((s) => Math.min(4, s + 1))}
+                disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid) || (step === 3 && !step3Valid)}
               >
                 Continue
               </button>

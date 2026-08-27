@@ -5,12 +5,20 @@
 // single place session_participants.status flips to 'paid'. Idempotent via
 // stripe_payment_intent_id being unique and the status guard below, mirroring
 // confirmBooking.ts's markBookingPaidByPaymentIntent.
+//
+// Wave-slot capacity is reserved exactly ONCE per session, on the HOST's own
+// payment confirmation (a session is one physical group departing together,
+// so its wave-slot claim happens when the group itself becomes real, not per
+// joiner). Non-host joiners only compete for the session's own max_players
+// headcount, never for wave-slot capacity.
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendHostSessionCreated, sendSessionParticipantJoined } from "@/lib/email/send";
 import { fetchSessionById, countPaidParticipants } from "./sessionsRepo";
 import { shouldSessionBecomeFull } from "./sessionCapacity";
+import { addWaveSlots } from "@/lib/booking/waveCapacity";
+import { fetchWaveById } from "@/lib/booking/wavesRepo";
 
 export async function markParticipantPaidByPaymentIntent(paymentIntentId: string): Promise<void> {
   const { data: participant, error } = await supabaseAdmin
@@ -39,24 +47,14 @@ export async function markParticipantPaidByPaymentIntent(paymentIntentId: string
 
   const session = await fetchSessionById(participant.session_id);
   if (session) {
-    const { data: wave } = await supabaseAdmin
-      .from("waves")
-      .select("id, capacity, booked")
-      .eq("id", session.wave_id)
-      .maybeSingle();
-
-    let waveIsFull = false;
-    if (wave) {
-      const newBooked = Math.min(wave.capacity, wave.booked + 1);
-      waveIsFull = newBooked >= wave.capacity;
-      await supabaseAdmin
-        .from("waves")
-        .update({ booked: newBooked, status: waveIsFull ? "full" : undefined })
-        .eq("id", wave.id);
+    if (participant.is_host) {
+      // One session = one group = one slot, regardless of ticket type.
+      await addWaveSlots(session.wave_id, 1);
     }
 
+    const wave = await fetchWaveById(session.wave_id);
     const paidCount = await countPaidParticipants(session.id);
-    if (session.status === "open" && shouldSessionBecomeFull({ paidCount, maxPlayers: session.max_players, waveIsFull })) {
+    if (session.status === "open" && shouldSessionBecomeFull({ paidCount, maxPlayers: session.max_players, waveIsFull: wave?.isFull ?? false })) {
       await supabaseAdmin.from("sessions").update({ status: "full", updated_at: new Date().toISOString() }).eq("id", session.id);
     }
   }

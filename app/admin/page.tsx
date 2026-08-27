@@ -17,6 +17,9 @@ export default async function AdminPage() {
           <span className="lbl">UTOPIA Admin</span>
           <h1 className={styles.title}>Slots</h1>
         </div>
+        <Link href="/admin/partners" className="hint">
+          Partners →
+        </Link>
       </div>
 
       <div className={styles.card}>
@@ -31,7 +34,7 @@ export default async function AdminPage() {
               <th>Date</th>
               <th>Time</th>
               <th>Status</th>
-              <th>Capacity</th>
+              <th>Wave-slots</th>
               <th>Paid bookings</th>
               <th></th>
             </tr>
@@ -45,7 +48,7 @@ export default async function AdminPage() {
                   <span className={`${styles.badge} ${styles[w.status] ?? ""}`}>{w.status}</span>
                 </td>
                 <td>
-                  {w.booked} / {w.capacity}
+                  {w.waveSlotsUsed} / {w.totalWaveSlots}
                 </td>
                 <td>{w.paidBookingCount}</td>
                 <td>

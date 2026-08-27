@@ -9,6 +9,8 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "./wavesRepo";
 import type { WaveView } from "./waves";
+import type { TicketType } from "./pricing";
+import { hasWaveSlotsAvailable, addWaveSlots, releaseWaveSlots } from "./waveCapacity";
 import { RESCHEDULE_CUTOFF_DAYS } from "./copy";
 import { sendBookingRescheduled } from "@/lib/email/send";
 
@@ -19,6 +21,7 @@ export interface BookingForManage {
   leadEmail: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   status: "pending" | "paid" | "cancelled";
   rescheduleUsed: boolean;
 }
@@ -26,7 +29,7 @@ export interface BookingForManage {
 export async function fetchBookingByManageToken(token: string): Promise<BookingForManage | null> {
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("id, wave_id, lead_name, lead_email, party_type, headcount, status, reschedule_used")
+    .select("id, wave_id, lead_name, lead_email, party_type, headcount, ticket_type, status, reschedule_used")
     .eq("manage_token", token)
     .maybeSingle();
 
@@ -39,6 +42,7 @@ export async function fetchBookingByManageToken(token: string): Promise<BookingF
     leadEmail: data.lead_email,
     partyType: data.party_type,
     headcount: data.headcount,
+    ticketType: data.ticket_type,
     status: data.status,
     rescheduleUsed: data.reschedule_used,
   };
@@ -69,7 +73,8 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
 
   const newWave = await fetchWaveById(newWaveId);
   if (!newWave) return { ok: false, error: "That slot no longer exists." };
-  if (newWave.isFull || newWave.spotsLeft < booking.headcount) {
+  // One booking = one group = one slot, regardless of ticket type.
+  if (!hasWaveSlotsAvailable(newWave, 1)) {
     return { ok: false, error: "Not enough spots left in that slot." };
   }
   if (isPastRescheduleCutoff(newWave)) {
@@ -85,29 +90,14 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
     return { ok: false, error: "Couldn't reschedule. Please try again." };
   }
 
-  // Move the headcount off the old wave and onto the new one. Small accepted
+  // Move the wave-slots off the old wave and onto the new one. Small accepted
   // race (same tolerance as the rest of this codebase's capacity bookkeeping):
   // two simultaneous reschedules could both read stale counts, worth it to
   // avoid a DB function for a single-operator, low-volume booking flow.
   if (currentWave) {
-    const releasedBooked = Math.max(0, currentWave.booked - booking.headcount);
-    await supabaseAdmin
-      .from("waves")
-      .update({
-        booked: releasedBooked,
-        status: currentWave.status === "full" ? "confirmed" : currentWave.status,
-      })
-      .eq("id", currentWave.id);
+    await releaseWaveSlots(currentWave.id, 1);
   }
-
-  const newBooked = newWave.booked + booking.headcount;
-  await supabaseAdmin
-    .from("waves")
-    .update({
-      booked: newBooked,
-      status: newBooked >= newWave.capacity ? "full" : newWave.status,
-    })
-    .eq("id", newWave.id);
+  await addWaveSlots(newWave.id, 1);
 
   await sendBookingRescheduled(booking.id);
 

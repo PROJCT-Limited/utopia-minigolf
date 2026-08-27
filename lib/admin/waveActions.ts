@@ -1,8 +1,8 @@
 // FILE: lib/admin/waveActions.ts
 // -----------------------------------------------------------------------------
 // Server actions behind the admin wave-detail form: flip provisional →
-// confirmed and set the real date/time/capacity — the one place this brief's
-// "no code change needed" promise gets exercised. Auth is enforced by
+// confirmed and set the real date/time/wave-slot total — the one place this
+// brief's "no code change needed" promise gets exercised. Auth is enforced by
 // proxy.ts on every /admin/* and /api/admin/* request before these ever run;
 // still worth remembering per the Next.js Data Security guide that Server
 // Functions bypass a proxy matcher that excludes their route, so if this file
@@ -22,18 +22,18 @@ export async function updateWaveAction(waveId: string, formData: FormData): Prom
   const status = String(formData.get("status") ?? "");
   const date = String(formData.get("date") ?? "");
   const startTime = String(formData.get("startTime") ?? "");
-  const capacity = Number(formData.get("capacity"));
+  const totalWaveSlots = Number(formData.get("totalWaveSlots"));
 
   if (!["provisional", "confirmed", "full"].includes(status)) {
     return { ok: false, error: "Invalid status." };
   }
-  if (!date || !startTime || !Number.isInteger(capacity) || capacity < 1) {
-    return { ok: false, error: "Date, time, and a valid capacity are required." };
+  if (!date || !startTime || !Number.isInteger(totalWaveSlots) || totalWaveSlots < 1) {
+    return { ok: false, error: "Date, time, and a valid wave-slot total are required." };
   }
 
   const { error } = await supabaseAdmin
     .from("waves")
-    .update({ status, date, start_time: startTime, capacity })
+    .update({ status, date, start_time: startTime, total_wave_slots: totalWaveSlots })
     .eq("id", waveId);
 
   if (error) {
@@ -49,17 +49,18 @@ export async function updateWaveAction(waveId: string, formData: FormData): Prom
 export async function createWaveAction(formData: FormData): Promise<UpdateWaveResult> {
   const date = String(formData.get("date") ?? "");
   const startTime = String(formData.get("startTime") ?? "");
-  const capacity = Number(formData.get("capacity"));
+  const totalWaveSlots = Number(formData.get("totalWaveSlots"));
   const status = String(formData.get("status") ?? "provisional");
 
-  if (!date || !startTime || !Number.isInteger(capacity) || capacity < 1) {
-    return { ok: false, error: "Date, time, and a valid capacity are required." };
+  if (!date || !startTime || !Number.isInteger(totalWaveSlots) || totalWaveSlots < 1) {
+    return { ok: false, error: "Date, time, and a valid wave-slot total are required." };
   }
 
   const { error } = await supabaseAdmin.from("waves").insert({
     date,
     start_time: startTime,
-    capacity,
+    total_wave_slots: totalWaveSlots,
+    wave_slots_used: 0,
     status: ["provisional", "confirmed", "full"].includes(status) ? status : "provisional",
   });
 

@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { TicketType } from "@/lib/booking/pricing";
 
 export interface SessionRow {
   id: string;
@@ -13,6 +14,7 @@ export interface SessionRow {
   max_players: number;
   share_token: string;
   status: "open" | "full";
+  ticket_type: TicketType;
 }
 
 export interface SessionParticipantRow {
@@ -33,11 +35,12 @@ export interface SessionForView {
   maxPlayers: number;
   status: "open" | "full";
   shareToken: string;
+  ticketType: TicketType;
   paidCount: number;
   paidParticipantNames: string[];
 }
 
-const SESSION_COLUMNS = "id, wave_id, max_players, share_token, status";
+const SESSION_COLUMNS = "id, wave_id, max_players, share_token, status, ticket_type";
 
 // A wave can have at most one public session (open or full) — starting a
 // second one on the same wave would mean two unrelated share links both
@@ -83,6 +86,7 @@ export async function fetchSessionByShareToken(shareToken: string): Promise<Sess
     maxPlayers: session.max_players,
     status: session.status,
     shareToken: session.share_token,
+    ticketType: session.ticket_type,
     paidCount: paidRows?.length ?? 0,
     paidParticipantNames: toParticipantNames(paidRows ?? []),
   };
@@ -177,6 +181,7 @@ export async function fetchSessionByParticipantManageToken(token: string): Promi
       maxPlayers: sessionRow.max_players,
       status: sessionRow.status,
       shareToken: sessionRow.share_token,
+      ticketType: sessionRow.ticket_type,
       paidCount: paidRows?.length ?? 0,
       paidParticipantNames: toParticipantNames(paidRows ?? []),
     },

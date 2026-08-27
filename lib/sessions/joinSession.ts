@@ -3,16 +3,22 @@
 // Server action behind the /session/[token] "Join & pay" form: re-validates
 // the session is still joinable against the server's own view (never trusts
 // the client), creates the joiner's participant row, and opens a Stripe
-// PaymentIntent for their own single place. Same accepted-race tolerance as
-// the rest of this codebase's capacity bookkeeping (see wavesRepo/reschedule)
-// — two people racing to fill the last spot could both slip through, worth
-// it to avoid a DB function for a single-operator, low-volume flow.
+// PaymentIntent for their own single place, priced at the session's own
+// ticket type (set once by the host — see createSession.ts). Same accepted-
+// race tolerance as the rest of this codebase's capacity bookkeeping (see
+// wavesRepo/reschedule) — two people racing to fill the last spot could both
+// slip through, worth it to avoid a DB function for a single-operator,
+// low-volume flow.
+//
+// Wave-slot capacity for the session was already reserved once, when the
+// host's payment confirmed (see confirmSession.ts) — a joiner only competes
+// for the session's own max_players headcount, not wave-slot capacity.
 // -----------------------------------------------------------------------------
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe/server";
-import { PRICE_PER_PERSON_CENTS, CURRENCY } from "@/lib/booking/pricing";
+import { TICKET_PRICE_PER_PERSON_CENTS, CURRENCY } from "@/lib/booking/pricing";
 import { generateManageToken } from "@/lib/booking/token";
 import { fetchWaveById } from "@/lib/booking/wavesRepo";
 import { fetchSessionByShareToken, countPaidParticipants } from "./sessionsRepo";
@@ -45,10 +51,8 @@ export async function joinSessionWithPaymentIntent(input: JoinSessionInput): Pro
   if (!isSessionJoinable({ status: session.status, paidCount, maxPlayers: session.maxPlayers, waveIsFull: wave.isFull })) {
     return { ok: false, error: "This session is full." };
   }
-  if (wave.spotsLeft < 1) {
-    return { ok: false, error: "Not enough spots left in that slot." };
-  }
 
+  const amountCents = TICKET_PRICE_PER_PERSON_CENTS[session.ticketType];
   const manageToken = generateManageToken();
   const { data: participant, error: insertError } = await supabaseAdmin
     .from("session_participants")
@@ -56,7 +60,7 @@ export async function joinSessionWithPaymentIntent(input: JoinSessionInput): Pro
       session_id: session.id,
       name: name.trim(),
       email: email.trim(),
-      amount_paid_cents: PRICE_PER_PERSON_CENTS,
+      amount_paid_cents: amountCents,
       currency: CURRENCY,
       status: "pending",
       manage_token: manageToken,
@@ -73,7 +77,7 @@ export async function joinSessionWithPaymentIntent(input: JoinSessionInput): Pro
   let paymentIntent;
   try {
     paymentIntent = await stripe.paymentIntents.create({
-      amount: PRICE_PER_PERSON_CENTS,
+      amount: amountCents,
       currency: CURRENCY,
       metadata: { session_participant_id: participant.id, session_id: session.id },
       automatic_payment_methods: { enabled: true },

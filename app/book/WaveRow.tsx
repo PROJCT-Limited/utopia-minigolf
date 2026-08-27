@@ -33,7 +33,7 @@ export function WaveRow({
           <div className="tm">{wave.timeLabel}</div>
         </div>
         <span className={`st ${wave.isLowAvailability ? "low" : ""}`}>
-          {taken ? "Taken" : wave.isFull ? "Full" : `${wave.spotsLeft} spot${wave.spotsLeft === 1 ? "" : "s"} left`}
+          {taken ? "Taken" : wave.isFull ? "Full" : `${wave.slotsLeft} group${wave.slotsLeft === 1 ? "" : "s"} left`}
         </span>
       </button>
     </div>

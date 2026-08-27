@@ -8,11 +8,12 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingConfirmation } from "@/lib/email/send";
+import { addWaveSlots } from "./waveCapacity";
 
 export async function markBookingPaidByPaymentIntent(paymentIntentId: string): Promise<void> {
   const { data: booking, error } = await supabaseAdmin
     .from("bookings")
-    .select("id, wave_id, headcount, status")
+    .select("id, wave_id, status")
     .eq("stripe_payment_intent_id", paymentIntentId)
     .maybeSingle();
 
@@ -34,19 +35,7 @@ export async function markBookingPaidByPaymentIntent(paymentIntentId: string): P
     return;
   }
 
-  const { data: wave } = await supabaseAdmin
-    .from("waves")
-    .select("id, capacity, booked")
-    .eq("id", booking.wave_id)
-    .maybeSingle();
-
-  if (wave) {
-    const newBooked = Math.min(wave.capacity, wave.booked + booking.headcount);
-    await supabaseAdmin
-      .from("waves")
-      .update({ booked: newBooked, status: newBooked >= wave.capacity ? "full" : undefined })
-      .eq("id", wave.id);
-  }
-
+  // One booking = one group = one slot, regardless of ticket type.
+  await addWaveSlots(booking.wave_id, 1);
   await sendBookingConfirmation(booking.id);
 }

@@ -16,9 +16,10 @@ export default function TermsPage() {
 
           <h2>Bookings &amp; payment</h2>
           <p>
-            A UTOPIA reservation costs HKD 160 per person, charged in full at the time of booking. This covers 30
-            minutes of play across all five stations plus one drink. No card details are stored by UTOPIA, payment
-            is processed securely by Stripe.
+            A UTOPIA reservation is charged in full, per person, at the time of booking. Standard tickets (HKD 150)
+            cover one 30-minute run across all five stations plus one drink; Unlimited tickets (HKD 220) cover the
+            full hour with re-entry and bottomless drinks. No card details are stored by UTOPIA, payment is
+            processed securely by Stripe.
           </p>
 
           <h2>Dates are provisional</h2>

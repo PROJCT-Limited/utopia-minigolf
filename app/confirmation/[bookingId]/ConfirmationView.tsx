@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "../../utils/formatWave";
 import styles from "../../confirmation.module.css";
 
@@ -10,6 +11,7 @@ interface BookingForView {
   leadName: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   amountPaidCents: number;
   currency: string;
   waveDate: string;
@@ -89,6 +91,10 @@ export function ConfirmationView({
       <span className="lbl">Booking confirmed</span>
       <h1 className={styles.title}>You&rsquo;re in, {firstName}.</h1>
 
+      <div className={styles.row}>
+        <span>Ticket</span>
+        <span>{TICKET_TYPE_LABELS[initialBooking.ticketType]}</span>
+      </div>
       <div className={styles.row}>
         <span>Party</span>
         <span>

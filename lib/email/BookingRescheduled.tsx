@@ -13,12 +13,14 @@ import { EmailShell } from "./components/EmailShell";
 import { EmailButton } from "./components/EmailButton";
 import { colors, bodyFontStack, displayFontStack } from "./components/theme";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
+import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
 export interface BookingRescheduledEmailProps {
   leadName: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   manageUrl: string;
   newWaveDate: string;
   newWaveTimeLabel: string;
@@ -55,6 +57,7 @@ export function BookingRescheduledEmail({
   leadName,
   partyType,
   headcount,
+  ticketType,
   manageUrl,
   newWaveDate,
   newWaveTimeLabel,
@@ -72,6 +75,11 @@ export function BookingRescheduledEmail({
         {headcount === 1 ? "player" : "players"}.
       </Text>
 
+      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
+      <Text style={{ ...bodyText, margin: "0 0 4px" }}>
+        <strong>Ticket</strong>
+      </Text>
+      <Text style={{ ...bigNumber, margin: "0 0 20px" }}>{TICKET_TYPE_LABELS[ticketType]}</Text>
       <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
       <Text style={{ ...bodyText, margin: "0 0 4px" }}>
         <strong>New date</strong>

@@ -6,13 +6,14 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { BOOKING_OPENS_ON, toWaveView, type WaveRow, type WaveView } from "./waves";
+import { BOOKABLE_WINDOW_START, BOOKABLE_WINDOW_END, toWaveView, type WaveRow, type WaveView } from "./waves";
 
 export async function fetchUpcomingWaves(): Promise<WaveView[]> {
   const { data, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, capacity, booked, status")
-    .gte("date", BOOKING_OPENS_ON) // nothing before the club opens is bookable, blind or otherwise
+    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
+    .gte("date", BOOKABLE_WINDOW_START) // nothing outside the open booking window is bookable
+    .lte("date", BOOKABLE_WINDOW_END)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -27,7 +28,7 @@ export async function fetchUpcomingWaves(): Promise<WaveView[]> {
 export async function fetchWaveById(waveId: string): Promise<WaveView | null> {
   const { data, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, capacity, booked, status")
+    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
     .eq("id", waveId)
     .maybeSingle();
 

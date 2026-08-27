@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchWaveAdminDetail } from "@/lib/admin/waves";
+import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
 import { AdminWaveForm } from "./AdminWaveForm";
 import styles from "../../admin.module.css";
 
@@ -42,6 +43,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
           <thead>
             <tr>
               <th>Lead</th>
+              <th>Ticket</th>
               <th>Party</th>
               <th>Status</th>
               <th>Paid</th>
@@ -55,6 +57,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                   <br />
                   <span className="hint">{b.leadEmail}</span>
                 </td>
+                <td>{TICKET_TYPE_LABELS[b.ticketType]}</td>
                 <td>
                   {b.partyType}, {b.headcount}
                 </td>
@@ -66,7 +69,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
             ))}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={4}>No bookings yet.</td>
+                <td colSpan={5}>No bookings yet.</td>
               </tr>
             )}
           </tbody>
@@ -80,6 +83,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
           <div key={s.id} style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
               <span className={styles.badge}>{s.status}</span>
+              <span className="hint">{TICKET_TYPE_LABELS[s.ticketType]}</span>
               <span className="hint">
                 {s.participants.filter((p) => p.status === "paid").length} of {s.maxPlayers} filled
               </span>

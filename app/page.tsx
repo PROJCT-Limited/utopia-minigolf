@@ -4,7 +4,12 @@ import { Leaderboard } from "./components/Leaderboard";
 import { NotifyMeForm } from "./components/NotifyMeForm";
 import { SiteFooter } from "./components/SiteFooter";
 import { Reveal, StaggerGroup, StaggerItem } from "./components/ScrollReveal";
+import { TICKET_PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
 import styles from "./page.module.css";
+
+function formatMoney(cents: number): string {
+  return `HKD ${(cents / 100).toFixed(0)}`;
+}
 
 const ADDITIONAL_ELEMENTS = [
   {
@@ -100,9 +105,8 @@ export default function HomePage() {
                   Reserve your place <span className="btn-icon">→</span>
                 </Link>
                 <div className={styles.meta}>
-                  <span className={styles.earlyBird}>Early bird price</span>
                   from
-                  <b>HKD 160</b>
+                  <b>{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.standard)}</b>
                 </div>
               </StaggerItem>
             </StaggerGroup>
@@ -210,32 +214,41 @@ export default function HomePage() {
           <Reveal>
             <div className="sechead">
               <div>
-                <span className="lbl">The ticket</span>
+                <span className="lbl">Two ways to play</span>
                 <h2>
-                  Everything <em>included</em>
+                  Pick your <em>pace</em>
                 </h2>
               </div>
             </div>
           </Reveal>
           <StaggerGroup className="pricegrid">
             <StaggerItem className="pcard">
-              <h3>What&rsquo;s in the round</h3>
+              <h3>What&rsquo;s always included</h3>
               <ul>
-                <li>All 5 stations, 30 minutes of play</li>
-                <li>One drink at the bar</li>
                 <li>Automatic scoring, no scorecards</li>
                 <li>Shoe matching at check-in</li>
                 <li>Live leaderboard</li>
                 <li>Come solo — we&rsquo;ll pair you with a team</li>
               </ul>
             </StaggerItem>
-            <StaggerItem className={`pcard blue ${styles.pcardRibbonHost}`}>
-              <span className={styles.earlyBirdRibbon}>Early bird price</span>
+            <StaggerItem className="pcard blue">
               <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
-                Per person
+                Standard, per person
               </div>
-              <div className="big">HKD 160</div>
-              <div className="small">30 minutes, 5 stations + 1 drink</div>
+              <div className="big">{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.standard)}</div>
+              <div className="small">One 30-minute run, all 5 stations + 1 drink</div>
+              <div className="cta">
+                <Link href="/book" className="btn btn-light" style={{ width: "100%" }}>
+                  Reserve your place <span className="btn-icon">→</span>
+                </Link>
+              </div>
+            </StaggerItem>
+            <StaggerItem className="pcard blue">
+              <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
+                Unlimited, per person
+              </div>
+              <div className="big">{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.unlimited)}</div>
+              <div className="small">Play the full hour, re-entry included + bottomless drinks</div>
               <div className="cta">
                 <Link href="/book" className="btn btn-light" style={{ width: "100%" }}>
                   Reserve your place <span className="btn-icon">→</span>
@@ -252,7 +265,7 @@ export default function HomePage() {
           <StaggerGroup className={styles.teaserSplit}>
             <StaggerItem className={styles.teaserCard}>
               <h2>Ready to play?</h2>
-              <p>Pick a slot and reserve your place — every round starts on the hour, 12pm to 10pm.</p>
+              <p>Pick a slot and reserve your place — groups head out every 15 minutes, 4pm to 10pm.</p>
               <Link href="/book" className="btn btn-light" style={{ alignSelf: "flex-start" }}>
                 Reserve your place <span className="btn-icon">→</span>
               </Link>

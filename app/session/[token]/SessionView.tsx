@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import type { WaveView } from "@/lib/booking/waves";
 import type { SessionForView } from "@/lib/sessions/sessionsRepo";
-import { PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
+import { TICKET_PRICE_PER_PERSON_CENTS, TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
 import { DATE_TBC_NOTICE, PUBLIC_SESSION_EXPLAINER, SESSION_FULL_NOTICE } from "@/lib/booking/copy";
 import { joinSessionWithPaymentIntent } from "@/lib/sessions/joinSession";
 import { isSessionJoinable } from "@/lib/sessions/sessionCapacity";
@@ -97,6 +97,10 @@ export function SessionView({
       </p>
 
       <div className={confirmationStyles.row}>
+        <span>Ticket</span>
+        <span>{TICKET_TYPE_LABELS[session.ticketType]}</span>
+      </div>
+      <div className={confirmationStyles.row}>
         <span>Spots filled</span>
         <span>
           {session.paidCount} of {session.maxPlayers}
@@ -116,7 +120,7 @@ export function SessionView({
       {!canJoin ? (
         <p style={{ marginTop: 20, fontSize: 14, color: "var(--ink-2)" }}>{SESSION_FULL_NOTICE}</p>
       ) : (
-        <JoinForm shareToken={shareToken} />
+        <JoinForm shareToken={shareToken} priceCents={TICKET_PRICE_PER_PERSON_CENTS[session.ticketType]} />
       )}
     </div>
   );
@@ -178,7 +182,7 @@ function ShareLinkBanner({ shareUrl }: { shareUrl: string }) {
   );
 }
 
-function JoinForm({ shareToken }: { shareToken: string }) {
+function JoinForm({ shareToken, priceCents }: { shareToken: string; priceCents: number }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -207,7 +211,7 @@ function JoinForm({ shareToken }: { shareToken: string }) {
         <PaymentStep
           bookingId={payment.participantId}
           clientSecret={payment.clientSecret}
-          amountLabel={formatMoney(PRICE_PER_PERSON_CENTS)}
+          amountLabel={formatMoney(priceCents)}
           returnPath={`/session/${shareToken}?p=${payment.participantId}`}
         />
       </div>
@@ -231,7 +235,7 @@ function JoinForm({ shareToken }: { shareToken: string }) {
         onClick={handleJoin}
         disabled={!valid || submitting}
       >
-        {submitting ? "Starting payment…" : `Join & pay ${formatMoney(PRICE_PER_PERSON_CENTS)}`}
+        {submitting ? "Starting payment…" : `Join & pay ${formatMoney(priceCents)}`}
       </button>
       {error && <p className={bookStyles.error}>{error}</p>}
     </div>

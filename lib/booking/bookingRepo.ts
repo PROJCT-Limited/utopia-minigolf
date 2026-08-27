@@ -4,12 +4,14 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { TicketType } from "./pricing";
 
 export interface BookingSummary {
   id: string;
   leadName: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   amountPaidCents: number;
   currency: string;
   status: "pending" | "paid" | "cancelled";
@@ -22,7 +24,7 @@ export async function fetchBookingSummary(bookingId: string): Promise<BookingSum
   const { data, error } = await supabaseAdmin
     .from("bookings")
     .select(
-      "id, lead_name, party_type, headcount, amount_paid_cents, currency, status, waves(date, start_time, status)"
+      "id, lead_name, party_type, headcount, ticket_type, amount_paid_cents, currency, status, waves(date, start_time, status)"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -37,6 +39,7 @@ export async function fetchBookingSummary(bookingId: string): Promise<BookingSum
     leadName: data.lead_name,
     partyType: data.party_type,
     headcount: data.headcount,
+    ticketType: data.ticket_type,
     amountPaidCents: data.amount_paid_cents,
     currency: data.currency,
     status: data.status,

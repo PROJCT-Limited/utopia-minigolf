@@ -9,6 +9,7 @@ import { render } from "@react-email/components";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "@/lib/booking/wavesRepo";
 import { fetchSessionById, countPaidParticipants } from "@/lib/sessions/sessionsRepo";
+import type { TicketType } from "@/lib/booking/pricing";
 import { sendEmailOnce } from "./sendEmailOnce";
 import { resend } from "./resendClient";
 import { BookingConfirmationEmail } from "./BookingConfirmation";
@@ -23,6 +24,7 @@ export interface BookingForEmail {
   leadName: string;
   partyType: "solo" | "pair" | "group";
   headcount: number;
+  ticketType: TicketType;
   amountPaidCents: number;
   currency: string;
   manageToken: string;
@@ -31,7 +33,7 @@ export interface BookingForEmail {
 async function loadBookingForEmail(bookingId: string): Promise<BookingForEmail | null> {
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("id, wave_id, lead_email, lead_name, party_type, headcount, amount_paid_cents, currency, manage_token")
+    .select("id, wave_id, lead_email, lead_name, party_type, headcount, ticket_type, amount_paid_cents, currency, manage_token")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -47,6 +49,7 @@ async function loadBookingForEmail(bookingId: string): Promise<BookingForEmail |
     leadName: data.lead_name,
     partyType: data.party_type,
     headcount: data.headcount,
+    ticketType: data.ticket_type,
     amountPaidCents: data.amount_paid_cents,
     currency: data.currency,
     manageToken: data.manage_token,
@@ -77,6 +80,7 @@ export async function sendBookingConfirmation(bookingId: string): Promise<{ sent
         leadName: booking.leadName,
         partyType: booking.partyType,
         headcount: booking.headcount,
+        ticketType: booking.ticketType,
         amountPaidCents: booking.amountPaidCents,
         currency: booking.currency,
         waveDate: wave?.date ?? null,
@@ -110,6 +114,7 @@ export async function sendBookingRescheduled(bookingId: string): Promise<{ sent:
         leadName: booking.leadName,
         partyType: booking.partyType,
         headcount: booking.headcount,
+        ticketType: booking.ticketType,
         manageUrl,
         newWaveDate: wave.date,
         newWaveTimeLabel: wave.timeLabel,
@@ -197,6 +202,7 @@ export async function sendHostSessionCreated(participantId: string): Promise<{ s
       html: await render(
         HostSessionCreatedEmail({
           hostName: participant.name,
+          ticketType: session.ticket_type,
           amountPaidCents: participant.amountPaidCents,
           currency: participant.currency,
           waveDate: wave?.date ?? null,
@@ -246,6 +252,7 @@ export async function sendSessionParticipantJoined(participantId: string): Promi
       html: await render(
         SessionParticipantJoinedEmail({
           participantName: participant.name,
+          ticketType: session.ticket_type,
           amountPaidCents: participant.amountPaidCents,
           currency: participant.currency,
           paidCount,

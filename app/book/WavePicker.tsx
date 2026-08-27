@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { groupByWeek, type WaveView } from "@/lib/booking/waves";
+import { groupByWeek, groupByHour, type WaveView } from "@/lib/booking/waves";
 import { formatWeekLabel } from "../utils/formatWave";
-import { WaveRow } from "./WaveRow";
+import { HourGroupRow } from "./HourGroupRow";
 import { MonthCalendar } from "./MonthCalendar";
 import styles from "./book.module.css";
 
@@ -44,8 +44,14 @@ export function WavePicker({
             <div key={g.key} className={styles.waveGroup}>
               <h4>{formatWeekLabel(g.key)}</h4>
               <div className={styles.waveList}>
-                {g.waves.map((w) => (
-                  <WaveRow key={w.id} wave={w} selected={selectedWaveId === w.id} onSelect={onSelect} taken={takenSet.has(w.id)} />
+                {groupByHour(g.waves).map((hourGroup) => (
+                  <HourGroupRow
+                    key={hourGroup.key}
+                    hourGroup={hourGroup}
+                    selectedWaveId={selectedWaveId}
+                    onSelect={onSelect}
+                    takenWaveIds={takenSet}
+                  />
                 ))}
               </div>
             </div>
