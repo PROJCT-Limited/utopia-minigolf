@@ -10,12 +10,22 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe/server";
-import { computeBookingTotalCents, derivePartyTypeFromHeadcount, isValidHeadcount, CURRENCY } from "./pricing";
+import {
+  computeBookingTotalCents,
+  derivePartyTypeFromHeadcount,
+  isValidHeadcount,
+  isValidTicketType,
+  CURRENCY,
+  type TicketType,
+} from "./pricing";
+import { hasWaveSlotsAvailable } from "./waveCapacity";
 import { generateManageToken } from "./token";
 import { fetchWaveById } from "./wavesRepo";
+import { resolveReferredBy } from "@/lib/partners/partnersRepo";
 
 export interface CreateBookingInput {
   waveId: string;
+  ticketType: TicketType;
   headcount: number;
   leadName: string;
   leadEmail: string;
@@ -28,10 +38,13 @@ export type CreateBookingResult =
 export async function createBookingWithPaymentIntent(
   input: CreateBookingInput
 ): Promise<CreateBookingResult> {
-  const { waveId, headcount, leadName, leadEmail } = input;
+  const { waveId, ticketType, headcount, leadName, leadEmail } = input;
 
   if (!leadName.trim() || !leadEmail.trim()) {
     return { ok: false, error: "Name and email are required." };
+  }
+  if (!isValidTicketType(ticketType)) {
+    return { ok: false, error: "Invalid ticket type." };
   }
   if (!isValidHeadcount(headcount)) {
     return { ok: false, error: "Party size must be between 1 and 5." };
@@ -39,12 +52,14 @@ export async function createBookingWithPaymentIntent(
 
   const wave = await fetchWaveById(waveId);
   if (!wave) return { ok: false, error: "That slot no longer exists." };
-  if (wave.isFull || wave.spotsLeft < headcount) {
+  // One booking = one group = one slot, regardless of ticket type.
+  if (!hasWaveSlotsAvailable(wave, 1)) {
     return { ok: false, error: "Not enough spots left in that slot." };
   }
 
-  const amountCents = computeBookingTotalCents(headcount);
+  const amountCents = computeBookingTotalCents(ticketType, headcount);
   const manageToken = generateManageToken();
+  const referredBy = await resolveReferredBy();
 
   const { data: booking, error: insertError } = await supabaseAdmin
     .from("bookings")
@@ -54,10 +69,12 @@ export async function createBookingWithPaymentIntent(
       lead_email: leadEmail.trim(),
       party_type: derivePartyTypeFromHeadcount(headcount),
       headcount,
+      ticket_type: ticketType,
       amount_paid_cents: amountCents,
       currency: CURRENCY,
       status: "pending",
       manage_token: manageToken,
+      referred_by: referredBy,
     })
     .select("id")
     .single();

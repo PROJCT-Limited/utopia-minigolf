@@ -5,18 +5,24 @@
 // validates against the server's own view of the wave (never trusts the
 // client), and opens a Stripe PaymentIntent for the host's own single place.
 // Nothing here marks the participant paid — only the webhook does that (see
-// confirmSession.ts), same rule as private bookings.
+// confirmSession.ts), same rule as private bookings. The host picks the
+// ticket type once, for the whole session — everyone who joins plays under
+// it. One session = one group = one slot, same as a private booking,
+// regardless of ticket type.
 // -----------------------------------------------------------------------------
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe/server";
-import { PRICE_PER_PERSON_CENTS, CURRENCY } from "@/lib/booking/pricing";
+import { TICKET_PRICE_PER_PERSON_CENTS, CURRENCY, isValidTicketType, type TicketType } from "@/lib/booking/pricing";
+import { hasWaveSlotsAvailable } from "@/lib/booking/waveCapacity";
 import { generateManageToken } from "@/lib/booking/token";
 import { fetchWaveById } from "@/lib/booking/wavesRepo";
+import { resolveReferredBy } from "@/lib/partners/partnersRepo";
 
 export interface CreateSessionInput {
   waveId: string;
+  ticketType: TicketType;
   hostName: string;
   hostEmail: string;
 }
@@ -28,15 +34,18 @@ export type CreateSessionResult =
 export async function createSessionWithPaymentIntent(
   input: CreateSessionInput
 ): Promise<CreateSessionResult> {
-  const { waveId, hostName, hostEmail } = input;
+  const { waveId, ticketType, hostName, hostEmail } = input;
 
   if (!hostName.trim() || !hostEmail.trim()) {
     return { ok: false, error: "Name and email are required." };
   }
+  if (!isValidTicketType(ticketType)) {
+    return { ok: false, error: "Invalid ticket type." };
+  }
 
   const wave = await fetchWaveById(waveId);
   if (!wave) return { ok: false, error: "That slot no longer exists." };
-  if (wave.isFull || wave.spotsLeft < 1) {
+  if (!hasWaveSlotsAvailable(wave, 1)) {
     return { ok: false, error: "Not enough spots left in that slot." };
   }
 
@@ -56,7 +65,7 @@ export async function createSessionWithPaymentIntent(
 
   const { data: session, error: sessionInsertError } = await supabaseAdmin
     .from("sessions")
-    .insert({ wave_id: waveId, share_token: shareToken, status: "open" })
+    .insert({ wave_id: waveId, share_token: shareToken, status: "open", ticket_type: ticketType })
     .select("id")
     .single();
 
@@ -73,18 +82,23 @@ export async function createSessionWithPaymentIntent(
     return { ok: false, error: "Couldn't create the session. Please try again." };
   }
 
+  const amountCents = TICKET_PRICE_PER_PERSON_CENTS[ticketType];
   const manageToken = generateManageToken();
+  // Only the host's own place is ever credited to a partner — a joiner
+  // arrives via the host's share link, not the partner's link.
+  const referredBy = await resolveReferredBy();
   const { data: participant, error: participantInsertError } = await supabaseAdmin
     .from("session_participants")
     .insert({
       session_id: session.id,
       name: hostName.trim(),
       email: hostEmail.trim(),
-      amount_paid_cents: PRICE_PER_PERSON_CENTS,
+      amount_paid_cents: amountCents,
       currency: CURRENCY,
       status: "pending",
       manage_token: manageToken,
       is_host: true,
+      referred_by: referredBy,
     })
     .select("id")
     .single();
@@ -100,7 +114,7 @@ export async function createSessionWithPaymentIntent(
   let paymentIntent;
   try {
     paymentIntent = await stripe.paymentIntents.create({
-      amount: PRICE_PER_PERSON_CENTS,
+      amount: amountCents,
       currency: CURRENCY,
       metadata: { session_participant_id: participant.id, session_id: session.id },
       automatic_payment_methods: { enabled: true },
