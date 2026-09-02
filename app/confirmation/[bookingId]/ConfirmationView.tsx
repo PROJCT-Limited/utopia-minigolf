@@ -5,6 +5,8 @@ import Link from "next/link";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "../../utils/formatWave";
+import sharedStyles from "../../components/found/shared.module.css";
+import bookStyles from "../../book/book.module.css";
 import styles from "../../confirmation.module.css";
 
 interface BookingForView {
@@ -64,7 +66,7 @@ export function ConfirmationView({
   if (status === "pending") {
     return (
       <div className={styles.card}>
-        <p className={styles.pending}>Confirming your payment… this only takes a moment.</p>
+        <p className={styles.pending}>Confirming your payment&hellip; this only takes a moment.</p>
       </div>
     );
   }
@@ -72,11 +74,12 @@ export function ConfirmationView({
   if (status === "cancelled") {
     return (
       <div className={styles.card}>
+        <span className={styles.kicker}>Booking failed</span>
         <h1 className={styles.title}>This booking didn&rsquo;t go through</h1>
-        <p>Nothing was charged. Please try again.</p>
+        <p className={styles.body}>Nothing was charged. Please try again.</p>
         <div className={styles.actions}>
-          <Link href="/book" className="btn btn-primary">
-            Back to booking
+          <Link href="/book" className={sharedStyles.pillBtn}>
+            Back to booking →
           </Link>
         </div>
       </div>
@@ -88,44 +91,46 @@ export function ConfirmationView({
 
   return (
     <div className={styles.card}>
-      <span className="lbl">Booking confirmed</span>
+      <span className={styles.kicker}>Booking confirmed</span>
       <h1 className={styles.title}>You&rsquo;re in, {firstName}.</h1>
 
-      <div className={styles.row}>
-        <span>Ticket</span>
-        <span>{TICKET_TYPE_LABELS[initialBooking.ticketType]}</span>
-      </div>
-      <div className={styles.row}>
-        <span>Party</span>
-        <span>
-          {initialBooking.partyType}, {initialBooking.headcount} {initialBooking.headcount === 1 ? "player" : "players"}
-        </span>
-      </div>
-      <div className={styles.row}>
-        <span>Slot</span>
-        <span>
-          {waveIsConfirmed
-            ? `${formatWaveDate(initialBooking.waveDate)}, ${initialBooking.waveStartTime.slice(0, 5)}`
-            : "To be confirmed"}
-        </span>
-      </div>
-      <div className={styles.row}>
-        <span>Amount paid</span>
-        <span>{formatMoney(initialBooking.amountPaidCents, initialBooking.currency)}</span>
+      <div className={styles.box}>
+        <div className={styles.row}>
+          <span className={sharedStyles.detailLabel}>Party</span>
+          <span className={sharedStyles.detailValue}>
+            {initialBooking.partyType}, {initialBooking.headcount} {initialBooking.headcount === 1 ? "player" : "players"}
+          </span>
+        </div>
+        <div className={styles.row}>
+          <span className={sharedStyles.detailLabel}>Ticket</span>
+          <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[initialBooking.ticketType]}</span>
+        </div>
+        <div className={styles.row}>
+          <span className={sharedStyles.detailLabel}>Slot</span>
+          <span className={sharedStyles.detailValue}>
+            {waveIsConfirmed
+              ? `${formatWaveDate(initialBooking.waveDate)}, ${initialBooking.waveStartTime.slice(0, 5)}`
+              : "To be confirmed"}
+          </span>
+        </div>
+        <div className={styles.row}>
+          <span className={sharedStyles.detailLabel}>Players</span>
+          <span className={sharedStyles.detailValue}>{initialBooking.headcount}</span>
+        </div>
+        <div className={`${styles.row} ${sharedStyles.detailRowTotal}`}>
+          <span className={sharedStyles.detailLabel}>Amount paid</span>
+          <span className={sharedStyles.detailValue}>{formatMoney(initialBooking.amountPaidCents, initialBooking.currency)}</span>
+        </div>
       </div>
 
-      {!waveIsConfirmed && (
-        <p className="notice" style={{ marginTop: 20 }}>
-          {DATE_TBC_NOTICE}
-        </p>
-      )}
-      <p style={{ marginTop: 14, fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6 }}>
+      {!waveIsConfirmed && <p className={bookStyles.notice}>{DATE_TBC_NOTICE}</p>}
+      <p className={styles.body}>
         Check your email for a receipt and a link to manage or reschedule your booking. {RESCHEDULE_NOTICE}
       </p>
 
       <div className={styles.actions}>
-        <Link href="/" className="btn btn-primary">
-          Back to home
+        <Link href="/" className={sharedStyles.textLink}>
+          Back to home →
         </Link>
       </div>
     </div>

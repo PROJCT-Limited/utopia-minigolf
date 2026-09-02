@@ -11,6 +11,7 @@ import { joinSessionWithPaymentIntent } from "@/lib/sessions/joinSession";
 import { isSessionJoinable } from "@/lib/sessions/sessionCapacity";
 import { formatWaveDate } from "../../utils/formatWave";
 import { PaymentStep } from "../../book/PaymentStep";
+import sharedStyles from "../../components/found/shared.module.css";
 import confirmationStyles from "../../confirmation.module.css";
 import bookStyles from "../../book/book.module.css";
 
@@ -70,7 +71,7 @@ export function SessionView({
   if (ownParticipantId && ownStatus === "pending") {
     return (
       <div className={confirmationStyles.card}>
-        <p className={confirmationStyles.pending}>Confirming your payment… this only takes a moment.</p>
+        <p className={confirmationStyles.pending}>Confirming your payment&hellip; this only takes a moment.</p>
       </div>
     );
   }
@@ -87,38 +88,38 @@ export function SessionView({
     <div className={confirmationStyles.card}>
       {justCreated && ownStatus === "paid" && <ShareLinkBanner shareUrl={shareUrl} />}
 
-      <span className="lbl">Public session</span>
+      <span className={confirmationStyles.kicker}>Public session</span>
       <h1 className={confirmationStyles.title}>
         {wave ? `${formatWaveDate(wave.date)}, ${wave.timeLabel}` : "Slot to be confirmed"}
       </h1>
 
-      <p className="hint" style={{ marginBottom: 16 }}>
+      <p className={bookStyles.stepIntro} style={{ marginTop: 0, marginBottom: 24, maxWidth: "none" }}>
         {PUBLIC_SESSION_EXPLAINER}
       </p>
 
-      <div className={confirmationStyles.row}>
-        <span>Ticket</span>
-        <span>{TICKET_TYPE_LABELS[session.ticketType]}</span>
-      </div>
-      <div className={confirmationStyles.row}>
-        <span>Spots filled</span>
-        <span>
-          {session.paidCount} of {session.maxPlayers}
-        </span>
-      </div>
-      <div className={confirmationStyles.row}>
-        <span>Who&rsquo;s in</span>
-        <span>{session.paidParticipantNames.length > 0 ? session.paidParticipantNames.join(", ") : "Just you so far"}</span>
+      <div className={confirmationStyles.box}>
+        <div className={confirmationStyles.row}>
+          <span className={sharedStyles.detailLabel}>Ticket</span>
+          <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[session.ticketType]}</span>
+        </div>
+        <div className={confirmationStyles.row}>
+          <span className={sharedStyles.detailLabel}>Spots filled</span>
+          <span className={sharedStyles.detailValue}>
+            {session.paidCount} of {session.maxPlayers}
+          </span>
+        </div>
+        <div className={`${confirmationStyles.row} ${sharedStyles.detailRowTotal}`}>
+          <span className={sharedStyles.detailLabel}>Who&rsquo;s in</span>
+          <span className={sharedStyles.detailValue}>
+            {session.paidParticipantNames.length > 0 ? session.paidParticipantNames.join(", ") : "Just you so far"}
+          </span>
+        </div>
       </div>
 
-      {wave?.status === "provisional" && (
-        <p className="notice" style={{ marginTop: 20 }}>
-          {DATE_TBC_NOTICE}
-        </p>
-      )}
+      {wave?.status === "provisional" && <p className={bookStyles.notice} style={{ marginTop: 20 }}>{DATE_TBC_NOTICE}</p>}
 
       {!canJoin ? (
-        <p style={{ marginTop: 20, fontSize: 14, color: "var(--ink-2)" }}>{SESSION_FULL_NOTICE}</p>
+        <p className={confirmationStyles.body}>{SESSION_FULL_NOTICE}</p>
       ) : (
         <JoinForm shareToken={shareToken} priceCents={TICKET_PRICE_PER_PERSON_CENTS[session.ticketType]} />
       )}
@@ -132,7 +133,7 @@ function ShareLinkBanner({ shareUrl }: { shareUrl: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    QRCode.toDataURL(shareUrl, { width: 208, margin: 1, color: { dark: "#12151c", light: "#ffffff" } })
+    QRCode.toDataURL(shareUrl, { width: 208, margin: 1, color: { dark: "#131210", light: "#f2f1ed" } })
       .then((url) => {
         if (!cancelled) setQrDataUrl(url);
       })
@@ -155,25 +156,17 @@ function ShareLinkBanner({ shareUrl }: { shareUrl: string }) {
   }
 
   return (
-    <div className="notice" style={{ marginBottom: 20 }}>
-      <p style={{ marginBottom: 4, fontWeight: 700, fontSize: 16 }}>Congrats — your session is live!</p>
-      <p style={{ marginBottom: 14, fontSize: 13.5, color: "var(--ink-2)" }}>
-        Share this link or QR code so people can join and pay for their own place.
-      </p>
-      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+    <div className={confirmationStyles.banner}>
+      <p className={confirmationStyles.bannerTitle}>Congrats — your session is live!</p>
+      <p className={confirmationStyles.bannerBody}>Share this link or QR code so people can join and pay for their own place.</p>
+      <div className={confirmationStyles.bannerRow}>
         {qrDataUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- data: URL generated client-side, next/image can't optimize it
-          <img
-            src={qrDataUrl}
-            alt="QR code to join this session"
-            width={104}
-            height={104}
-            style={{ borderRadius: 12, flexShrink: 0 }}
-          />
+          <img src={qrDataUrl} alt="QR code to join this session" width={104} height={104} style={{ flexShrink: 0 }} />
         )}
         <div style={{ flex: 1, minWidth: 200 }}>
-          <code style={{ fontSize: 13, wordBreak: "break-all", display: "block", marginBottom: 10 }}>{shareUrl}</code>
-          <button type="button" className="btn btn-outline" onClick={handleCopy}>
+          <code className={confirmationStyles.bannerCode}>{shareUrl}</code>
+          <button type="button" className={sharedStyles.pillBtnOutline} onClick={handleCopy}>
             {copied ? "Copied!" : "Copy link"}
           </button>
         </div>
@@ -230,12 +223,12 @@ function JoinForm({ shareToken, priceCents }: { shareToken: string; priceCents: 
       </div>
       <button
         type="button"
-        className="btn btn-primary"
-        style={{ width: "100%" }}
+        className={sharedStyles.pillBtn}
+        style={{ width: "100%", marginTop: 8 }}
         onClick={handleJoin}
         disabled={!valid || submitting}
       >
-        {submitting ? "Starting payment…" : `Join & pay ${formatMoney(priceCents)}`}
+        {submitting ? "Starting payment…" : `Join & pay ${formatMoney(priceCents)} →`}
       </button>
       {error && <p className={bookStyles.error}>{error}</p>}
     </div>

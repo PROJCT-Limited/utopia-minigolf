@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { fetchBookingByManageToken, isPastRescheduleCutoff } from "@/lib/booking/reschedule";
 import { fetchWaveById, fetchUpcomingWaves } from "@/lib/booking/wavesRepo";
 import { fetchSessionByParticipantManageToken } from "@/lib/sessions/sessionsRepo";
-import { SiteHeader } from "../../components/SiteHeader";
-import { SiteFooter } from "../../components/SiteFooter";
+import { FoundHeader } from "../../components/found/FoundHeader";
+import { FoundFooter } from "../../components/found/FoundFooter";
+import sharedStyles from "../../components/found/shared.module.css";
 import { ManageView } from "./ManageView";
 import styles from "../../confirmation.module.css";
 
-export const metadata = { title: "Manage your booking — UTOPIA" };
+export const metadata = { title: "Manage your booking — FOUND" };
 export const dynamic = "force-dynamic";
 
 export default async function ManageBookingPage({ params }: { params: Promise<{ token: string }> }) {
@@ -24,20 +25,22 @@ export default async function ManageBookingPage({ params }: { params: Promise<{ 
       : [];
 
     return (
-      <>
-        <SiteHeader />
-        <main className={`wrap ${styles.page}`}>
-          <ManageView
-            kind="booking"
-            token={token}
-            booking={booking}
-            currentWave={currentWave}
-            eligibleForReschedule={eligibleForReschedule}
-            availableWaves={availableWaves}
-          />
+      <div className={sharedStyles.pageWrap}>
+        <FoundHeader />
+        <main className={sharedStyles.pageMain}>
+          <div className={styles.page}>
+            <ManageView
+              kind="booking"
+              token={token}
+              booking={booking}
+              currentWave={currentWave}
+              eligibleForReschedule={eligibleForReschedule}
+              availableWaves={availableWaves}
+            />
+          </div>
         </main>
-        <SiteFooter />
-      </>
+        <FoundFooter />
+      </div>
     );
   }
 
@@ -47,12 +50,14 @@ export default async function ManageBookingPage({ params }: { params: Promise<{ 
   const wave = await fetchWaveById(sessionManage.session.waveId);
 
   return (
-    <>
-      <SiteHeader />
-      <main className={`wrap ${styles.page}`}>
-        <ManageView kind="session" participant={sessionManage.participant} session={sessionManage.session} wave={wave} />
+    <div className={sharedStyles.pageWrap}>
+      <FoundHeader />
+      <main className={sharedStyles.pageMain}>
+        <div className={styles.page}>
+          <ManageView kind="session" participant={sessionManage.participant} session={sessionManage.session} wave={wave} />
+        </div>
       </main>
-      <SiteFooter />
-    </>
+      <FoundFooter />
+    </div>
   );
 }

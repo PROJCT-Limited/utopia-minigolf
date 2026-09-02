@@ -1,0 +1,281 @@
+/* =============================================================================
+   FOUND design system — shared primitives for every page beyond the
+   homepage. Built from the same --f-* tokens (app/globals.css :root) as
+   app/page.module.css, so this file intentionally duplicates a few of that
+   file's class *shapes* (container/twoCol/h48/monoLabel/dot/rule) rather
+   than importing it — the homepage's module carries a lot of hero-only CSS
+   that has no business shipping on every other route.
+   ============================================================================= */
+
+.pageWrap {
+  background: var(--f-paper);
+  color: var(--f-ink);
+  font-family: var(--f-archivo);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.pageMain {
+  flex: 1;
+}
+/* Header/main/footer all center their own max-width:1500 content via
+   margin:0 auto — but a flex item with auto cross-axis margins shrinks to
+   its content width instead of stretching (auto margins opt out of
+   align-items:stretch per spec). Without this, every page using pageWrap
+   renders a footer/header shrink-wrapped to its content instead of
+   spanning the page — the homepage doesn't use pageWrap, so it never hit
+   this. */
+.pageWrap > * {
+  width: 100%;
+}
+
+.pageWrap :where(a) {
+  color: inherit;
+}
+
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 var(--f-pad-x);
+}
+
+.twoCol {
+  composes: container;
+  display: grid;
+  grid-template-columns: 0.95fr 1fr;
+  gap: var(--f-gap);
+  align-items: start;
+}
+.alignEnd {
+  align-items: end;
+}
+
+/* ---------- type ---------- */
+.h48 {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: var(--f-h48);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.monoLabel {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+}
+.body15 {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--f-grey);
+}
+
+/* ---------- structural devices ---------- */
+.rule {
+  height: 1px;
+  background: var(--f-ink);
+  width: 100%;
+  border: none;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--f-ink);
+  flex-shrink: 0;
+}
+
+/* ---------- buttons / links ---------- */
+.pillBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  background: var(--f-ink);
+  color: var(--f-white);
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px 26px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.pillBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pillBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.pillBtnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--f-ink);
+  border: 1px solid var(--f-ink);
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 22px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.pillBtnOutline:hover {
+  background: var(--f-ink);
+  color: var(--f-white);
+}
+.textLink {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---------- bordered detail box (booking summary / confirmation / manage) ---------- */
+.detailBox {
+  border: 1px solid var(--f-ink);
+  padding: 28px;
+}
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(19, 18, 16, 0.12);
+}
+.detailRow:first-child {
+  padding-top: 0;
+}
+.detailRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+/* The row right before the total row would otherwise stack its own thin
+   border-bottom directly against the total row's bold border-top, reading
+   as one doubled/glitchy line instead of a single clean divider. */
+.detailRow:has(+ .detailRowTotal) {
+  border-bottom: none;
+}
+.detailLabel {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+  flex-shrink: 0;
+}
+.detailValue {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: 14px;
+  text-align: right;
+}
+.detailRowTotal {
+  border-top: 1px solid var(--f-ink);
+  border-bottom: none;
+  margin-top: 4px;
+  padding-top: 16px;
+}
+.detailRowTotal .detailLabel {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--f-ink);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.detailRowTotal .detailValue {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+/* ---------- form rows (booking Details step) ---------- */
+.formRow {
+  border-bottom: 1px solid var(--f-ink);
+  padding: 18px 0;
+}
+.formRow label {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+  margin-bottom: 8px;
+}
+.formRow input {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--f-ink);
+  padding: 0;
+}
+.formRow input::placeholder {
+  color: var(--f-stone);
+}
+.formRow input:focus {
+  outline: none;
+}
+
+.stepperRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stepperBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--f-ink);
+  background: transparent;
+  color: var(--f-ink);
+  font-family: var(--f-archivo);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stepperBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.stepperCount {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 18px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.errorText {
+  font-family: var(--f-archivo);
+  font-size: 13px;
+  color: #b23b2f;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .alignEnd {
+    align-items: start;
+  }
+}

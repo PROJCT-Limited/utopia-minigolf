@@ -1,0 +1,46 @@
+.inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 var(--f-pad-x);
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: block;
+  line-height: 0;
+}
+.logoImg {
+  width: clamp(64px, 6vw, 90px);
+  height: auto;
+  /* source SVG's native fill is near-white (#F7F7F7) — the hero wordmark
+     inverts it to white on purpose; here, on the paper background, it needs
+     forcing dark instead, same as the footer logo. */
+  filter: brightness(0);
+}
+.links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--f-ink);
+}
+.links a {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.15s;
+}
+.links a:hover {
+  opacity: 0.6;
+}
+@media (max-width: 640px) {
+  .links {
+    gap: 16px;
+  }
+  .links a:not(:last-child) {
+    display: none;
+  }
+}

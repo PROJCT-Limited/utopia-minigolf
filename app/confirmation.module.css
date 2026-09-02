@@ -1,47 +1,87 @@
+/* =============================================================================
+   /confirmation, /manage, /session — single centred-left column, FOUND style.
+   ============================================================================= */
+
 .page {
-  padding: 50px 0 100px;
+  composes: container from "./components/found/shared.module.css";
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 .card {
   max-width: 620px;
-  margin: 0 auto;
-  background: var(--panel);
-  border-radius: var(--r);
-  padding: 44px;
 }
 
-.kick {
-  margin-bottom: 12px;
-}
-
-.title {
-  font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 38px);
-  font-weight: 900;
-  letter-spacing: -0.03em;
+.kicker {
+  composes: monoLabel from "./components/found/shared.module.css";
   margin-bottom: 16px;
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 14px;
+.title {
+  composes: h48 from "./components/found/shared.module.css";
+  margin-bottom: 32px;
 }
-.row:last-of-type {
-  border-bottom: none;
+
+.box {
+  composes: detailBox from "./components/found/shared.module.css";
+  margin-bottom: 24px;
+}
+.row {
+  composes: detailRow from "./components/found/shared.module.css";
+}
+
+.body {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--f-grey);
+  margin-top: 16px;
 }
 
 .actions {
-  margin-top: 24px;
+  margin-top: 28px;
   display: flex;
-  gap: 12px;
+  gap: 20px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.banner {
+  composes: detailBox from "./components/found/shared.module.css";
+  margin-bottom: 24px;
+}
+.bannerTitle {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 16px;
+}
+.bannerBody {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--f-grey);
+  margin: 6px 0 16px;
+}
+.bannerRow {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.bannerCode {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  word-break: break-all;
+  display: block;
+  margin-bottom: 12px;
 }
 
 .pending {
-  text-align: center;
-  padding: 30px 0;
-  color: var(--ink-2);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+  padding: 60px 0;
 }

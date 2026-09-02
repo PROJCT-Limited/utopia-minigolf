@@ -9,7 +9,8 @@ import styles from "./book.module.css";
 /**
  * Level 1 of the two-level picker: one hour, aggregated across its four
  * quarter-hour start times. Expands to reveal the individual start times
- * (Level 2, rendered as WaveRows) — that's what actually gets booked.
+ * (Level 2, rendered as WaveRow cells in a 4-column grid) — that's what
+ * actually gets booked.
  */
 export function HourGroupRow({
   hourGroup,
@@ -30,22 +31,21 @@ export function HourGroupRow({
 
   return (
     <div className={styles.hourGroup}>
-      <div className={styles.waveRow}>
-        {showDate && <span className={styles.waveDate}>{formatWaveDate(hourGroup.date)}</span>}
-        <button
-          type="button"
-          className={`bwave ${containsSelected ? "on" : ""}`}
-          disabled={hourGroup.isFull}
-          onClick={() => setExpanded((e) => !e)}
-          style={{ flex: 1 }}
-        >
-          <span className={`dot ${hourGroup.isFull ? "out" : ""}`} />
-          <div>
-            <div className="tm">{hourGroup.hour}</div>
-          </div>
-          <span className="st">{hourGroup.isFull ? "Full" : "Available"}</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        className={styles.hourRow}
+        disabled={hourGroup.isFull}
+        onClick={() => setExpanded((e) => !e)}
+      >
+        {showDate && <span className={styles.hourDate}>{formatWaveDate(hourGroup.date)}</span>}
+        <span className={styles.hourTime}>{hourGroup.hour}</span>
+        <span className={styles.hourAvailability}>{hourGroup.isFull ? "Full" : `${hourGroup.slotsLeft} groups left`}</span>
+        {!hourGroup.isFull && (
+          <span className={`${styles.hourToggle} ${expanded ? styles.expanded : ""}`} aria-hidden>
+            {expanded ? "−" : "+"}
+          </span>
+        )}
+      </button>
       {expanded && !hourGroup.isFull && (
         <div className={styles.hourGroupBody}>
           {hourGroup.waves.map((w) => (
@@ -54,7 +54,6 @@ export function HourGroupRow({
               wave={w}
               selected={selectedWaveId === w.id}
               onSelect={onSelect}
-              showDate={false}
               taken={takenWaveIds?.has(w.id) ?? false}
             />
           ))}

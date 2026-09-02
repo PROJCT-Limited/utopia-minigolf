@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { fetchBookingSummary } from "@/lib/booking/bookingRepo";
-import { SiteHeader } from "../../components/SiteHeader";
-import { SiteFooter } from "../../components/SiteFooter";
+import { FoundHeader } from "../../components/found/FoundHeader";
+import { FoundFooter } from "../../components/found/FoundFooter";
+import sharedStyles from "../../components/found/shared.module.css";
 import { ConfirmationView } from "./ConfirmationView";
 import styles from "../../confirmation.module.css";
 
-export const metadata = { title: "Booking confirmed — UTOPIA" };
+export const metadata = { title: "Booking confirmed — FOUND" };
 export const dynamic = "force-dynamic";
 
 export default async function ConfirmationPage({ params }: { params: Promise<{ bookingId: string }> }) {
@@ -14,12 +15,14 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ b
   if (!booking) notFound();
 
   return (
-    <>
-      <SiteHeader />
-      <main className={`wrap ${styles.page}`}>
-        <ConfirmationView bookingId={bookingId} initialStatus={booking.status} initialBooking={booking} />
+    <div className={sharedStyles.pageWrap}>
+      <FoundHeader />
+      <main className={sharedStyles.pageMain}>
+        <div className={styles.page}>
+          <ConfirmationView bookingId={bookingId} initialStatus={booking.status} initialBooking={booking} />
+        </div>
       </main>
-      <SiteFooter />
-    </>
+      <FoundFooter />
+    </div>
   );
 }

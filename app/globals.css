@@ -40,6 +40,32 @@
      locally-installed system Futura, then Archivo (self-hosted via
      next/font), for any environment where the local font file didn't load. */
   --font-display: var(--font-futura-book), "Futura Medium", Futura, var(--font-archivo), sans-serif;
+
+  /* -------------------------------------------------------------------------
+     FOUND design system — introduced on the homepage redesign, now the
+     target look for every page (see FOUND-build-brief.md and the companion
+     "remaining pages" brief). Prefixed --f- and defined globally (rather than
+     scoped to one page's CSS module) so every route's markup can use them
+     directly without re-declaring them. Pages not yet migrated keep using
+     the --ink/--blue/etc. tokens above unaffected — these are inert until
+     something references them.
+     ------------------------------------------------------------------------- */
+  --f-ink: #131210;
+  --f-white: #f7f7f7;
+  --f-grey: #75736b;
+  --f-paper: #f2f1ed;
+  --f-stone: #a19d94;
+  --f-archivo: var(--font-archivo), sans-serif;
+  --f-mono: var(--font-input-mono), monospace;
+
+  /* Fluid layout/type tokens: clamp(640px value, linear vw ramp, 1500px
+     design value) — see app/page.module.css's header comment for the
+     interpolation method. Centralised here so every FOUND-styled page
+     shares the exact same container/heading rhythm as the homepage. */
+  --f-pad-x: clamp(20px, 5.116vw - 12.74px, 64px);
+  --f-sec-pad: clamp(80px, 8.14vw + 27.9px, 150px);
+  --f-gap: clamp(36px, 4.535vw + 6.97px, 64px);
+  --f-h48: clamp(34px, 3.488vw + 11.7px, 64px);
 }
 
 html {
@@ -56,7 +82,10 @@ body {
 body {
   min-height: 100%;
   font-family: var(--font-body);
-  background: var(--bg);
+  /* Every FOUND-styled page now paints its own opaque --f-paper background
+     via .pageWrap, so this only actually shows through on /admin, the one
+     route intentionally left in its previous minimal styling. */
+  background: var(--f-paper);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
@@ -279,7 +308,7 @@ button {
 }
 .lbrow {
   display: grid;
-  grid-template-columns: 54px 1fr 170px 90px 70px;
+  grid-template-columns: 54px 1fr 170px 100px;
   align-items: center;
   gap: 16px;
   padding: 15px 16px;
@@ -315,22 +344,14 @@ button {
   color: var(--ink-2);
   text-align: right;
 }
-.lbrow .par {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--blue);
-  text-align: right;
-}
 @media (max-width: 620px) {
   .board {
     padding: 28px 20px;
   }
   .lbrow {
-    grid-template-columns: 30px 1fr 60px;
+    grid-template-columns: 30px 1fr 80px;
   }
-  .lbrow .ctx,
-  .lbrow .str {
+  .lbrow .ctx {
     display: none;
   }
 }

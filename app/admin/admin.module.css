@@ -1,9 +1,11 @@
+/* Admin — kept functional and minimal per the FOUND remaining-pages brief
+   (section 8): colours/fonts/rule-based rows only, no layout rework. */
+
 .page {
-  /* longhand, not shorthand — a 3-value `padding: 40px 0 90px` also sets
-     left/right to 0, wiping out the horizontal padding the shared `.wrap`
-     class provides and pinning content flush to the screen edge */
   padding-top: 40px;
   padding-bottom: 90px;
+  font-family: var(--f-archivo);
+  color: var(--f-ink);
 }
 
 .headRow {
@@ -16,16 +18,15 @@
 }
 
 .title {
-  font-family: var(--font-display);
+  font-family: var(--f-archivo);
+  font-weight: 700;
   font-size: clamp(26px, 3.4vw, 36px);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 
 .card {
-  background: var(--panel);
-  border-radius: var(--r);
+  background: var(--f-paper);
+  border: 1px solid var(--f-ink);
   padding: 28px;
   margin-bottom: 20px;
 }
@@ -34,49 +35,51 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
+  font-family: var(--f-archivo);
 }
 .table th {
   text-align: left;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-family: var(--f-mono);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  color: var(--f-grey);
   padding: 0 10px 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--f-ink);
 }
 .table td {
   padding: 12px 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(19, 18, 16, 0.12);
   vertical-align: top;
 }
 .table tr:last-child td {
   border-bottom: none;
 }
 .table a {
-  color: var(--blue);
-  text-decoration: none;
-  font-weight: 600;
+  color: var(--f-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 700;
 }
 
 .badge {
   display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--f-mono);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 4px 10px;
-  border-radius: 100px;
-  background: var(--panel-2);
-  color: var(--ink-2);
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border: 1px solid var(--f-stone);
+  color: var(--f-grey);
 }
 .badge.confirmed {
-  background: #e3f7ea;
-  color: #1a8a44;
+  border-color: var(--f-ink);
+  color: var(--f-ink);
 }
 .badge.full {
-  background: var(--blue-wash);
-  color: var(--blue);
+  border-color: var(--f-ink);
+  background: var(--f-ink);
+  color: var(--f-white);
 }
 
 .formGrid {
@@ -92,36 +95,38 @@
   gap: 6px;
 }
 .field label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--f-grey);
 }
 .field input,
 .field select {
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--f-ink);
+  border-radius: 0;
   padding: 10px 12px;
   font-size: 14px;
-  font-family: inherit;
-  background: var(--panel-2);
+  font-family: var(--f-archivo);
+  background: var(--f-paper);
+  color: var(--f-ink);
 }
 .field input:focus,
 .field select:focus {
   outline: none;
-  border-color: var(--blue);
   background: #fff;
 }
 
 .loginCard {
   max-width: 380px;
   margin: 80px auto;
-  background: var(--panel);
-  border-radius: var(--r);
+  background: var(--f-paper);
+  border: 1px solid var(--f-ink);
   padding: 36px;
 }
 
 .error {
-  color: #c0293b;
+  color: #b23b2f;
   font-size: 13px;
   margin-top: 10px;
 }

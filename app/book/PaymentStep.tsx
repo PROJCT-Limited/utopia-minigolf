@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import type { Appearance } from "@stripe/stripe-js";
 import { getStripe } from "@/lib/stripe/client";
+import sharedStyles from "../components/found/shared.module.css";
 import styles from "./book.module.css";
 
 interface PaymentStepProps {
@@ -14,9 +16,43 @@ interface PaymentStepProps {
   returnPath?: string;
 }
 
+// Themes the Stripe Elements iframe to sit inside the FOUND design system —
+// square corners, ink/paper/grey, Archivo — since Stripe's own markup can't
+// be reached by our CSS.
+const STRIPE_APPEARANCE: Appearance = {
+  theme: "flat",
+  variables: {
+    colorPrimary: "#131210",
+    colorBackground: "#f2f1ed",
+    colorText: "#131210",
+    colorTextSecondary: "#75736b",
+    colorDanger: "#b23b2f",
+    fontFamily: "var(--font-archivo), sans-serif",
+    borderRadius: "0px",
+    spacingUnit: "4px",
+  },
+  rules: {
+    ".Input": {
+      border: "1px solid #131210",
+      boxShadow: "none",
+      padding: "12px 14px",
+    },
+    ".Input:focus": {
+      border: "1px solid #131210",
+      boxShadow: "none",
+    },
+    ".Label": {
+      fontSize: "11px",
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      color: "#75736b",
+    },
+  },
+};
+
 export function PaymentStep({ bookingId, clientSecret, amountLabel, returnPath }: PaymentStepProps) {
   return (
-    <Elements stripe={getStripe()} options={{ clientSecret }}>
+    <Elements stripe={getStripe()} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
       <PaymentForm bookingId={bookingId} amountLabel={amountLabel} returnPath={returnPath} />
     </Elements>
   );
@@ -75,10 +111,10 @@ function PaymentForm({
     <form onSubmit={handleSubmit}>
       <PaymentElement />
       {error && <p className={styles.error}>{error}</p>}
-      <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: 18 }} disabled={!stripe || submitting}>
-        {submitting ? "Processing…" : `Pay ${amountLabel}`}
+      <button type="submit" className={sharedStyles.pillBtn} style={{ width: "100%", marginTop: 18 }} disabled={!stripe || submitting}>
+        {submitting ? "Processing…" : `Pay ${amountLabel} →`}
       </button>
-      <p className="hint" style={{ marginTop: 12, textAlign: "center" }}>
+      <p className={styles.hint} style={{ marginTop: 12, textAlign: "center" }}>
         Powered by Stripe.
       </p>
     </form>

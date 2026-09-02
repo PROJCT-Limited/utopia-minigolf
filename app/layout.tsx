@@ -14,7 +14,17 @@ const manrope = Manrope({
 const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+// FOUND homepage redesign — Input Mono, self-hosted from the Figma export's
+// bundled font files (app/minig/input-mono-font-family/). Only the Regular
+// weight is used by the design (see FOUND build brief, type scale table).
+const inputMono = localFont({
+  src: "./fonts/InputMono-Regular.ttf",
+  variable: "--font-input-mono",
+  weight: "400",
+  display: "swap",
 });
 
 // Self-hosted Futura Book. Provenance: this file's own bundled readme (see
@@ -46,7 +56,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${archivo.variable} ${futuraBook.variable}`}>
+    <html
+      lang="en"
+      className={`${manrope.variable} ${archivo.variable} ${futuraBook.variable} ${inputMono.variable}`}
+    >
       <body>
         {/* Scroll/mount reveal animations (app/components/ScrollReveal.tsx)
             ship opacity:0 in the server-rendered HTML and only animate back

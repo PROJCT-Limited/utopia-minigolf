@@ -2,12 +2,22 @@ import { TICKET_PRICE_PER_PERSON_CENTS, type TicketType } from "@/lib/booking/pr
 import styles from "./book.module.css";
 
 function formatMoney(cents: number): string {
-  return `HKD ${(cents / 100).toFixed(0)}`;
+  return (cents / 100).toFixed(0);
 }
 
-const TICKET_OPTIONS: { type: TicketType; title: string; body: string }[] = [
-  { type: "standard", title: "Standard", body: "One 30-minute run across all 5 stations, plus 1 drink." },
-  { type: "unlimited", title: "Unlimited", body: "Keep playing for the full hour, re-entry included, plus bottomless drinks." },
+const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: string }[] = [
+  {
+    type: "standard",
+    label: "Standard, per person",
+    name: "One 30-minute run",
+    body: "All 5 stations + 1 drink",
+  },
+  {
+    type: "unlimited",
+    label: "Unlimited, per person",
+    name: "The full hour",
+    body: "Re entry included + bottomless drinks",
+  },
 ];
 
 export function TicketTypeStep({
@@ -18,21 +28,37 @@ export function TicketTypeStep({
   onSelect: (ticketType: TicketType) => void;
 }) {
   return (
-    <div className={`${styles.partyGrid} ${styles.modeGrid}`}>
-      {TICKET_OPTIONS.map((option) => (
-        <button
-          key={option.type}
-          type="button"
-          className={`${styles.partyOption} ${selected === option.type ? styles.on : ""}`}
-          onClick={() => onSelect(option.type)}
-        >
-          <h4>{option.title}</h4>
-          <p>{option.body}</p>
-          <p style={{ marginTop: 10, fontWeight: 700, color: "var(--ink)" }}>
-            {formatMoney(TICKET_PRICE_PER_PERSON_CENTS[option.type])} / person
-          </p>
-        </button>
-      ))}
+    <div className={styles.tierRows}>
+      {TICKET_OPTIONS.map((option) => {
+        const on = selected === option.type;
+        return (
+          <button
+            key={option.type}
+            type="button"
+            className={`${styles.tierRow} ${on ? styles.on : ""}`}
+            aria-pressed={on}
+            onClick={() => onSelect(option.type)}
+          >
+            <div className={styles.tierRowInner}>
+              <div>
+                <div className={styles.tierRowHead}>
+                  <span className={styles.radioDot} />
+                  <span className={styles.tierLabel}>{option.label}</span>
+                </div>
+                <div className={styles.tierRowText}>
+                  <div className={styles.tierName}>{option.name}</div>
+                  <div className={styles.tierBody}>{option.body}</div>
+                </div>
+              </div>
+              <div className={styles.tierRight}>
+                <div className={styles.tierPrice}>
+                  {formatMoney(TICKET_PRICE_PER_PERSON_CENTS[option.type])} <span className={styles.tierCurrency}>HKD</span>
+                </div>
+              </div>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

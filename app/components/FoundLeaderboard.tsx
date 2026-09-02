@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import type { LeaderboardRow } from "@/lib/scoring/leaderboardRepo";
+import styles from "../page.module.css";
 
-const LEADERBOARD_TABS = [
+const TABS = [
   { key: "day", label: "Today" },
   { key: "month", label: "This month" },
   { key: "global", label: "All clubs" },
 ] as const;
 
-type TabKey = (typeof LEADERBOARD_TABS)[number]["key"];
+type TabKey = (typeof TABS)[number]["key"];
 
-export function Leaderboard({
+export function FoundLeaderboard({
   day,
   month,
   all,
@@ -25,13 +26,13 @@ export function Leaderboard({
   const rows = rowsByTab[tab];
 
   return (
-    <div className="board">
-      <div className="tabs">
-        {LEADERBOARD_TABS.map((t) => (
+    <div>
+      <div className={styles.lbTabs}>
+        {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
-            className={`tab${tab === t.key ? " on" : ""}`}
+            className={`${styles.lbTab} ${tab === t.key ? styles.lbTabActive : ""}`}
             aria-pressed={tab === t.key}
             onClick={() => setTab(t.key)}
           >
@@ -39,18 +40,17 @@ export function Leaderboard({
           </button>
         ))}
       </div>
+      <div className={styles.lbRule} />
       {rows.length === 0 ? (
-        <div className="lbempty">
-          <p>Scores will show up here once the first rounds are played.</p>
-        </div>
+        <p className={styles.lbEmpty}>Scores will show up here once the first rounds are played.</p>
       ) : (
-        <div className="lbrows">
+        <div className={styles.lbRows}>
           {rows.map((row) => (
-            <div className={`lbrow${row.rank === 1 ? " lead" : ""}`} key={`${tab}-${row.rank}`}>
-              <span className="rk">{row.rank}</span>
-              <span className="pl">{row.player}</span>
-              <span className="ctx">{row.context}</span>
-              <span className="str">{row.strokes} strokes</span>
+            <div className={styles.lbRow} key={`${tab}-${row.rank}`}>
+              <span className={styles.lbRank}>{row.rank}</span>
+              <span className={styles.lbPlayer}>{row.player}</span>
+              <span className={styles.lbContext}>{row.context}</span>
+              <span className={styles.lbStrokes}>{row.strokes} strokes</span>
             </div>
           ))}
         </div>

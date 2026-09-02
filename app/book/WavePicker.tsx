@@ -39,10 +39,10 @@ export function WavePicker({
         <MonthCalendar waves={waves} selectedWaveId={selectedWaveId} onSelect={onSelect} takenWaveIds={takenSet} />
       ) : (
         <div className={styles.waveGroups}>
-          {weekGroups.length === 0 && <p className="hint">No slots available yet — check back soon.</p>}
+          {weekGroups.length === 0 && <p className={styles.hint}>No slots available yet — check back soon.</p>}
           {weekGroups.map((g) => (
             <div key={g.key} className={styles.waveGroup}>
-              <h4>{formatWeekLabel(g.key)}</h4>
+              <h4 className={styles.waveGroupLabel}>{formatWeekLabel(g.key)}</h4>
               <div className={styles.waveList}>
                 {groupByHour(g.waves).map((hourGroup) => (
                   <HourGroupRow

@@ -1,0 +1,50 @@
+.wrap {
+  composes: container from "./components/found/shared.module.css";
+  padding-bottom: 64px;
+  max-width: 70ch;
+}
+.draftNotice {
+  composes: monoLabel from "./components/found/shared.module.css";
+  margin-top: 40px;
+}
+.content {
+  margin-top: 24px;
+}
+.rule {
+  composes: rule from "./components/found/shared.module.css";
+}
+.section {
+  padding: 40px 0;
+}
+.section h2 {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.section p {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--f-grey);
+}
+.section p + p {
+  margin-top: 12px;
+}
+.section ul {
+  margin: 4px 0 0 20px;
+}
+.section li {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--f-grey);
+}
+.section a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--f-ink);
+}

@@ -82,7 +82,7 @@ export function MonthCalendar({
       {selectedDate && (
         <div className={styles.waveList} style={{ marginTop: 16 }}>
           {dayHourGroups.length === 0 ? (
-            <p className="hint">No slots that day.</p>
+            <p className={styles.hint}>No slots that day.</p>
           ) : (
             dayHourGroups.map((hourGroup) => (
               <HourGroupRow

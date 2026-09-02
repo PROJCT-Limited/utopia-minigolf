@@ -1,0 +1,230 @@
+/* Standalone kiosk layout — no site header/footer, sized for an iPad sitting
+   on a stand all day. Built on the same design tokens as the rest of the
+   site (app/globals.css) so it looks like part of UTOPIA, just full-screen
+   and touch-scaled up from the desktop-oriented booking flow. */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  background: var(--panel);
+  border-radius: 28px;
+  padding: 48px;
+  box-shadow: 0 20px 60px rgba(18, 21, 28, 0.08);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-block;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+}
+.backLink:hover {
+  color: var(--blue);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.hint {
+  font-size: 16px;
+  color: var(--ink-2);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ---------- group / player tile grid ---------- */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.tile {
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  padding: 24px 20px;
+  min-height: 96px;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s;
+  font-family: inherit;
+}
+.tile:hover,
+.tile:active {
+  border-color: var(--blue);
+  background: var(--blue-wash);
+}
+.tileTime {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+.tileName {
+  font-size: 18px;
+  font-weight: 800;
+}
+.tileMeta {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.tileDone {
+  border-color: #2fbf63;
+  background: #eafbf0;
+}
+.tileDone .tileMeta {
+  color: #1a8a44;
+  font-weight: 700;
+}
+
+/* ---------- player-name entry ---------- */
+.nameList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.nameInput {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  font-size: 18px;
+  font-family: inherit;
+  background: var(--panel-2);
+}
+.nameInput:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: #fff;
+}
+
+/* ---------- station progress + nav ---------- */
+.stationProgress {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.stationNav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.navBtn {
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  padding: 12px 0;
+}
+.navBtn:hover:not(:disabled) {
+  color: var(--blue);
+}
+.navBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.stationNav .primaryBtn {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* ---------- single-station score entry ---------- */
+.bigStepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  margin: 36px 0;
+}
+.bigStepper button {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-size: 36px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: 0.15s;
+}
+.bigStepper button:hover:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.bigStepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.bigStepperValue {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 900;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* ---------- shared ---------- */
+.primaryBtn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error {
+  color: #c0293b;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 28px 20px;
+  }
+}

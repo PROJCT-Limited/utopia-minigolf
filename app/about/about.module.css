@@ -1,0 +1,76 @@
+.section {
+  composes: twoCol from "../components/found/shared.module.css";
+  composes: alignEnd from "../components/found/shared.module.css";
+  padding-top: var(--f-sec-pad);
+  padding-bottom: var(--f-sec-pad);
+}
+.image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  filter: grayscale(1);
+  border-radius: 16px;
+}
+.copy {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--f-ink);
+  max-width: 62ch;
+}
+.copy p + p {
+  margin-top: 16px;
+}
+
+.prose {
+  composes: container from "../components/found/shared.module.css";
+  padding-bottom: var(--f-sec-pad);
+}
+.prose .copy {
+  max-width: 70ch;
+}
+
+.labRow {
+  composes: container from "../components/found/shared.module.css";
+  padding-bottom: 64px;
+}
+.labRule {
+  composes: rule from "../components/found/shared.module.css";
+}
+.labContent {
+  padding: 26px 0;
+}
+.labTitle {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+.labBody {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--f-grey);
+  margin-top: 6px;
+  max-width: 62ch;
+}
+.contactRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+.contactRow p {
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--f-grey);
+  max-width: 46ch;
+}
+.getInTouch {
+  composes: textLink from "../components/found/shared.module.css";
+  white-space: nowrap;
+}

@@ -1,0 +1,12 @@
+.wrap {
+  composes: container from "./shared.module.css";
+  padding-top: 48px;
+}
+.heading {
+  composes: h48 from "./shared.module.css";
+  margin-top: 12px;
+}
+.rule {
+  composes: rule from "./shared.module.css";
+  margin-top: 28px;
+}

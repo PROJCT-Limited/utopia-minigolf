@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { fetchSessionByShareToken, fetchSessionParticipantById } from "@/lib/sessions/sessionsRepo";
 import { fetchWaveById } from "@/lib/booking/wavesRepo";
-import { SiteHeader } from "../../components/SiteHeader";
-import { SiteFooter } from "../../components/SiteFooter";
+import { FoundHeader } from "../../components/found/FoundHeader";
+import { FoundFooter } from "../../components/found/FoundFooter";
+import sharedStyles from "../../components/found/shared.module.css";
 import { SessionView } from "./SessionView";
 import styles from "../../confirmation.module.css";
 
-export const metadata = { title: "Join a session — UTOPIA" };
+export const metadata = { title: "Join a session — FOUND" };
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({
@@ -26,19 +27,21 @@ export default async function SessionPage({
   const ownParticipant = p ? await fetchSessionParticipantById(p) : null;
 
   return (
-    <>
-      <SiteHeader />
-      <main className={`wrap ${styles.page}`}>
-        <SessionView
-          shareToken={token}
-          session={session}
-          wave={wave}
-          justCreated={created === "1"}
-          ownParticipantId={ownParticipant?.id ?? null}
-          initialOwnStatus={ownParticipant?.status ?? null}
-        />
+    <div className={sharedStyles.pageWrap}>
+      <FoundHeader />
+      <main className={sharedStyles.pageMain}>
+        <div className={styles.page}>
+          <SessionView
+            shareToken={token}
+            session={session}
+            wave={wave}
+            justCreated={created === "1"}
+            ownParticipantId={ownParticipant?.id ?? null}
+            initialOwnStatus={ownParticipant?.status ?? null}
+          />
+        </div>
       </main>
-      <SiteFooter />
-    </>
+      <FoundFooter />
+    </div>
   );
 }
