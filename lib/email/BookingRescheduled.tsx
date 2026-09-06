@@ -7,11 +7,17 @@
 // Rendered to HTML by lib/email/send.ts and sent via Resend.
 // -----------------------------------------------------------------------------
 
-import { Heading, Hr, Text } from "@react-email/components";
+import { Text } from "@react-email/components";
 import { partyTypeLabels } from "./format";
 import { EmailShell } from "./components/EmailShell";
 import { EmailButton } from "./components/EmailButton";
-import { colors, bodyFontStack, displayFontStack } from "./components/theme";
+import {
+  EmailDetailBox,
+  EmailHeading,
+  EmailNotice,
+  MonoLabel,
+  bodyText,
+} from "./components/EmailPrimitives";
 import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
@@ -27,32 +33,6 @@ export interface BookingRescheduledEmailProps {
   newWaveIsConfirmed: boolean;
 }
 
-const bodyText = {
-  margin: "0 0 16px",
-  fontFamily: bodyFontStack,
-  fontSize: "15px",
-  lineHeight: "1.6",
-  color: colors.ink,
-};
-
-const noticeBox = {
-  margin: "0 0 20px",
-  padding: "16px 18px",
-  borderRadius: "14px",
-  backgroundColor: colors.blueWash,
-  fontFamily: bodyFontStack,
-  fontSize: "14px",
-  lineHeight: "1.55",
-  color: colors.ink,
-};
-
-const bigNumber = {
-  fontFamily: displayFontStack,
-  fontSize: "20px",
-  fontWeight: 500,
-  color: colors.ink,
-};
-
 export function BookingRescheduledEmail({
   leadName,
   partyType,
@@ -66,30 +46,27 @@ export function BookingRescheduledEmail({
   const firstName = leadName.trim().split(/\s+/)[0] || leadName;
 
   return (
-    <EmailShell previewText="Your UTOPIA reservation has been rescheduled" manageUrl={manageUrl}>
-      <Heading style={{ margin: "0 0 12px", fontFamily: displayFontStack, fontWeight: 500, fontSize: "20px", color: colors.ink }}>
-        You&apos;re all set, {firstName}.
-      </Heading>
+    <EmailShell previewText="Your FOUND reservation has been rescheduled" manageUrl={manageUrl}>
+      <MonoLabel>Reservation rescheduled</MonoLabel>
+      <EmailHeading>You&rsquo;re all set, {firstName}.</EmailHeading>
       <Text style={bodyText}>
-        Your UTOPIA reservation has been rescheduled — {partyTypeLabels[partyType]}, {headcount}{" "}
+        Your FOUND reservation has been rescheduled — {partyTypeLabels[partyType]}, {headcount}{" "}
         {headcount === 1 ? "player" : "players"}.
       </Text>
 
-      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
-      <Text style={{ ...bodyText, margin: "0 0 4px" }}>
-        <strong>Ticket</strong>
-      </Text>
-      <Text style={{ ...bigNumber, margin: "0 0 20px" }}>{TICKET_TYPE_LABELS[ticketType]}</Text>
-      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
-      <Text style={{ ...bodyText, margin: "0 0 4px" }}>
-        <strong>New date</strong>
-      </Text>
-      <Text style={{ ...bigNumber, margin: "0 0 20px" }}>
-        {newWaveIsConfirmed ? `${formatWaveDate(newWaveDate)}, ${newWaveTimeLabel}` : "To be confirmed"}
-      </Text>
-      <Hr style={{ borderColor: colors.rule, margin: "0 0 20px" }} />
+      <EmailDetailBox
+        rows={[
+          { label: "Ticket", value: TICKET_TYPE_LABELS[ticketType] },
+          {
+            label: "New date",
+            value: newWaveIsConfirmed
+              ? `${formatWaveDate(newWaveDate)}, ${newWaveTimeLabel}`
+              : "To be confirmed",
+          },
+        ]}
+      />
 
-      {!newWaveIsConfirmed && <Text style={noticeBox}>{DATE_TBC_NOTICE}</Text>}
+      {!newWaveIsConfirmed && <EmailNotice>{DATE_TBC_NOTICE}</EmailNotice>}
 
       <Text style={bodyText}>
         This booking has now used its one self-serve reschedule — for any further changes, just reply to this
