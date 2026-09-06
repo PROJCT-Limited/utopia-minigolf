@@ -8,7 +8,7 @@ function refLinkFor(refCode: string): string {
   return `${process.env.NEXT_PUBLIC_SITE_URL}/book?ref=${refCode}`;
 }
 
-export const metadata = { title: "Partners — UTOPIA Admin" };
+export const metadata = { title: "Partners — FOUND Admin" };
 export const dynamic = "force-dynamic";
 
 function formatMoney(cents: number): string {
@@ -40,7 +40,7 @@ export default async function PartnersPage({
     <main className={`wrap ${styles.page}`}>
       <div className={styles.headRow}>
         <div>
-          <span className="lbl">UTOPIA Admin</span>
+          <span className="lbl">FOUND Admin</span>
           <h1 className={styles.title}>Partners</h1>
         </div>
         <Link href="/admin" className="hint">

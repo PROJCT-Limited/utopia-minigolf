@@ -4,7 +4,7 @@ import { formatWaveDate } from "../utils/formatWave";
 import { CreateWaveForm } from "./CreateWaveForm";
 import styles from "./admin.module.css";
 
-export const metadata = { title: "Admin — UTOPIA" };
+export const metadata = { title: "Admin — FOUND" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
@@ -14,7 +14,7 @@ export default async function AdminPage() {
     <main className={`wrap ${styles.page}`}>
       <div className={styles.headRow}>
         <div>
-          <span className="lbl">UTOPIA Admin</span>
+          <span className="lbl">FOUND Admin</span>
           <h1 className={styles.title}>Slots</h1>
         </div>
         <Link href="/admin/partners" className="hint">

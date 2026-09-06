@@ -39,7 +39,7 @@ export function Preloader() {
 
   return (
     <div className={`${styles.overlay} ${stage === "fading" ? styles.fading : ""}`} role="status" aria-live="polite">
-      <span className={styles.srOnly}>Loading UTOPIA…</span>
+      <span className={styles.srOnly}>Loading FOUND…</span>
       <img src="/golf-ball.svg" alt="" aria-hidden="true" className={styles.ball} width={72} height={72} />
     </div>
   );

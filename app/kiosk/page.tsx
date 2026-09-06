@@ -2,7 +2,7 @@ import { fetchCurrentGroups } from "@/lib/scoring/scoringRepo";
 import { KioskFlow } from "./KioskFlow";
 import styles from "./kiosk.module.css";
 
-export const metadata = { title: "Scoring — UTOPIA" };
+export const metadata = { title: "Scoring — FOUND" };
 export const dynamic = "force-dynamic"; // who's "currently playing" changes every minute
 
 export default async function KioskPage() {

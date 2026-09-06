@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     ),
   ];
 
-  const filename = `utopia-partners-${from ?? "all"}_${to ?? "all"}.csv`;
+  const filename = `found-partners-${from ?? "all"}_${to ?? "all"}.csv`;
 
   return new NextResponse(lines.join("\n"), {
     headers: {

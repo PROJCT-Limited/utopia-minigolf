@@ -1,5 +1,5 @@
 /* =============================================================================
-   UTOPIA — global design tokens + shared component classes.
+   FOUND — global design tokens + shared component classes.
    Ported from ~/Downloads/hoka-corefit-v2_4.html's design system (Manrope +
    Archivo, cobalt blue, soft rounded cards, cool grey background, glass
    panels) — colors/radii/type scale kept 1:1, HOKA/race-specific styling
@@ -29,7 +29,7 @@
   --r-sm: 16px;
 
   /* PROJCT's own brand blue (from projct-logo-blue.svg) — distinct from
-     UTOPIA's cobalt --blue above. Used for parent-brand touchpoints only,
+     FOUND's cobalt --blue above. Used for parent-brand touchpoints only,
      e.g. the persistent PROJCT tab. */
   --projct-blue: #0e50c8;
 

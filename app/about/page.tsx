@@ -36,7 +36,7 @@ export default function AboutPage() {
         </section>
 
         <section className={styles.prose}>
-          <span className={sharedStyles.monoLabel}>UTOPIA is one of our projects</span>
+          <span className={sharedStyles.monoLabel}>FOUND is one of our projects</span>
           <div className={styles.copy} style={{ marginTop: 16 }}>
             <p>
               QUALITY OUTPUT is what we care about — but we also care about the long term strategic value for

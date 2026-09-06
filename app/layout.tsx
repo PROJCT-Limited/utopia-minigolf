@@ -45,9 +45,9 @@ const futuraBook = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "UTOPIA — Minigolf Social Club",
+  title: "FOUND — Minigolf Social Club",
   description:
-    "A 30-minute five-station indoor mini-golf journey by PROJCT. Opening September 2026 in Sai Ying Pun, Hong Kong. Reserve your place now.",
+    "A five-station indoor mini-golf journey by PROJCT. Opening September 2026 in Sai Ying Pun, Hong Kong. Reserve your place now.",
 };
 
 export default function RootLayout({

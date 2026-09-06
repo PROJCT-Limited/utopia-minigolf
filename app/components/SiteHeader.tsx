@@ -5,7 +5,7 @@ export function SiteHeader() {
     <div className="topnav">
       <div className="wrap in">
         <Link href="/" className="brand">
-          UTOPIA
+          FOUND
         </Link>
         <nav>
           <Link href="/#leaderboard">Leaderboard</Link>

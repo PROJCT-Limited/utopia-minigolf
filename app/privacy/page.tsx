@@ -31,7 +31,7 @@ export default function PrivacyPage() {
               <h2>Pairing data is private</h2>
               <p>
                 Pairing information is opt-in, gated behind confirming you&rsquo;re 18 or over, and is only ever
-                visible to UTOPIA staff for the purpose of pairing you with other guests. It is never shown
+                visible to FOUND staff for the purpose of pairing you with other guests. It is never shown
                 publicly, never shown to other guests, and never used for anything else.
               </p>
             </div>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
             <div className={styles.section}>
               <h2>How long we keep it</h2>
               <p>
-                We keep booking records for as long as needed to run UTOPIA and meet our legal obligations. You can
+                We keep booking records for as long as needed to run FOUND and meet our legal obligations. You can
                 ask us to delete your data by emailing us at any time.
               </p>
             </div>

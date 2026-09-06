@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
   return (
     <main className="wrap">
       <div className={styles.loginCard}>
-        <span className="lbl">UTOPIA Admin</span>
+        <span className="lbl">FOUND Admin</span>
         <h1 className={styles.title} style={{ marginTop: 8, marginBottom: 20, fontSize: 24 }}>
           Sign in
         </h1>

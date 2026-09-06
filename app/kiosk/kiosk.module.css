@@ -1,6 +1,6 @@
 /* Standalone kiosk layout — no site header/footer, sized for an iPad sitting
    on a stand all day. Built on the same design tokens as the rest of the
-   site (app/globals.css) so it looks like part of UTOPIA, just full-screen
+   site (app/globals.css) so it looks like part of FOUND, just full-screen
    and touch-scaled up from the desktop-oriented booking flow. */
 
 .page {

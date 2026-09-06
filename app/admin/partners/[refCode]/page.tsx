@@ -5,7 +5,7 @@ import { PartnerForm } from "./PartnerForm";
 import { CopyRefLink } from "../CopyRefLink";
 import styles from "../../admin.module.css";
 
-export const metadata = { title: "Edit partner — UTOPIA Admin" };
+export const metadata = { title: "Edit partner — FOUND Admin" };
 export const dynamic = "force-dynamic";
 
 function refLinkFor(refCode: string): string {
