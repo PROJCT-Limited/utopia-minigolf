@@ -5,7 +5,7 @@ import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
 import { AdminWaveForm } from "./AdminWaveForm";
 import styles from "../../admin.module.css";
 
-export const metadata = { title: "Manage slot — UTOPIA Admin" };
+export const metadata = { title: "Manage slot — FOUND Admin" };
 export const dynamic = "force-dynamic";
 
 function formatMoney(cents: number, currency: string): string {
@@ -17,7 +17,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
   const detail = await fetchWaveAdminDetail(id);
   if (!detail) notFound();
 
-  const { wave, bookings, sessions } = detail;
+  const { wave, bookings } = detail;
 
   return (
     <main className={`wrap ${styles.page}`}>
@@ -76,52 +76,6 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
         </table>
       </div>
 
-      <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Public sessions ({sessions.length})</h3>
-        {sessions.length === 0 && <p className="hint">No sessions yet.</p>}
-        {sessions.map((s) => (
-          <div key={s.id} style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <span className={styles.badge}>{s.status}</span>
-              <span className="hint">{TICKET_TYPE_LABELS[s.ticketType]}</span>
-              <span className="hint">
-                {s.participants.filter((p) => p.status === "paid").length} of {s.maxPlayers} filled
-              </span>
-            </div>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Participant</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Paid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {s.participants.map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      {p.name}
-                      <br />
-                      <span className="hint">{p.email}</span>
-                    </td>
-                    <td>{p.isHost ? "Host" : "Joiner"}</td>
-                    <td>
-                      <span className={styles.badge}>{p.status}</span>
-                    </td>
-                    <td>{formatMoney(p.amountPaidCents, p.currency)}</td>
-                  </tr>
-                ))}
-                {s.participants.length === 0 && (
-                  <tr>
-                    <td colSpan={4}>No participants yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        ))}
-      </div>
     </main>
   );
 }

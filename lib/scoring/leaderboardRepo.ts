@@ -64,33 +64,6 @@ export async function fetchLeaderboard(range: LeaderboardRange, limit = 10): Pro
     players.set(key, existing);
   }
 
-  const { data: sessionScores, error: sessionError } = await supabaseAdmin
-    .from("station_scores")
-    .select(
-      "strokes, station_number, session_participant_id, session_participants(name, sessions(waves(date, start_time)))"
-    )
-    .not("session_participant_id", "is", null);
-  if (sessionError) console.error("fetchLeaderboard: session scores query failed:", sessionError.message);
-
-  for (const row of sessionScores ?? []) {
-    const sp = row.session_participants as unknown as {
-      name: string;
-      sessions: { waves: { date: string; start_time: string } } | null;
-    } | null;
-    const wave = sp?.sessions?.waves;
-    if (!sp || !wave) continue;
-
-    const key = `session:${row.session_participant_id}`;
-    const existing = players.get(key) ?? {
-      name: sp.name,
-      date: wave.date,
-      startTime: wave.start_time,
-      strokesByStation: new Map<number, number>(),
-    };
-    existing.strokesByStation.set(row.station_number, row.strokes);
-    players.set(key, existing);
-  }
-
   const rows = Array.from(players.values())
     .filter((p) => p.strokesByStation.size === 5 && inRange(p.date, range, today))
     .map((p) => ({

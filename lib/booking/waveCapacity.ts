@@ -1,8 +1,7 @@
 // FILE: lib/booking/waveCapacity.ts
 // -----------------------------------------------------------------------------
 // The one place wave-slot capacity gets read, checked, and mutated. Used by
-// confirmBooking.ts, reschedule.ts, and lib/sessions/confirmSession.ts, which
-// previously each reimplemented "read, clamp, update, flip full status"
+// confirmBooking.ts and reschedule.ts, which previously each reimplemented "read, clamp, update, flip full status"
 // independently — consolidated here so the wave-slot unit (as opposed to the
 // old raw-headcount unit) only has one implementation to get right.
 // -----------------------------------------------------------------------------

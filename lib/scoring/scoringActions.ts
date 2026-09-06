@@ -17,7 +17,6 @@ import {
   fetchScoresForPlayer,
   fetchScoresForRoster,
   saveStationScore,
-  type GroupKind,
   type CurrentGroup,
   type RosterPlayer,
 } from "./scoringRepo";
@@ -26,8 +25,8 @@ export async function fetchCurrentGroupsAction(): Promise<CurrentGroup[]> {
   return fetchCurrentGroups();
 }
 
-export async function fetchRosterForGroupAction(kind: GroupKind, id: string): Promise<RosterPlayer[]> {
-  return fetchRosterForGroup(kind, id);
+export async function fetchRosterForGroupAction(bookingId: string): Promise<RosterPlayer[]> {
+  return fetchRosterForGroup(bookingId);
 }
 
 export interface CreateRosterResult {
@@ -51,15 +50,14 @@ export async function createBookingRosterAction(bookingId: string, names: string
   return { ok: true, players };
 }
 
-export async function fetchScoresForPlayerAction(kind: GroupKind, playerId: string): Promise<Record<number, number>> {
-  return fetchScoresForPlayer(kind, playerId);
+export async function fetchScoresForPlayerAction(playerId: string): Promise<Record<number, number>> {
+  return fetchScoresForPlayer(playerId);
 }
 
 export async function fetchScoresForRosterAction(
-  kind: GroupKind,
   playerIds: string[]
 ): Promise<Record<string, Record<number, number>>> {
-  return fetchScoresForRoster(kind, playerIds);
+  return fetchScoresForRoster(playerIds);
 }
 
 export interface SaveScoreResult {
@@ -68,12 +66,11 @@ export interface SaveScoreResult {
 }
 
 export async function saveStationScoreAction(
-  kind: GroupKind,
   playerId: string,
   stationNumber: number,
   strokes: number
 ): Promise<SaveScoreResult> {
-  const result = await saveStationScore(kind, playerId, stationNumber, strokes);
+  const result = await saveStationScore(playerId, stationNumber, strokes);
   if (result.ok) revalidatePath("/");
   return result;
 }

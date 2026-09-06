@@ -8,7 +8,8 @@
 export const TICKET_TYPES = ["standard", "unlimited"] as const;
 export type TicketType = (typeof TICKET_TYPES)[number];
 
-// Standard: one 30-min run (all 5 stations) + 1 drink.
+// Standard: one run (all 5 stations) + 1 drink. Deliberately not described
+// by a duration anywhere guest-facing — players aren't timed.
 // Unlimited: a standing slot held for the full hour (re-entry every cycle) +
 // bottomless drinks.
 export const TICKET_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
@@ -23,14 +24,16 @@ export const TICKET_TYPE_LABELS: Record<TicketType, string> = {
 
 export const CURRENCY = "hkd";
 
-export const MIN_PRIVATE_GROUP_HEADCOUNT = 1;
-export const MAX_PRIVATE_GROUP_HEADCOUNT = 5;
+// A booking is just a booking — one person or a group of up to five. How
+// many tickets you buy is the only difference between them.
+export const MIN_HEADCOUNT = 1;
+export const MAX_HEADCOUNT = 5;
 
 export function isValidHeadcount(headcount: number): boolean {
   return (
     Number.isInteger(headcount) &&
-    headcount >= MIN_PRIVATE_GROUP_HEADCOUNT &&
-    headcount <= MAX_PRIVATE_GROUP_HEADCOUNT
+    headcount >= MIN_HEADCOUNT &&
+    headcount <= MAX_HEADCOUNT
   );
 }
 

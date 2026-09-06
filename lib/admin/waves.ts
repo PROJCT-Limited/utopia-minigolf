@@ -57,29 +57,9 @@ export interface AdminBookingRow {
   currency: string;
 }
 
-export interface AdminSessionParticipantRow {
-  id: string;
-  name: string;
-  email: string;
-  status: "pending" | "paid" | "cancelled";
-  amountPaidCents: number;
-  currency: string;
-  isHost: boolean;
-}
-
-export interface AdminSessionRow {
-  id: string;
-  shareToken: string;
-  maxPlayers: number;
-  status: "open" | "full";
-  ticketType: TicketType;
-  participants: AdminSessionParticipantRow[];
-}
-
 export interface AdminWaveDetail {
   wave: WaveView;
   bookings: AdminBookingRow[];
-  sessions: AdminSessionRow[];
 }
 
 export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDetail | null> {
@@ -113,34 +93,5 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     currency: b.currency,
   }));
 
-  const { data: sessionRows, error: sessionsError } = await supabaseAdmin
-    .from("sessions")
-    .select(
-      "id, share_token, max_players, status, ticket_type, session_participants(id, name, email, status, amount_paid_cents, currency, is_host)"
-    )
-    .eq("wave_id", waveId)
-    .order("created_at", { ascending: true });
-
-  if (sessionsError) {
-    console.error("fetchWaveAdminDetail: sessions query failed:", sessionsError.message);
-  }
-
-  const sessions: AdminSessionRow[] = (sessionRows ?? []).map((s) => ({
-    id: s.id,
-    shareToken: s.share_token,
-    maxPlayers: s.max_players,
-    status: s.status,
-    ticketType: s.ticket_type,
-    participants: (s.session_participants ?? []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      email: p.email,
-      status: p.status,
-      amountPaidCents: p.amount_paid_cents,
-      currency: p.currency,
-      isHost: p.is_host,
-    })),
-  }));
-
-  return { wave: toWaveView(waveRow as WaveRow), bookings, sessions };
+  return { wave: toWaveView(waveRow as WaveRow), bookings };
 }

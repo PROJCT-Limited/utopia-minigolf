@@ -44,8 +44,8 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
   async function selectGroup(group: CurrentGroup) {
     setSelectedGroup(group);
     setError(null);
-    const players = await fetchRosterForGroupAction(group.kind, group.id);
-    if (group.kind === "booking" && players.length === 0) {
+    const players = await fetchRosterForGroupAction(group.id);
+    if (players.length === 0) {
       setRosterNames(Array(group.playerCount).fill(""));
       setStep("roster");
       return;
@@ -69,7 +69,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
   async function enterStation(group: CurrentGroup, players: RosterPlayer[], station: number) {
     setRoster(players);
     setCurrentStation(station);
-    setScoresByPlayer(await fetchScoresForRosterAction(group.kind, players.map((p) => p.id)));
+    setScoresByPlayer(await fetchScoresForRosterAction(players.map((p) => p.id)));
     setStep("station");
   }
 
@@ -82,7 +82,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
 
   async function saveScore() {
     if (!selectedGroup || !activePlayer) return;
-    const result = await saveStationScoreAction(selectedGroup.kind, activePlayer.id, currentStation, pendingStrokes);
+    const result = await saveStationScoreAction(activePlayer.id, currentStation, pendingStrokes);
     if (!result.ok) {
       setError(result.error ?? "Couldn't save that score.");
       return;
@@ -114,7 +114,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
 
   return (
     <div className={styles.panel}>
-      <div className={styles.brand}>UTOPIA Scoring</div>
+      <div className={styles.brand}>FOUND Scoring</div>
 
       {step !== "groups" && (
         <button type="button" className={styles.backLink} onClick={backToGroups}>
@@ -130,7 +130,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
           ) : (
             <div className={styles.tileGrid}>
               {groups.map((g) => (
-                <button key={`${g.kind}-${g.id}`} type="button" className={styles.tile} onClick={() => selectGroup(g)}>
+                <button key={g.id} type="button" className={styles.tile} onClick={() => selectGroup(g)}>
                   <div className={styles.tileTime}>{g.timeLabel}</div>
                   <div className={styles.tileName}>{g.displayName}</div>
                   <div className={styles.tileMeta}>{g.playerCount} players</div>

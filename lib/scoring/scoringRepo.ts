@@ -1,20 +1,17 @@
 // FILE: lib/scoring/scoringRepo.ts
 // -----------------------------------------------------------------------------
 // DB access for the kiosk: which groups are currently playing, each group's
-// player roster (creating one for a private booking on first check-in),
-// and reading/writing station scores. Private bookings and public sessions
-// stay as parallel "kinds" throughout, matching how the rest of this schema
-// already treats them (see migrations/014_scoring.sql's header comment).
+// player roster (created on first check-in), and reading/writing station
+// scores. A group is always a booking — the parallel "public session" kind
+// this used to carry alongside it is gone, so scores hang off
+// station_scores.booking_player_id only.
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { TicketType } from "@/lib/booking/pricing";
 import { isCurrentlyActive, todayInHongKong } from "./activeWindow";
 
-export type GroupKind = "booking" | "session";
-
 export interface CurrentGroup {
-  kind: GroupKind;
   id: string;
   timeLabel: string;
   ticketType: TicketType;
@@ -56,33 +53,11 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
     const wave = waveTimings.get(b.wave_id);
     if (!wave || !isCurrentlyActive(wave, b.ticket_type, now)) continue;
     groups.push({
-      kind: "booking",
       id: b.id,
       timeLabel: wave.startTime.slice(0, 5),
       ticketType: b.ticket_type,
       displayName: `${b.lead_name}’s group`,
       playerCount: b.headcount,
-    });
-  }
-
-  const { data: sessionRows, error: sessionsError } = await supabaseAdmin
-    .from("sessions")
-    .select("id, wave_id, ticket_type, session_participants(status)")
-    .in("wave_id", waveIds);
-  if (sessionsError) console.error("fetchCurrentGroups: sessions query failed:", sessionsError.message);
-
-  for (const s of sessionRows ?? []) {
-    const wave = waveTimings.get(s.wave_id);
-    if (!wave || !isCurrentlyActive(wave, s.ticket_type, now)) continue;
-    const paidCount = (s.session_participants ?? []).filter((p) => p.status === "paid").length;
-    if (paidCount === 0) continue;
-    groups.push({
-      kind: "session",
-      id: s.id,
-      timeLabel: wave.startTime.slice(0, 5),
-      ticketType: s.ticket_type,
-      displayName: "Public session",
-      playerCount: paidCount,
     });
   }
 
@@ -94,28 +69,14 @@ export interface RosterPlayer {
   name: string;
 }
 
-export async function fetchRosterForGroup(kind: GroupKind, id: string): Promise<RosterPlayer[]> {
-  if (kind === "booking") {
-    const { data, error } = await supabaseAdmin
-      .from("booking_players")
-      .select("id, name")
-      .eq("booking_id", id)
-      .order("created_at", { ascending: true });
-    if (error) {
-      console.error("fetchRosterForGroup: booking_players query failed:", error.message);
-      return [];
-    }
-    return data ?? [];
-  }
-
+export async function fetchRosterForGroup(bookingId: string): Promise<RosterPlayer[]> {
   const { data, error } = await supabaseAdmin
-    .from("session_participants")
+    .from("booking_players")
     .select("id, name")
-    .eq("session_id", id)
-    .eq("status", "paid")
+    .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
   if (error) {
-    console.error("fetchRosterForGroup: session_participants query failed:", error.message);
+    console.error("fetchRosterForGroup: booking_players query failed:", error.message);
     return [];
   }
   return data ?? [];
@@ -133,15 +94,11 @@ export async function createBookingRoster(bookingId: string, names: string[]): P
   return data ?? [];
 }
 
-function playerColumn(kind: GroupKind): "booking_player_id" | "session_participant_id" {
-  return kind === "booking" ? "booking_player_id" : "session_participant_id";
-}
-
-export async function fetchScoresForPlayer(kind: GroupKind, playerId: string): Promise<Record<number, number>> {
+export async function fetchScoresForPlayer(playerId: string): Promise<Record<number, number>> {
   const { data, error } = await supabaseAdmin
     .from("station_scores")
     .select("station_number, strokes")
-    .eq(playerColumn(kind), playerId);
+    .eq("booking_player_id", playerId);
 
   if (error) {
     console.error("fetchScoresForPlayer: query failed:", error.message);
@@ -156,13 +113,14 @@ export async function fetchScoresForPlayer(kind: GroupKind, playerId: string): P
 /** Every player's scores, keyed by player id then station number — used to
  * show who in the group has already logged the station they're all on. */
 export async function fetchScoresForRoster(
-  kind: GroupKind,
   playerIds: string[]
 ): Promise<Record<string, Record<number, number>>> {
   if (playerIds.length === 0) return {};
 
-  const column = playerColumn(kind);
-  const { data, error } = await supabaseAdmin.from("station_scores").select(`${column}, station_number, strokes`).in(column, playerIds);
+  const { data, error } = await supabaseAdmin
+    .from("station_scores")
+    .select("booking_player_id, station_number, strokes")
+    .in("booking_player_id", playerIds);
 
   if (error) {
     console.error("fetchScoresForRoster: query failed:", error.message);
@@ -171,7 +129,7 @@ export async function fetchScoresForRoster(
 
   const scores: Record<string, Record<number, number>> = {};
   for (const row of data ?? []) {
-    const playerId = (row as Record<string, string>)[column];
+    const playerId = (row as Record<string, string>).booking_player_id;
     scores[playerId] ??= {};
     scores[playerId][row.station_number] = row.strokes;
   }
@@ -179,7 +137,6 @@ export async function fetchScoresForRoster(
 }
 
 export async function saveStationScore(
-  kind: GroupKind,
   playerId: string,
   stationNumber: number,
   strokes: number
@@ -194,8 +151,8 @@ export async function saveStationScore(
   const { error } = await supabaseAdmin
     .from("station_scores")
     .upsert(
-      { [playerColumn(kind)]: playerId, station_number: stationNumber, strokes, updated_at: new Date().toISOString() },
-      { onConflict: `${playerColumn(kind)},station_number` }
+      { booking_player_id: playerId, station_number: stationNumber, strokes, updated_at: new Date().toISOString() },
+      { onConflict: "booking_player_id,station_number" }
     );
 
   if (error) {

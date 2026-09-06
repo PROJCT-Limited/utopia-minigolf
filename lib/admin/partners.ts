@@ -75,12 +75,11 @@ export async function fetchPartnerReport(range: ReportDateRange): Promise<Partne
   if (partners.length === 0) return [];
 
   const clickCounts = await countClicksByRefCode(range);
-  const { bookingsByRef, sessionsByRef } = await revenueByRefCode(range);
+  const bookingsByRef = await revenueByRefCode(range);
 
   return partners.map((partner) => {
     const bookingAgg = bookingsByRef.get(partner.refCode) ?? { count: 0, players: 0, cents: 0 };
-    const sessionAgg = sessionsByRef.get(partner.refCode) ?? { count: 0, players: 0, cents: 0 };
-    const salesCents = bookingAgg.cents + sessionAgg.cents;
+    const salesCents = bookingAgg.cents;
 
     return {
       refCode: partner.refCode,
@@ -88,8 +87,8 @@ export async function fetchPartnerReport(range: ReportDateRange): Promise<Partne
       active: partner.active,
       commissionRate: partner.commissionRate,
       clicks: clickCounts.get(partner.refCode) ?? 0,
-      bookings: bookingAgg.count + sessionAgg.count,
-      players: bookingAgg.players + sessionAgg.players,
+      bookings: bookingAgg.count,
+      players: bookingAgg.players,
       salesCents,
       commissionOwedCents: computeCommissionOwedCents(salesCents, partner.commissionRate),
     };
@@ -120,9 +119,7 @@ interface RevenueAgg {
   cents: number;
 }
 
-async function revenueByRefCode(
-  range: ReportDateRange
-): Promise<{ bookingsByRef: Map<string, RevenueAgg>; sessionsByRef: Map<string, RevenueAgg> }> {
+async function revenueByRefCode(range: ReportDateRange): Promise<Map<string, RevenueAgg>> {
   let bookingsQuery = supabaseAdmin
     .from("bookings")
     .select("referred_by, headcount, amount_paid_cents")
@@ -131,20 +128,8 @@ async function revenueByRefCode(
   if (range.from) bookingsQuery = bookingsQuery.gte("created_at", range.from);
   if (range.to) bookingsQuery = bookingsQuery.lte("created_at", `${range.to}T23:59:59.999Z`);
 
-  let sessionsQuery = supabaseAdmin
-    .from("session_participants")
-    .select("referred_by, amount_paid_cents")
-    .eq("status", "paid")
-    .eq("is_host", true)
-    .not("referred_by", "is", null);
-  if (range.from) sessionsQuery = sessionsQuery.gte("created_at", range.from);
-  if (range.to) sessionsQuery = sessionsQuery.lte("created_at", `${range.to}T23:59:59.999Z`);
-
-  const [{ data: bookingRows, error: bookingsError }, { data: sessionRows, error: sessionsError }] =
-    await Promise.all([bookingsQuery, sessionsQuery]);
-
+  const { data: bookingRows, error: bookingsError } = await bookingsQuery;
   if (bookingsError) console.error("revenueByRefCode: bookings query failed:", bookingsError.message);
-  if (sessionsError) console.error("revenueByRefCode: session_participants query failed:", sessionsError.message);
 
   const bookingsByRef = new Map<string, RevenueAgg>();
   for (const row of bookingRows ?? []) {
@@ -156,15 +141,5 @@ async function revenueByRefCode(
     bookingsByRef.set(key, existing);
   }
 
-  const sessionsByRef = new Map<string, RevenueAgg>();
-  for (const row of sessionRows ?? []) {
-    const key = row.referred_by as string;
-    const existing = sessionsByRef.get(key) ?? { count: 0, players: 0, cents: 0 };
-    existing.count += 1;
-    existing.players += 1; // one host = one player credited
-    existing.cents += row.amount_paid_cents;
-    sessionsByRef.set(key, existing);
-  }
-
-  return { bookingsByRef, sessionsByRef };
+  return bookingsByRef;
 }

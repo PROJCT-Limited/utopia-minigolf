@@ -5,8 +5,8 @@ import type { WaveView } from "@/lib/booking/waves";
 import {
   computeBookingTotalCents,
   TICKET_TYPE_LABELS,
-  MIN_PRIVATE_GROUP_HEADCOUNT,
-  MAX_PRIVATE_GROUP_HEADCOUNT,
+  MIN_HEADCOUNT,
+  MAX_HEADCOUNT,
   type TicketType,
 } from "@/lib/booking/pricing";
 import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
@@ -17,11 +17,8 @@ import confirmationStyles from "../confirmation.module.css";
 import { WavePicker } from "./WavePicker";
 import { TicketTypeStep } from "./TicketTypeStep";
 import { PaymentStep } from "./PaymentStep";
-import { PublicSessionWizard } from "./PublicSessionWizard";
 import { StepProgress } from "./StepProgress";
 import styles from "./book.module.css";
-
-type BookingMode = "private" | "public";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,51 +26,7 @@ function formatMoney(cents: number): string {
   return `HKD ${(cents / 100).toFixed(0)}`;
 }
 
-export function BookingWizard({ waves, takenWaveIds }: { waves: WaveView[]; takenWaveIds: string[] }) {
-  const [mode, setMode] = useState<BookingMode | null>(null);
-
-  if (mode === null) {
-    return <BookingModePicker onSelect={setMode} />;
-  }
-
-  if (mode === "public") {
-    return <PublicSessionWizard waves={waves} takenWaveIds={takenWaveIds} onBack={() => setMode(null)} />;
-  }
-
-  return <PrivateGroupWizard waves={waves} onBack={() => setMode(null)} />;
-}
-
-function BookingModePicker({ onSelect }: { onSelect: (mode: BookingMode) => void }) {
-  return (
-    <section className={styles.stepSection}>
-      <div className={styles.stepInner}>
-        <h2 className={styles.stepHeading}>How are you booking?</h2>
-        <div className={styles.stepBody}>
-          <div className={styles.selectRows}>
-            <button type="button" className={styles.selectRow} onClick={() => onSelect("private")}>
-              <div className={styles.selectRowHead}>
-                <span className={styles.radioDot} />
-                <span className={styles.selectRowTitle}>Private group</span>
-              </div>
-              <p className={styles.selectRowBody}>Reserve a slot for your own party. You pay for everyone in one go.</p>
-            </button>
-            <button type="button" className={styles.selectRow} onClick={() => onSelect("public")}>
-              <div className={styles.selectRowHead}>
-                <span className={styles.radioDot} />
-                <span className={styles.selectRowTitle}>Public session</span>
-              </div>
-              <p className={styles.selectRowBody}>
-                Start a session and share the link. Everyone who joins pays for their own place — 2 to 5 players.
-              </p>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () => void }) {
+export function BookingWizard({ waves }: { waves: WaveView[] }) {
   const [step, setStep] = useState(1);
   const [ticketType, setTicketType] = useState<TicketType | null>(null);
   const [headcount, setHeadcount] = useState(1);
@@ -175,8 +128,8 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
                   <button
                     type="button"
                     className={sharedStyles.stepperBtn}
-                    onClick={() => setHeadcount((n) => Math.max(MIN_PRIVATE_GROUP_HEADCOUNT, n - 1))}
-                    disabled={headcount <= MIN_PRIVATE_GROUP_HEADCOUNT}
+                    onClick={() => setHeadcount((n) => Math.max(MIN_HEADCOUNT, n - 1))}
+                    disabled={headcount <= MIN_HEADCOUNT}
                     aria-label="Fewer players"
                   >
                     −
@@ -185,8 +138,8 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
                   <button
                     type="button"
                     className={sharedStyles.stepperBtn}
-                    onClick={() => setHeadcount((n) => Math.min(MAX_PRIVATE_GROUP_HEADCOUNT, n + 1))}
-                    disabled={headcount >= MAX_PRIVATE_GROUP_HEADCOUNT}
+                    onClick={() => setHeadcount((n) => Math.min(MAX_HEADCOUNT, n + 1))}
+                    disabled={headcount >= MAX_HEADCOUNT}
                     aria-label="More players"
                   >
                     +
@@ -260,13 +213,15 @@ function PrivateGroupWizard({ waves, onBack }: { waves: WaveView[]; onBack: () =
       {!(step === 4 && payment) && (
         <div className={styles.footerNav}>
           <div className={styles.footerNavInner}>
-            <button
-              type="button"
-              className={styles.backLink}
-              onClick={() => (step === 1 ? onBack() : setStep((s) => Math.max(1, s - 1)))}
-            >
-              ← Back
-            </button>
+            {/* Step 1 is now the first thing on the page — there is no
+                booking-mode picker behind it to go back to. */}
+            {step > 1 ? (
+              <button type="button" className={styles.backLink} onClick={() => setStep((s) => s - 1)}>
+                ← Back
+              </button>
+            ) : (
+              <span />
+            )}
             {step < 4 && (
               <div className={styles.continueWrap}>
                 <button

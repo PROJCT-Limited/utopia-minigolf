@@ -14,7 +14,6 @@
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe/server";
 import { markBookingPaidByPaymentIntent } from "@/lib/booking/confirmBooking";
-import { markParticipantPaidByPaymentIntent } from "@/lib/sessions/confirmSession";
 
 export const runtime = "nodejs";
 
@@ -38,8 +37,6 @@ export async function POST(req: Request) {
     const pi = event.data.object as Stripe.PaymentIntent;
     if (pi.metadata?.booking_id) {
       await markBookingPaidByPaymentIntent(pi.id);
-    } else if (pi.metadata?.session_participant_id) {
-      await markParticipantPaidByPaymentIntent(pi.id);
     }
   } else if (event.type === "payment_intent.payment_failed") {
     const pi = event.data.object as Stripe.PaymentIntent;
