@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "../../utils/formatWave";
 import sharedStyles from "../../components/found/shared.module.css";
-import bookStyles from "../../book/book.module.css";
 import styles from "../../confirmation.module.css";
 
 interface BookingForView {
@@ -123,7 +122,6 @@ export function ConfirmationView({
         </div>
       </div>
 
-      {!waveIsConfirmed && <p className={bookStyles.notice}>{DATE_TBC_NOTICE}</p>}
       <p className={styles.body}>
         Check your email for a receipt and a link to manage or reschedule your booking. {RESCHEDULE_NOTICE}
       </p>

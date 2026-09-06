@@ -13,11 +13,10 @@ import { EmailButton } from "./components/EmailButton";
 import {
   EmailDetailBox,
   EmailHeading,
-  EmailNotice,
   MonoLabel,
   bodyText,
 } from "./components/EmailPrimitives";
-import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
@@ -69,7 +68,6 @@ export function BookingConfirmationEmail({
         ]}
       />
 
-      {!waveIsConfirmed && <EmailNotice>{DATE_TBC_NOTICE}</EmailNotice>}
       <Text style={bodyText}>{RESCHEDULE_NOTICE}</Text>
 
       <EmailButton href={manageUrl}>Manage your booking</EmailButton>

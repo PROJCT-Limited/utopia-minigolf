@@ -14,11 +14,9 @@ import { EmailButton } from "./components/EmailButton";
 import {
   EmailDetailBox,
   EmailHeading,
-  EmailNotice,
   MonoLabel,
   bodyText,
 } from "./components/EmailPrimitives";
-import { DATE_TBC_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
@@ -66,7 +64,6 @@ export function BookingRescheduledEmail({
         ]}
       />
 
-      {!newWaveIsConfirmed && <EmailNotice>{DATE_TBC_NOTICE}</EmailNotice>}
 
       <Text style={bodyText}>
         This booking has now used its one self-serve reschedule — for any further changes, just reply to this

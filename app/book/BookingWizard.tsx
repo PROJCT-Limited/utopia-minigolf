@@ -9,7 +9,7 @@ import {
   MAX_HEADCOUNT,
   type TicketType,
 } from "@/lib/booking/pricing";
-import { DATE_TBC_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import sharedStyles from "../components/found/shared.module.css";
@@ -156,7 +156,6 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
           <div className={styles.stepInner}>
             <h2 className={styles.stepHeading}>Review &amp; pay</h2>
             <p className={styles.notice} style={{ marginTop: 20 }}>
-              {selectedWave?.status === "provisional" && `${DATE_TBC_NOTICE} `}
               {RESCHEDULE_NOTICE}
             </p>
             <div className={styles.stepBody}>
