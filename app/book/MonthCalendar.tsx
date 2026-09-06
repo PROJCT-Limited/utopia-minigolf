@@ -24,12 +24,10 @@ export function MonthCalendar({
   waves,
   selectedWaveId,
   onSelect,
-  takenWaveIds,
 }: {
   waves: WaveView[];
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
-  takenWaveIds?: Set<string>;
 }) {
   const [viewMonth, setViewMonth] = useState(() => (waves[0] ? waves[0].date.slice(0, 7) : todayMonthKey()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -91,7 +89,6 @@ export function MonthCalendar({
                 selectedWaveId={selectedWaveId}
                 onSelect={onSelect}
                 showDate={false}
-                takenWaveIds={takenWaveIds}
               />
             ))
           )}

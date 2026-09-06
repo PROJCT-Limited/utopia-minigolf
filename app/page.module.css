@@ -164,17 +164,6 @@
   top: 21.4%;
   color: var(--f-white);
 }
-.pill {
-  display: inline-block;
-  border: 1px solid var(--f-white);
-  border-radius: 100px;
-  padding: 8px 16px;
-  font-family: var(--f-mono);
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 1.5;
-  letter-spacing: 0;
-}
 .heroBody {
   margin-top: 24px;
   max-width: 44ch;
@@ -184,14 +173,43 @@
   line-height: 1.553;
   letter-spacing: 0;
 }
+/* The hero's single call to action, in the slot the decorative pill used to
+   occupy. Solid --f-white on the photograph is the highest-contrast object
+   in the frame, so it reads as the one thing to press; hover inverts it back
+   to the outlined pill this replaced. Same 100px pill geometry as .pillBtn
+   in the shared FOUND primitives, colours swapped for a dark ground. */
 .heroCta {
-  display: inline-block;
-  margin-top: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--f-white);
+  border-radius: 100px;
+  background: var(--f-white);
+  color: var(--f-ink);
+  padding: 15px 28px;
   font-family: var(--f-archivo);
   font-weight: 700;
   font-size: 15px;
-  text-decoration: underline;
-  text-underline-offset: 6px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.heroCta:hover {
+  background: transparent;
+  color: var(--f-white);
+}
+.heroCtaArrow {
+  transition: transform 0.18s ease;
+}
+.heroCta:hover .heroCtaArrow {
+  transform: translateX(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroCta,
+  .heroCtaArrow {
+    transition: none;
+  }
 }
 
 .wordmark {

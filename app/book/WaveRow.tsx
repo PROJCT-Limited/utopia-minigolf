@@ -19,24 +19,20 @@ export function WaveRow({
   wave,
   selected,
   onSelect,
-  taken = false,
 }: {
   wave: WaveView;
   selected: boolean;
   onSelect: (waveId: string) => void;
   showDate?: boolean;
-  /** This wave already has a public session — can't start another one on it. */
-  taken?: boolean;
 }) {
-  const disabled = wave.isFull || taken;
 
   return (
     <button
       type="button"
       className={`${styles.quarterCell} ${selected ? styles.on : ""}`}
-      disabled={disabled}
+      disabled={wave.isFull}
       onClick={() => onSelect(wave.id)}
-      title={taken ? "Taken" : wave.isFull ? "Full" : undefined}
+      title={wave.isFull ? "Full" : undefined}
     >
       {cellLabel(wave)}
     </button>

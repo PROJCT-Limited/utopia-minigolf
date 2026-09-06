@@ -35,7 +35,7 @@ const COMMUNITY_ROWS = [
 const TIERS = [
   {
     label: "Standard, per person",
-    name: "One 30-minute run",
+    name: "One run",
     body: "All 5 stations + 1 drink",
     priceCents: TICKET_PRICE_PER_PERSON_CENTS.standard,
   },
@@ -85,14 +85,16 @@ export default async function HomePage() {
           </nav>
 
           <div className={styles.heroContent}>
-            <span className={styles.pill}>Minigolf Social Club</span>
+            <Link href="/book" className={styles.heroCta}>
+              Reserve your place
+              <span className={styles.heroCtaArrow} aria-hidden>
+                →
+              </span>
+            </Link>
             <p className={styles.heroBody}>
               This is an investigation into rediscovering day to day objects and materials under a new light,
               uncovering hidden narratives within the material properties of reclaimed objects.
             </p>
-            <Link href="/book" className={styles.heroCta}>
-              Reserve your place <span aria-hidden>→</span>
-            </Link>
           </div>
 
           <Image

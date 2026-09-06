@@ -9,7 +9,7 @@ const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: str
   {
     type: "standard",
     label: "Standard, per person",
-    name: "One 30-minute run",
+    name: "One run",
     body: "All 5 stations + 1 drink",
   },
   {

@@ -11,18 +11,15 @@ export function WavePicker({
   waves,
   selectedWaveId,
   onSelect,
-  takenWaveIds,
 }: {
   waves: WaveView[];
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
   /** Wave IDs that already have a public session — shown as "Taken", not selectable. */
-  takenWaveIds?: string[];
 }) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
 
   const weekGroups = useMemo(() => groupByWeek(waves), [waves]);
-  const takenSet = useMemo(() => new Set(takenWaveIds ?? []), [takenWaveIds]);
 
   return (
     <>
@@ -36,7 +33,7 @@ export function WavePicker({
       </div>
 
       {viewMode === "month" ? (
-        <MonthCalendar waves={waves} selectedWaveId={selectedWaveId} onSelect={onSelect} takenWaveIds={takenSet} />
+        <MonthCalendar waves={waves} selectedWaveId={selectedWaveId} onSelect={onSelect} />
       ) : (
         <div className={styles.waveGroups}>
           {weekGroups.length === 0 && <p className={styles.hint}>No slots available yet — check back soon.</p>}
@@ -50,7 +47,7 @@ export function WavePicker({
                     hourGroup={hourGroup}
                     selectedWaveId={selectedWaveId}
                     onSelect={onSelect}
-                    takenWaveIds={takenSet}
+                   
                   />
                 ))}
               </div>

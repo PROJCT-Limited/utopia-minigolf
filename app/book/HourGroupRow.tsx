@@ -17,14 +17,11 @@ export function HourGroupRow({
   selectedWaveId,
   onSelect,
   showDate = true,
-  takenWaveIds,
 }: {
   hourGroup: HourGroup;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
   showDate?: boolean;
-  /** Wave IDs that already have a public session — shown as "Taken", not selectable. */
-  takenWaveIds?: Set<string>;
 }) {
   const containsSelected = hourGroup.waves.some((w) => w.id === selectedWaveId);
   const [expanded, setExpanded] = useState(containsSelected);
@@ -39,7 +36,9 @@ export function HourGroupRow({
       >
         {showDate && <span className={styles.hourDate}>{formatWaveDate(hourGroup.date)}</span>}
         <span className={styles.hourTime}>{hourGroup.hour}</span>
-        <span className={styles.hourAvailability}>{hourGroup.isFull ? "Full" : `${hourGroup.slotsLeft} groups left`}</span>
+        {/* Whether an hour is bookable, never how much room is left in it —
+            guests don't see exact availability counts. */}
+        {hourGroup.isFull && <span className={styles.hourAvailability}>Full</span>}
         {!hourGroup.isFull && (
           <span className={`${styles.hourToggle} ${expanded ? styles.expanded : ""}`} aria-hidden>
             {expanded ? "−" : "+"}
@@ -54,7 +53,6 @@ export function HourGroupRow({
               wave={w}
               selected={selectedWaveId === w.id}
               onSelect={onSelect}
-              taken={takenWaveIds?.has(w.id) ?? false}
             />
           ))}
         </div>

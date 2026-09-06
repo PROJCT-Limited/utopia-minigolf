@@ -18,9 +18,9 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>Bookings &amp; payment</h2>
               <p>
-                A UTOPIA reservation is charged in full, per person, at the time of booking. Standard tickets (HKD
-                150) cover one 30-minute run across all five stations plus one drink; Unlimited tickets (HKD 220)
-                cover the full hour with re-entry and bottomless drinks. No card details are stored by UTOPIA,
+                A FOUND reservation is charged in full, per person, at the time of booking. Standard tickets (HKD
+                150) cover one run across all five stations plus one drink; Unlimited tickets (HKD 220)
+                cover the full hour with re-entry and bottomless drinks. No card details are stored by FOUND,
                 payment is processed securely by Stripe.
               </p>
             </div>
@@ -28,7 +28,7 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>Dates are provisional</h2>
               <p>
-                UTOPIA has not opened yet. Reservations made before launch are against a provisional wave, not a
+                FOUND has not opened yet. Reservations made before launch are against a provisional wave, not a
                 fixed date or time. We&rsquo;ll email the confirmed date and time slot as soon as it&rsquo;s locked
                 in.
               </p>
@@ -55,7 +55,7 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>At the venue</h2>
               <p>
-                Please arrive on time for your wave, late arrival may shorten your play time. UTOPIA reserves the
+                Please arrive on time for your wave, late arrival may shorten your play time. FOUND reserves the
                 right to refuse entry to anyone who is intoxicated, disruptive, or a safety risk to staff or other
                 guests.
               </p>
