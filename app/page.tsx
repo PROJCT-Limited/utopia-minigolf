@@ -11,12 +11,6 @@ import styles from "./page.module.css";
 // rather than making the whole marketing page dynamic on every request.
 export const revalidate = 60;
 
-const BEYOND_THE_TRAIL = [
-  ["Automatic scoring", "Drinks & Snacks"],
-  ["Digital onboarding", "Leaderboards"],
-  ["Prizes for wins", null],
-] as const;
-
 const COMMUNITY_ROWS = [
   {
     title: "Birthdays",
@@ -34,15 +28,15 @@ const COMMUNITY_ROWS = [
 
 const TIERS = [
   {
-    label: "Standard, per person",
-    name: "One run",
-    body: "All 5 stations + 1 drink",
+    label: "ONE ROUND, PER PERSON",
+    name: "One round",
+    body: "All 5 stations + a drink",
     priceCents: TICKET_PRICE_PER_PERSON_CENTS.standard,
   },
   {
-    label: "Unlimited, per person",
-    name: "The full hour",
-    body: "Re entry included + bottomless drinks",
+    label: "UNLIMITED PLAY, PER PERSON",
+    name: "A full hour",
+    body: "Keep playing + free flow drinks",
     priceCents: TICKET_PRICE_PER_PERSON_CENTS.unlimited,
   },
 ];
@@ -85,6 +79,7 @@ export default async function HomePage() {
           </nav>
 
           <div className={styles.heroContent}>
+            <p className={styles.heroDates}>30 Sept &mdash; 31 Oct 2026</p>
             <Link href="/book" className={styles.heroCta}>
               Reserve your place
               <span className={styles.heroCtaArrow} aria-hidden>
@@ -92,8 +87,9 @@ export default async function HomePage() {
               </span>
             </Link>
             <p className={styles.heroBody}>
-              This is an investigation into rediscovering day to day objects and materials under a new light,
-              uncovering hidden narratives within the material properties of reclaimed objects.
+              Come play indoor mini golf, reimagined with things you&rsquo;d never expect to find on a golf
+              course. Five fun stations, drinks at the bar, and a playful experience made for good times with
+              friends. Come for the game, stay for the atmosphere.
             </p>
           </div>
 
@@ -113,7 +109,7 @@ export default async function HomePage() {
           <h2 className={styles.h48}>
             Five stations.
             <br />
-            <span className={styles.stone}>Five material investigations.</span>
+            <span className={styles.stone}>Five fun challenges.</span>
           </h2>
         </div>
         <div className={styles.stationsImageWrap}>
@@ -146,34 +142,6 @@ export default async function HomePage() {
             a fixed form, we let the materials lead.
           </p>
           <p className={styles.conceptP}>The result is a series of minigolf stations built through this process of discovery.</p>
-        </div>
-      </section>
-
-      {/* BEYOND THE TRAIL */}
-      <section className={styles.twoCol}>
-        <div>
-          <h2 className={styles.h48}>Beyond the trail</h2>
-          <p className={styles.subhead}>Everything that turns a round into a night.</p>
-        </div>
-        <div>
-          <div className={styles.trailRule} />
-          {BEYOND_THE_TRAIL.map((pair, i) => (
-            <div key={i}>
-              <div className={styles.trailRow}>
-                <span className={styles.trailItem}>
-                  <span className={styles.dot} />
-                  {pair[0]}
-                </span>
-                {pair[1] && (
-                  <span className={styles.trailItem}>
-                    <span className={styles.dot} />
-                    {pair[1]}
-                  </span>
-                )}
-              </div>
-              <div className={styles.trailRule} />
-            </div>
-          ))}
         </div>
       </section>
 
@@ -221,12 +189,10 @@ export default async function HomePage() {
         <div className={styles.twoCol}>
           <div>
             <h2 className={`${styles.h48} ${styles.paceHeading}`}>Pick your pace</h2>
-            <div className={styles.paceIncluded}>
-              WHAT&rsquo;S INCLUDED
-              <br />/ AUTOMATIC SCORING
-              <br />/ LIVE LEADERBOARD
-              <br />/ DRINKS
-            </div>
+            <p className={styles.paceSub}>
+              Come on your own or bring the whole group. Five stations, and the automated scoring for your
+              convenience
+            </p>
           </div>
           <div>
             <div className={styles.tierRule} />

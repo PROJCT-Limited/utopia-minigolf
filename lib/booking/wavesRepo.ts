@@ -11,7 +11,7 @@ import { BOOKABLE_WINDOW_START, BOOKABLE_WINDOW_END, toWaveView, type WaveRow, t
 export async function fetchUpcomingWaves(): Promise<WaveView[]> {
   const { data, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
+    .select("id, date, start_time, people_capacity, people_used, wave_slots_used, status")
     .gte("date", BOOKABLE_WINDOW_START) // nothing outside the open booking window is bookable
     .lte("date", BOOKABLE_WINDOW_END)
     .order("date", { ascending: true })
@@ -28,7 +28,7 @@ export async function fetchUpcomingWaves(): Promise<WaveView[]> {
 export async function fetchWaveById(waveId: string): Promise<WaveView | null> {
   const { data, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
+    .select("id, date, start_time, people_capacity, people_used, wave_slots_used, status")
     .eq("id", waveId)
     .maybeSingle();
 

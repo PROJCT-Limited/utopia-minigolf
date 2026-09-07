@@ -18,7 +18,7 @@ import {
   CURRENCY,
   type TicketType,
 } from "./pricing";
-import { hasWaveSlotsAvailable } from "./waveCapacity";
+import { hasRoomForGroup } from "./waveCapacity";
 import { generateManageToken } from "./token";
 import { fetchWaveById } from "./wavesRepo";
 import { resolveReferredBy } from "@/lib/partners/partnersRepo";
@@ -51,10 +51,17 @@ export async function createBookingWithPaymentIntent(
   }
 
   const wave = await fetchWaveById(waveId);
-  if (!wave) return { ok: false, error: "That slot no longer exists." };
-  // One booking = one group = one slot, regardless of ticket type.
-  if (!hasWaveSlotsAvailable(wave, 1)) {
-    return { ok: false, error: "Not enough spots left in that slot." };
+  if (!wave) return { ok: false, error: "That start time no longer exists." };
+  // Capacity is people: a group of four needs four spaces, and the picker's
+  // view of this start time may be seconds stale, so re-check server-side.
+  if (!hasRoomForGroup(wave, headcount)) {
+    return {
+      ok: false,
+      error:
+        wave.peopleLeft > 0
+          ? `Only ${wave.peopleLeft} ${wave.peopleLeft === 1 ? "space" : "spaces"} left at that start time — pick another, or come as a smaller group.`
+          : "That start time just filled up. Please pick another.",
+    };
   }
 
   const amountCents = computeBookingTotalCents(ticketType, headcount);

@@ -40,8 +40,8 @@ export function AdminWaveForm({ waveId, wave }: { waveId: string; wave: WaveView
         <input id="startTime" name="startTime" type="time" defaultValue={wave.startTime.slice(0, 5)} required />
       </div>
       <div className={styles.field}>
-        <label htmlFor="totalWaveSlots">Total wave-slots</label>
-        <input id="totalWaveSlots" name="totalWaveSlots" type="number" min={1} defaultValue={wave.totalWaveSlots} required />
+        <label htmlFor="peopleCapacity">People cap</label>
+        <input id="peopleCapacity" name="peopleCapacity" type="number" min={1} defaultValue={wave.peopleCapacity} required />
       </div>
       <div className={styles.field}>
         <label htmlFor="status">Status</label>

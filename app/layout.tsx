@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Manrope, Archivo } from "next/font/google";
 import localFont from "next/font/local";
 import { PersistentProjctTab } from "./components/PersistentProjctTab";
-import { Preloader } from "./components/Preloader";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -47,7 +46,7 @@ const futuraBook = localFont({
 export const metadata: Metadata = {
   title: "FOUND — Minigolf Social Club",
   description:
-    "A five-station indoor mini-golf journey by PROJCT. Opening September 2026 in Sai Ying Pun, Hong Kong. Reserve your place now.",
+    "A five-station indoor minigolf club by PROJCT. 30 Sept — 31 Oct 2026, Sai Ying Pun, Hong Kong. Reserve your place.",
 };
 
 export default function RootLayout({
@@ -68,7 +67,9 @@ export default function RootLayout({
         <noscript>
           <style>{".motionReveal { opacity: 1 !important; transform: none !important; }"}</style>
         </noscript>
-        <Preloader />
+        {/* Intro animation (app/components/Preloader.tsx) is parked, not
+            deleted — the component and its CSS are still here; re-add
+            <Preloader /> above {children} to bring the rolling ball back. */}
         {children}
         <PersistentProjctTab />
       </body>

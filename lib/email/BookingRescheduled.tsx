@@ -72,7 +72,7 @@ export function BookingRescheduledEmail({
 
       <EmailButton href={manageUrl}>Manage your booking</EmailButton>
 
-      <Text style={bodyText}>See you on the trail.</Text>
+      <Text style={bodyText}>See you at FOUND.</Text>
     </EmailShell>
   );
 }

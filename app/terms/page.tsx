@@ -28,17 +28,17 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>Dates are provisional</h2>
               <p>
-                FOUND has not opened yet. Reservations made before launch are against a provisional wave, not a
-                fixed date or time. We&rsquo;ll email the confirmed date and time slot as soon as it&rsquo;s locked
-                in.
+                FOUND has not opened yet. Reservations made before launch are against a provisional start time,
+                not a fixed date or time. We&rsquo;ll email the confirmed date and time as soon as it&rsquo;s
+                locked in.
               </p>
             </div>
             <div className={styles.rule} />
             <div className={styles.section}>
               <h2>Rescheduling</h2>
               <p>
-                Once your date is confirmed, you may reschedule your booking once, self-serve, to any available
-                wave, up until {RESCHEDULE_CUTOFF_DAYS} days before your confirmed date. Use the manage-booking link
+                Once your date is confirmed, you may reschedule your booking once, self-serve, to any start time
+                with room for your group, up until {RESCHEDULE_CUTOFF_DAYS} days before your confirmed date. Use the manage-booking link
                 in your confirmation email. Requests closer to the date, or a second reschedule, should be sent by
                 replying to that email.
               </p>
@@ -55,7 +55,7 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>At the venue</h2>
               <p>
-                Please arrive on time for your wave, late arrival may shorten your play time. FOUND reserves the
+                Please arrive on time for your start time, late arrival may shorten your play time. FOUND reserves the
                 right to refuse entry to anyone who is intoxicated, disruptive, or a safety risk to staff or other
                 guests.
               </p>

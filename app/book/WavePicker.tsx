@@ -9,13 +9,15 @@ import styles from "./book.module.css";
 
 export function WavePicker({
   waves,
+  headcount,
   selectedWaveId,
   onSelect,
 }: {
   waves: WaveView[];
+  /** Party size: capacity is people, so this decides what's still bookable. */
+  headcount: number;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
-  /** Wave IDs that already have a public session — shown as "Taken", not selectable. */
 }) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
 
@@ -33,7 +35,7 @@ export function WavePicker({
       </div>
 
       {viewMode === "month" ? (
-        <MonthCalendar waves={waves} selectedWaveId={selectedWaveId} onSelect={onSelect} />
+        <MonthCalendar waves={waves} headcount={headcount} selectedWaveId={selectedWaveId} onSelect={onSelect} />
       ) : (
         <div className={styles.waveGroups}>
           {weekGroups.length === 0 && <p className={styles.hint}>No slots available yet — check back soon.</p>}
@@ -45,9 +47,9 @@ export function WavePicker({
                   <HourGroupRow
                     key={hourGroup.key}
                     hourGroup={hourGroup}
+                    headcount={headcount}
                     selectedWaveId={selectedWaveId}
                     onSelect={onSelect}
-                   
                   />
                 ))}
               </div>

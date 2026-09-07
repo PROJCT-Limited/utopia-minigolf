@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { WaveView } from "@/lib/booking/waves";
+import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import {
   computeBookingTotalCents,
   TICKET_TYPE_LABELS,
@@ -39,8 +39,19 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
 
   const selectedWave = waves.find((w) => w.id === selectedWaveId) ?? null;
 
+  // Capacity is counted in people, so party size decides what's bookable:
+  // growing the group can outgrow the start time already chosen, which then
+  // has to be given up rather than silently failing at payment.
+  function changeHeadcount(next: number) {
+    setHeadcount(next);
+    const stillSelected = waves.find((w) => w.id === selectedWaveId);
+    if (stillSelected && !hasRoomFor(stillSelected, next)) {
+      setSelectedWaveId(null);
+    }
+  }
+
   const step1Valid = ticketType !== null;
-  const step2Valid = selectedWaveId !== null;
+  const step2Valid = selectedWave !== null && hasRoomFor(selectedWave, headcount);
   const step3Valid = leadName.trim().length > 0 && EMAIL_RE.test(leadEmail.trim());
 
   const recap: string[] = [];
@@ -51,7 +62,7 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
     step === 1 && !step1Valid
       ? "Select a ticket to continue"
       : step === 2 && !step2Valid
-        ? "Pick a slot to continue"
+        ? "Pick a start time that fits your group to continue"
         : step === 3 && !step3Valid
           ? "Add your name and email to continue"
           : null;
@@ -85,12 +96,10 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
         <section className={styles.stepSection}>
           <div className={styles.stepInner}>
             <h2 className={styles.stepHeading}>Pick your pace</h2>
-            <div className={styles.includedList}>
-              WHAT&rsquo;S INCLUDED
-              <br />/ AUTOMATIC SCORING
-              <br />/ LIVE LEADERBOARD
-              <br />/ DRINKS
-            </div>
+            <p className={styles.includedList}>
+              Come on your own or bring the whole group. Five stations, and the automated scoring for your
+              convenience
+            </p>
             <div className={styles.stepBody}>
               <TicketTypeStep selected={ticketType} onSelect={setTicketType} />
             </div>
@@ -103,7 +112,38 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
           <div className={styles.stepInner}>
             <h2 className={styles.stepHeading}>Pick a slot</h2>
             <div className={styles.stepBody}>
-              <WavePicker waves={waves} selectedWaveId={selectedWaveId} onSelect={setSelectedWaveId} />
+              <div className={styles.field}>
+                <label>Players in your group</label>
+                <div className={sharedStyles.stepperRow}>
+                  <button
+                    type="button"
+                    className={sharedStyles.stepperBtn}
+                    onClick={() => changeHeadcount(Math.max(MIN_HEADCOUNT, headcount - 1))}
+                    disabled={headcount <= MIN_HEADCOUNT}
+                    aria-label="Fewer players"
+                  >
+                    −
+                  </button>
+                  <span className={sharedStyles.stepperCount}>{headcount}</span>
+                  <button
+                    type="button"
+                    className={sharedStyles.stepperBtn}
+                    onClick={() => changeHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))}
+                    disabled={headcount >= MAX_HEADCOUNT}
+                    aria-label="More players"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div className={styles.slotPicker}>
+                <WavePicker
+                  waves={waves}
+                  headcount={headcount}
+                  selectedWaveId={selectedWaveId}
+                  onSelect={setSelectedWaveId}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -121,30 +161,6 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
               <div className={styles.field}>
                 <label htmlFor="leadEmail">Email</label>
                 <input id="leadEmail" type="email" value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} autoComplete="email" />
-              </div>
-              <div className={styles.field}>
-                <label>Players</label>
-                <div className={sharedStyles.stepperRow}>
-                  <button
-                    type="button"
-                    className={sharedStyles.stepperBtn}
-                    onClick={() => setHeadcount((n) => Math.max(MIN_HEADCOUNT, n - 1))}
-                    disabled={headcount <= MIN_HEADCOUNT}
-                    aria-label="Fewer players"
-                  >
-                    −
-                  </button>
-                  <span className={sharedStyles.stepperCount}>{headcount}</span>
-                  <button
-                    type="button"
-                    className={sharedStyles.stepperBtn}
-                    onClick={() => setHeadcount((n) => Math.min(MAX_HEADCOUNT, n + 1))}
-                    disabled={headcount >= MAX_HEADCOUNT}
-                    aria-label="More players"
-                  >
-                    +
-                  </button>
-                </div>
               </div>
             </div>
           </div>

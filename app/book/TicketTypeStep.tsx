@@ -8,15 +8,15 @@ function formatMoney(cents: number): string {
 const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: string }[] = [
   {
     type: "standard",
-    label: "Standard, per person",
-    name: "One run",
-    body: "All 5 stations + 1 drink",
+    label: "ONE ROUND, PER PERSON",
+    name: "One round",
+    body: "All 5 stations + a drink",
   },
   {
     type: "unlimited",
-    label: "Unlimited, per person",
-    name: "The full hour",
-    body: "Re entry included + bottomless drinks",
+    label: "UNLIMITED PLAY, PER PERSON",
+    name: "A full hour",
+    body: "Keep playing + free flow drinks",
   },
 ];
 

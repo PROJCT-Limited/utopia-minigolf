@@ -10,4 +10,4 @@
 
 export const RESCHEDULE_CUTOFF_DAYS = Number(process.env.RESCHEDULE_CUTOFF_DAYS ?? 10);
 
-export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule to any available slot once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;
+export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule to any available start time once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;

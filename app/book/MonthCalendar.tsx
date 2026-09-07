@@ -7,6 +7,7 @@ import {
   monthGridDays,
   shiftMonthKey,
   groupByHour,
+  hasRoomFor,
   type WaveView,
 } from "@/lib/booking/waves";
 import { formatMonthLabel } from "../utils/formatWave";
@@ -22,10 +23,12 @@ function todayMonthKey(): string {
 
 export function MonthCalendar({
   waves,
+  headcount,
   selectedWaveId,
   onSelect,
 }: {
   waves: WaveView[];
+  headcount: number;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
 }) {
@@ -33,6 +36,12 @@ export function MonthCalendar({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const daySummaries = useMemo(() => summarizeWavesByDay(waves), [waves]);
+  // A day is only offerable if one of its start times fits this group whole —
+  // a day with ten spaces spread one-per-start-time seats nobody but a solo.
+  const daysThatFit = useMemo(
+    () => new Set(waves.filter((w) => hasRoomFor(w, headcount)).map((w) => w.date)),
+    [waves, headcount]
+  );
   const gridDays = useMemo(() => monthGridDays(viewMonth), [viewMonth]);
   const dayHourGroups = useMemo(
     () => (selectedDate ? groupByHour(waves.filter((w) => w.date === selectedDate)) : []),
@@ -61,13 +70,15 @@ export function MonthCalendar({
         {gridDays.map((date, i) => {
           if (!date) return <div key={`blank-${i}`} className={styles.calendarCell} />;
           const busyness = busynessForDay(daySummaries.get(date));
+          const fits = daysThatFit.has(date);
           const dayNum = Number(date.slice(8, 10));
           return (
             <button
               key={date}
               type="button"
               className={`${styles.calendarCell} ${styles.calendarDay} ${selectedDate === date ? styles.calendarDayOn : ""}`}
-              disabled={busyness === "none"}
+              disabled={busyness === "none" || !fits}
+              title={busyness !== "none" && !fits ? `No room for ${headcount} that day` : undefined}
               onClick={() => setSelectedDate(date)}
             >
               <span>{dayNum}</span>
@@ -86,6 +97,7 @@ export function MonthCalendar({
               <HourGroupRow
                 key={hourGroup.key}
                 hourGroup={hourGroup}
+                headcount={headcount}
                 selectedWaveId={selectedWaveId}
                 onSelect={onSelect}
                 showDate={false}

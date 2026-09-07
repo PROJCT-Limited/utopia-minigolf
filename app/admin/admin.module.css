@@ -130,3 +130,11 @@
   font-size: 13px;
   margin-top: 10px;
 }
+
+/* Shown beside a start time's people figure only when the `people_used`
+   counter that gates booking has drifted from the paid bookings behind it. */
+.drift {
+  font-size: 11px;
+  color: #b4341f;
+  white-space: nowrap;
+}

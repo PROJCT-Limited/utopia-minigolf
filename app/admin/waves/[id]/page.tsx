@@ -5,7 +5,7 @@ import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
 import { AdminWaveForm } from "./AdminWaveForm";
 import styles from "../../admin.module.css";
 
-export const metadata = { title: "Manage slot — FOUND Admin" };
+export const metadata = { title: "Manage start time — FOUND Admin" };
 export const dynamic = "force-dynamic";
 
 function formatMoney(cents: number, currency: string): string {
@@ -17,28 +17,32 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
   const detail = await fetchWaveAdminDetail(id);
   if (!detail) notFound();
 
-  const { wave, bookings } = detail;
+  const { wave, bookings, paidBookingCount, paidPeopleCount } = detail;
 
   return (
     <main className={`wrap ${styles.page}`}>
       <div className={styles.headRow}>
         <div>
           <Link href="/admin" className="hint">
-            ← All slots
+            ← All start times
           </Link>
           <h1 className={styles.title} style={{ marginTop: 8 }}>
             {wave.date}, {wave.startTime.slice(0, 5)}
           </h1>
+          <p className="hint" style={{ marginTop: 6 }}>
+            {paidBookingCount} {paidBookingCount === 1 ? "group" : "groups"} · {paidPeopleCount} / {wave.peopleCapacity}{" "}
+            people
+          </p>
         </div>
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Edit slot</h3>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Edit start time</h3>
         <AdminWaveForm waveId={wave.id} wave={wave} />
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Private bookings ({bookings.length})</h3>
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Bookings ({bookings.length})</h3>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -59,7 +63,7 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                 </td>
                 <td>{TICKET_TYPE_LABELS[b.ticketType]}</td>
                 <td>
-                  {b.partyType}, {b.headcount}
+                  {b.partyType}, {b.headcount} {b.headcount === 1 ? "person" : "people"}
                 </td>
                 <td>
                   <span className={styles.badge}>{b.status}</span>

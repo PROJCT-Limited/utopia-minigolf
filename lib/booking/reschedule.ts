@@ -10,7 +10,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "./wavesRepo";
 import type { WaveView } from "./waves";
 import type { TicketType } from "./pricing";
-import { hasWaveSlotsAvailable, addWaveSlots, releaseWaveSlots } from "./waveCapacity";
+import { hasRoomForGroup, reserveSeats, releaseSeats } from "./waveCapacity";
 import { RESCHEDULE_CUTOFF_DAYS } from "./copy";
 import { sendBookingRescheduled } from "@/lib/email/send";
 
@@ -72,13 +72,20 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
   }
 
   const newWave = await fetchWaveById(newWaveId);
-  if (!newWave) return { ok: false, error: "That slot no longer exists." };
-  // One booking = one group = one slot, regardless of ticket type.
-  if (!hasWaveSlotsAvailable(newWave, 1)) {
-    return { ok: false, error: "Not enough spots left in that slot." };
+  if (!newWave) return { ok: false, error: "That start time no longer exists." };
+  // Capacity is people, so the same start time can have room for a pair and
+  // none for this booking's group.
+  if (!hasRoomForGroup(newWave, booking.headcount)) {
+    return {
+      ok: false,
+      error:
+        newWave.peopleLeft > 0
+          ? `That start time only has ${newWave.peopleLeft} ${newWave.peopleLeft === 1 ? "space" : "spaces"} left — not enough for your group of ${booking.headcount}.`
+          : "That start time is full. Please pick another.",
+    };
   }
   if (isPastRescheduleCutoff(newWave)) {
-    return { ok: false, error: "That slot is too close to its date to book online — please contact us." };
+    return { ok: false, error: "That start time is too close to its date to book online — please contact us." };
   }
 
   const { error: bookingUpdateError } = await supabaseAdmin
@@ -90,14 +97,14 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
     return { ok: false, error: "Couldn't reschedule. Please try again." };
   }
 
-  // Move the wave-slots off the old wave and onto the new one. Small accepted
-  // race (same tolerance as the rest of this codebase's capacity bookkeeping):
-  // two simultaneous reschedules could both read stale counts, worth it to
-  // avoid a DB function for a single-operator, low-volume booking flow.
+  // Move the group's seats off the old start time and onto the new one. Small
+  // accepted race (same tolerance as the rest of this codebase's capacity
+  // bookkeeping): two simultaneous reschedules could both read stale counts,
+  // worth it to avoid a DB function for a single-operator, low-volume flow.
   if (currentWave) {
-    await releaseWaveSlots(currentWave.id, 1);
+    await releaseSeats(currentWave.id, booking.headcount);
   }
-  await addWaveSlots(newWave.id, 1);
+  await reserveSeats(newWave.id, booking.headcount);
 
   await sendBookingRescheduled(booking.id);
 

@@ -11,7 +11,9 @@ export interface WaveRow {
   id: string;
   date: string; // "YYYY-MM-DD"
   start_time: string; // "HH:MM:SS"
-  total_wave_slots: number;
+  people_capacity: number;
+  people_used: number;
+  /** Groups booked at this start time — a display figure, never a limit. */
   wave_slots_used: number;
   status: "provisional" | "confirmed" | "full";
 }
@@ -21,16 +23,32 @@ export interface WaveView {
   date: string;
   startTime: string;
   status: WaveRow["status"];
-  totalWaveSlots: number;
-  waveSlotsUsed: number;
-  slotsLeft: number;
+  /** How many people this start time holds in total. */
+  peopleCapacity: number;
+  peopleUsed: number;
+  peopleLeft: number;
+  /** How many groups are booked here. Capacity is people, so this is
+      reporting only — the admin panel shows it beside the people figure. */
+  groupsBooked: number;
   isFull: boolean;
   isLowAvailability: boolean;
   /** What the booking UI shows in place of a real time for provisional waves. */
   timeLabel: string;
 }
 
-const LOW_AVAILABILITY_THRESHOLD = 1;
+/**
+ * Capacity is counted in people, so whether a start time is bookable depends
+ * on who's asking: 3 spaces left is wide open to a pair and closed to a
+ * four. Everything customer-facing that shows or gates availability goes
+ * through this, so nobody is offered a start time their group won't fit in.
+ */
+export function hasRoomFor(wave: Pick<WaveView, "peopleLeft" | "isFull">, headcount: number): boolean {
+  return !wave.isFull && wave.peopleLeft >= headcount;
+}
+
+// A start time with fewer than a full group's worth of space left is nearly
+// gone — that's the point where a walk-up group of five can no longer take it.
+const LOW_AVAILABILITY_PEOPLE = 5;
 export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
 /** The only bookable date range — nothing outside it is fetched or shown. */
@@ -38,19 +56,20 @@ export const BOOKABLE_WINDOW_START = "2026-09-30";
 export const BOOKABLE_WINDOW_END = "2026-10-31";
 
 export function toWaveView(row: WaveRow): WaveView {
-  const slotsLeft = Math.max(0, row.total_wave_slots - row.wave_slots_used);
-  const isFull = row.status === "full" || slotsLeft === 0;
+  const peopleLeft = Math.max(0, row.people_capacity - row.people_used);
+  const isFull = row.status === "full" || peopleLeft === 0;
 
   return {
     id: row.id,
     date: row.date,
     startTime: row.start_time,
     status: row.status,
-    totalWaveSlots: row.total_wave_slots,
-    waveSlotsUsed: row.wave_slots_used,
-    slotsLeft,
+    peopleCapacity: row.people_capacity,
+    peopleUsed: row.people_used,
+    peopleLeft,
+    groupsBooked: row.wave_slots_used,
     isFull,
-    isLowAvailability: !isFull && slotsLeft <= LOW_AVAILABILITY_THRESHOLD,
+    isLowAvailability: !isFull && peopleLeft < LOW_AVAILABILITY_PEOPLE,
     timeLabel: row.status === "provisional" ? PROVISIONAL_LABEL : formatTime(row.start_time),
   };
 }
@@ -106,11 +125,11 @@ function groupBy(waves: WaveView[], keyFn: (w: WaveView) => string): WaveGroup[]
 
 // -----------------------------------------------------------------------------
 // Two-level picker: bookable start times fall on quarter-hour marks (:00,
-// :15, :30, :45), each its own row in `waves` with its own small capacity (3
-// or 2 groups). The picker shows the containing HOUR first, aggregated
-// across its 4 quarter-hour start times, and expands to the individual start
-// times on demand — this groups a day's (or week's) waves by hour for that
-// first level.
+// :15, :30, :45), each its own row in `waves` with its own people cap. The
+// picker shows the containing HOUR first, aggregated across its 4
+// quarter-hour start times, and expands to the individual start times on
+// demand — this groups a day's (or week's) waves by hour for that first
+// level.
 // -----------------------------------------------------------------------------
 
 export interface HourGroup {
@@ -118,9 +137,11 @@ export interface HourGroup {
   date: string;
   hour: string; // "16:00"
   waves: WaveView[]; // the quarter-hour start times within this hour, sorted
-  slotsLeft: number;
-  totalWaveSlots: number;
+  peopleLeft: number;
+  peopleCapacity: number;
   isFull: boolean;
+  /** The largest group that still fits in *some* start time in this hour. */
+  largestGroupThatFits: number;
 }
 
 function hourOf(startTime: string): string {
@@ -148,9 +169,12 @@ export function groupByHour(waves: WaveView[]): HourGroup[] {
       date: groupWaves[0].date,
       hour: hourOf(groupWaves[0].startTime),
       waves: groupWaves,
-      slotsLeft: groupWaves.reduce((sum, w) => sum + (w.isFull ? 0 : w.slotsLeft), 0),
-      totalWaveSlots: groupWaves.reduce((sum, w) => sum + w.totalWaveSlots, 0),
+      peopleLeft: groupWaves.reduce((sum, w) => sum + (w.isFull ? 0 : w.peopleLeft), 0),
+      peopleCapacity: groupWaves.reduce((sum, w) => sum + w.peopleCapacity, 0),
       isFull: groupWaves.every((w) => w.isFull),
+      // Space doesn't pool across start times: a group books one of them, so
+      // what matters is the roomiest single start time, not the hour's total.
+      largestGroupThatFits: groupWaves.reduce((max, w) => (w.isFull ? max : Math.max(max, w.peopleLeft)), 0),
     }));
 }
 
@@ -161,18 +185,29 @@ export function groupByHour(waves: WaveView[]): HourGroup[] {
 
 export interface DaySummary {
   date: string;
-  waveCount: number;
-  slotsLeft: number;
-  totalWaveSlots: number;
+  startTimeCount: number;
+  groupsBooked: number;
+  peopleUsed: number;
+  peopleLeft: number;
+  peopleCapacity: number;
 }
 
 export function summarizeWavesByDay(waves: WaveView[]): Map<string, DaySummary> {
   const byDate = new Map<string, DaySummary>();
   for (const w of waves) {
-    const existing = byDate.get(w.date) ?? { date: w.date, waveCount: 0, slotsLeft: 0, totalWaveSlots: 0 };
-    existing.waveCount += 1;
-    existing.slotsLeft += w.slotsLeft;
-    existing.totalWaveSlots += w.totalWaveSlots;
+    const existing = byDate.get(w.date) ?? {
+      date: w.date,
+      startTimeCount: 0,
+      groupsBooked: 0,
+      peopleUsed: 0,
+      peopleLeft: 0,
+      peopleCapacity: 0,
+    };
+    existing.startTimeCount += 1;
+    existing.groupsBooked += w.groupsBooked;
+    existing.peopleUsed += w.peopleUsed;
+    existing.peopleLeft += w.peopleLeft;
+    existing.peopleCapacity += w.peopleCapacity;
     byDate.set(w.date, existing);
   }
   return byDate;
@@ -180,13 +215,13 @@ export function summarizeWavesByDay(waves: WaveView[]): Map<string, DaySummary> 
 
 export type DayBusyness = "none" | "quiet" | "busy" | "full";
 
-const BUSY_SLOTS_LEFT_RATIO = 0.3;
+const BUSY_PEOPLE_LEFT_RATIO = 0.3;
 
 /** How full a day is, at a glance — for the month calendar's heatmap dots. */
 export function busynessForDay(summary: DaySummary | undefined): DayBusyness {
-  if (!summary || summary.waveCount === 0) return "none";
-  if (summary.slotsLeft === 0) return "full";
-  return summary.slotsLeft / summary.totalWaveSlots <= BUSY_SLOTS_LEFT_RATIO ? "busy" : "quiet";
+  if (!summary || summary.startTimeCount === 0) return "none";
+  if (summary.peopleLeft === 0) return "full";
+  return summary.peopleLeft / summary.peopleCapacity <= BUSY_PEOPLE_LEFT_RATIO ? "busy" : "quiet";
 }
 
 /**

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listWavesForAdmin } from "@/lib/admin/waves";
+import { PEOPLE_PER_START_TIME } from "@/lib/booking/capacityConfig";
 import { formatWaveDate } from "../utils/formatWave";
 import { CreateWaveForm } from "./CreateWaveForm";
 import styles from "./admin.module.css";
@@ -15,7 +16,7 @@ export default async function AdminPage() {
       <div className={styles.headRow}>
         <div>
           <span className="lbl">FOUND Admin</span>
-          <h1 className={styles.title}>Slots</h1>
+          <h1 className={styles.title}>Start times</h1>
         </div>
         <Link href="/admin/partners" className="hint">
           Partners →
@@ -23,8 +24,8 @@ export default async function AdminPage() {
       </div>
 
       <div className={styles.card}>
-        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Add a slot</h3>
-        <CreateWaveForm />
+        <h3 style={{ marginBottom: 14, fontSize: 15 }}>Add a start time</h3>
+        <CreateWaveForm defaultPeopleCapacity={PEOPLE_PER_START_TIME} />
       </div>
 
       <div className={styles.card}>
@@ -34,8 +35,8 @@ export default async function AdminPage() {
               <th>Date</th>
               <th>Time</th>
               <th>Status</th>
-              <th>Wave-slots</th>
-              <th>Paid bookings</th>
+              <th>Groups</th>
+              <th>People</th>
               <th></th>
             </tr>
           </thead>
@@ -47,10 +48,18 @@ export default async function AdminPage() {
                 <td>
                   <span className={`${styles.badge} ${styles[w.status] ?? ""}`}>{w.status}</span>
                 </td>
-                <td>
-                  {w.waveSlotsUsed} / {w.totalWaveSlots}
-                </td>
                 <td>{w.paidBookingCount}</td>
+                <td>
+                  {w.paidPeopleCount} / {w.peopleCapacity}
+                  {w.capacityCounterDrift && (
+                    <>
+                      {" "}
+                      <span className={styles.drift} title="The people counter that gates booking disagrees with the paid bookings behind it.">
+                        counter: {w.peopleUsed}
+                      </span>
+                    </>
+                  )}
+                </td>
                 <td>
                   <Link href={`/admin/waves/${w.id}`}>Manage →</Link>
                 </td>
@@ -58,7 +67,7 @@ export default async function AdminPage() {
             ))}
             {waves.length === 0 && (
               <tr>
-                <td colSpan={6}>No slots yet.</td>
+                <td colSpan={6}>No start times yet.</td>
               </tr>
             )}
           </tbody>

@@ -1,4 +1,4 @@
-import type { WaveView } from "@/lib/booking/waves";
+import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import styles from "./book.module.css";
 
 /**
@@ -17,22 +17,26 @@ function cellLabel(wave: WaveView): string {
 
 export function WaveRow({
   wave,
+  headcount,
   selected,
   onSelect,
 }: {
   wave: WaveView;
+  /** Party size — a start time with 3 spaces left is closed to a four. */
+  headcount: number;
   selected: boolean;
   onSelect: (waveId: string) => void;
   showDate?: boolean;
 }) {
+  const fits = hasRoomFor(wave, headcount);
 
   return (
     <button
       type="button"
       className={`${styles.quarterCell} ${selected ? styles.on : ""}`}
-      disabled={wave.isFull}
+      disabled={!fits}
       onClick={() => onSelect(wave.id)}
-      title={wave.isFull ? "Full" : undefined}
+      title={fits ? undefined : wave.isFull ? "Full" : `Not enough room for ${headcount}`}
     >
       {cellLabel(wave)}
     </button>

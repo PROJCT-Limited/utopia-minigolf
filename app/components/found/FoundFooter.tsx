@@ -12,7 +12,9 @@ export function FoundFooter() {
         <div className={styles.footerMeta}>
           MINIGOLF SOCIAL CLUB BY PROJCT
           <br />
-          189 QUEEN&rsquo;S ROAD WEST, SAI YING PUN, HONG KONG, OPENING SEP 2026
+          UNIT 8-10, GF, 189 QUEEN&rsquo;S ROAD WEST
+          <br />
+          SAI YING PUN, HONG KONG
         </div>
       </div>
       <div className={styles.footerLinks}>

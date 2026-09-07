@@ -66,7 +66,7 @@ export async function sendBookingConfirmation(bookingId: string): Promise<{ sent
 
   return sendEmailOnce(booking.id, "booking_confirmation", async () => ({
     to: booking.leadEmail,
-    subject: "You're in — your FOUND reservation is confirmed",
+    subject: "You're in — your FOUND reservation is confirmed ⛳",
     html: await render(
       BookingConfirmationEmail({
         leadName: booking.leadName,

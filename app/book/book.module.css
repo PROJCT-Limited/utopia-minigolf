@@ -97,14 +97,17 @@
   color: var(--f-grey);
   margin-top: 12px;
 }
+/* Was a mono spec list ("WHAT'S INCLUDED / AUTOMATIC SCORING / …"); now the
+   same warm line the homepage's "Pick your pace" section carries. */
 .includedList {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 2.2;
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  max-width: 40ch;
   color: var(--f-grey);
-  margin-top: 16px;
+  margin-top: 14px;
   margin-bottom: 24px;
 }
 .stepBody {
@@ -283,6 +286,10 @@
 }
 
 /* ---------- slot picker: view toggle ---------- */
+.slotPicker {
+  margin-top: 40px;
+}
+
 .viewToggle {
   display: flex;
   gap: 32px;

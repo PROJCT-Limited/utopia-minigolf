@@ -173,6 +173,23 @@
   line-height: 1.553;
   letter-spacing: 0;
 }
+/* Run dates, as the line that opens the hero — dateline, then the action it
+   belongs to, then the description. Sat under the paragraph it read as a
+   stray last line of it; sat beside the pill it crowded the button. Above,
+   with its own space, it reads as a heading and can't collide with either.
+   Small and wide-tracked so it never competes with the pill: Input Mono has
+   no true small-caps cut, so uppercase at 11px with 0.2em does that job. */
+.heroDates {
+  margin-bottom: 20px;
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(247, 247, 247, 0.85);
+}
+
 /* The hero's single call to action, in the slot the decorative pill used to
    occupy. Solid --f-white on the photograph is the highest-contrast object
    in the frame, so it reads as the one thing to press; hover inverts it back
@@ -278,40 +295,6 @@
 }
 .conceptText .monoLabel {
   margin-bottom: 4px;
-}
-
-/* ---------- BEYOND THE TRAIL ---------- */
-.trailRule {
-  height: 1px;
-  background: var(--f-ink);
-  width: 100%;
-}
-.trailRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 22px 0;
-}
-.trailItem {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.01em;
-}
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--f-ink);
-  flex-shrink: 0;
-}
-@media (max-width: 900px) {
-  .trailRow {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 }
 
 /* ---------- SEE WHO SCORED ---------- */
@@ -450,13 +433,18 @@
 .paceHeading {
   color: var(--f-white);
 }
-.paceIncluded {
-  margin-top: 28px;
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  line-height: 2.2;
+/* The support line under "Pick your pace" takes --f-stone rather than the
+   --f-grey used for the same role on the light sections: this column sits on
+   --f-ink, where --f-grey lands around 4:1 and reads muddy. Otherwise it
+   matches .readyBody. */
+.paceSub {
+  margin-top: 14px;
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  max-width: 40ch;
   color: var(--f-stone);
 }
 .tierRule {

@@ -104,13 +104,16 @@ export function ManageView({ token, booking, currentWave, eligibleForReschedule,
           </p>
           <div className={bookStyles.waveGroups} style={{ maxHeight: 360 }}>
             {hourGroups.length === 0 ? (
-              <p className={bookStyles.hint}>No other slots are available to move to right now.</p>
+              <p className={bookStyles.hint}>No other start times have room for your group right now.</p>
             ) : (
               <div className={bookStyles.waveList}>
                 {hourGroups.map((hourGroup) => (
                   <HourGroupRow
                     key={hourGroup.key}
                     hourGroup={hourGroup}
+                    /* Only start times with room for this whole group are
+                       offered — capacity is people, not bookings. */
+                    headcount={booking.headcount}
                     selectedWaveId={selectedWaveId}
                     onSelect={setSelectedWaveId}
                   />

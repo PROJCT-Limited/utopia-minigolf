@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { createWaveAction } from "@/lib/admin/waveActions";
 import styles from "./admin.module.css";
 
-export function CreateWaveForm() {
+/**
+ * `defaultPeopleCapacity` is passed in rather than read from
+ * lib/booking/capacityConfig.ts directly: this is a client component, and
+ * PEOPLE_PER_START_TIME comes from a server-only env var that would read as
+ * `undefined` in the browser.
+ */
+export function CreateWaveForm({ defaultPeopleCapacity }: { defaultPeopleCapacity: number }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +43,8 @@ export function CreateWaveForm() {
         <input id="startTime" name="startTime" type="time" required />
       </div>
       <div className={styles.field}>
-        <label htmlFor="totalWaveSlots">Total wave-slots</label>
-        <input id="totalWaveSlots" name="totalWaveSlots" type="number" min={1} defaultValue={3} required />
+        <label htmlFor="peopleCapacity">People cap</label>
+        <input id="peopleCapacity" name="peopleCapacity" type="number" min={1} defaultValue={defaultPeopleCapacity} required />
       </div>
       <div className={styles.field}>
         <label htmlFor="status">Status</label>
@@ -48,7 +54,7 @@ export function CreateWaveForm() {
         </select>
       </div>
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? "Adding…" : "Add slot"}
+        {submitting ? "Adding…" : "Add start time"}
       </button>
       {error && <p className={styles.error}>{error}</p>}
     </form>

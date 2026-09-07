@@ -10,13 +10,23 @@ import { toWaveView, type WaveRow, type WaveView } from "@/lib/booking/waves";
 import type { TicketType } from "@/lib/booking/pricing";
 
 export interface AdminWaveListItem extends WaveView {
+  /** Groups (paid bookings) at this start time, counted from `bookings`. */
   paidBookingCount: number;
+  /** People across those groups — the figure the 15-per-start-time cap is on. */
+  paidPeopleCount: number;
+  /**
+   * True when the `people_used` counter that actually gates booking disagrees
+   * with the paid bookings behind it. Should never happen; surfaced rather
+   * than hidden because a stuck counter silently blocks (or oversells) a
+   * start time, and the counter — not this table's sum — is what customers hit.
+   */
+  capacityCounterDrift: boolean;
 }
 
 export async function listWavesForAdmin(): Promise<AdminWaveListItem[]> {
   const { data: waveRows, error } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
+    .select("id, date, start_time, people_capacity, people_used, wave_slots_used, status")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -27,22 +37,31 @@ export async function listWavesForAdmin(): Promise<AdminWaveListItem[]> {
 
   const { data: bookingRows, error: bookingsError } = await supabaseAdmin
     .from("bookings")
-    .select("wave_id")
+    .select("wave_id, headcount")
     .eq("status", "paid");
 
   if (bookingsError) {
     console.error("listWavesForAdmin: bookings query failed:", bookingsError.message);
   }
 
-  const countByWave = new Map<string, number>();
+  const byWave = new Map<string, { groups: number; people: number }>();
   for (const row of bookingRows ?? []) {
-    countByWave.set(row.wave_id, (countByWave.get(row.wave_id) ?? 0) + 1);
+    const tally = byWave.get(row.wave_id) ?? { groups: 0, people: 0 };
+    tally.groups += 1;
+    tally.people += row.headcount;
+    byWave.set(row.wave_id, tally);
   }
 
-  return (waveRows as WaveRow[]).map((row) => ({
-    ...toWaveView(row),
-    paidBookingCount: countByWave.get(row.id) ?? 0,
-  }));
+  return (waveRows as WaveRow[]).map((row) => {
+    const view = toWaveView(row);
+    const tally = byWave.get(row.id) ?? { groups: 0, people: 0 };
+    return {
+      ...view,
+      paidBookingCount: tally.groups,
+      paidPeopleCount: tally.people,
+      capacityCounterDrift: !bookingsError && tally.people !== view.peopleUsed,
+    };
+  });
 }
 
 export interface AdminBookingRow {
@@ -60,12 +79,15 @@ export interface AdminBookingRow {
 export interface AdminWaveDetail {
   wave: WaveView;
   bookings: AdminBookingRow[];
+  /** Groups and people from the paid bookings below — see AdminWaveListItem. */
+  paidBookingCount: number;
+  paidPeopleCount: number;
 }
 
 export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDetail | null> {
   const { data: waveRow, error: waveError } = await supabaseAdmin
     .from("waves")
-    .select("id, date, start_time, total_wave_slots, wave_slots_used, status")
+    .select("id, date, start_time, people_capacity, people_used, wave_slots_used, status")
     .eq("id", waveId)
     .maybeSingle();
 
@@ -93,5 +115,12 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     currency: b.currency,
   }));
 
-  return { wave: toWaveView(waveRow as WaveRow), bookings };
+  const paid = bookings.filter((b) => b.status === "paid");
+
+  return {
+    wave: toWaveView(waveRow as WaveRow),
+    bookings,
+    paidBookingCount: paid.length,
+    paidPeopleCount: paid.reduce((sum, b) => sum + b.headcount, 0),
+  };
 }

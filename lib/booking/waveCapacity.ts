@@ -1,57 +1,79 @@
 // FILE: lib/booking/waveCapacity.ts
 // -----------------------------------------------------------------------------
-// The one place wave-slot capacity gets read, checked, and mutated. Used by
-// confirmBooking.ts and reschedule.ts, which previously each reimplemented "read, clamp, update, flip full status"
-// independently — consolidated here so the wave-slot unit (as opposed to the
-// old raw-headcount unit) only has one implementation to get right.
+// The one place a start time's capacity gets read, checked, and mutated. Used
+// by confirmBooking.ts and reschedule.ts, which previously each reimplemented
+// "read, clamp, update, flip full status" independently.
+//
+// Capacity is people, not groups (migrations/017_people_capacity.sql): a
+// booking holds as many spaces as it has players, and any mix of groups fits
+// while the people total stays within the start time's `people_capacity`. The
+// group counter (`wave_slots_used`) is still kept in step because the admin
+// panel reports groups beside people — but it gates nothing.
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export interface WaveCapacitySnapshot {
-  waveSlotsUsed: number;
-  totalWaveSlots: number;
+  peopleUsed: number;
+  peopleCapacity: number;
+  peopleLeft: number;
   status: "provisional" | "confirmed" | "full";
 }
 
-export function hasWaveSlotsAvailable(wave: WaveCapacitySnapshot, slotsNeeded: number): boolean {
-  return wave.status !== "full" && wave.waveSlotsUsed + slotsNeeded <= wave.totalWaveSlots;
+/**
+ * Can a group of `headcount` still be seated here? Mirrors hasRoomFor() in
+ * waves.ts (the client-safe copy the picker uses) — this is the server-side
+ * check that actually decides, since the client's view of a wave can be
+ * seconds stale.
+ */
+export function hasRoomForGroup(wave: WaveCapacitySnapshot, headcount: number): boolean {
+  return wave.status !== "full" && wave.peopleUsed + headcount <= wave.peopleCapacity;
 }
 
-export async function addWaveSlots(waveId: string, slotsToAdd: number): Promise<void> {
+/** Seats a group of `headcount` at `waveId`, flipping the wave full if it fills. */
+export async function reserveSeats(waveId: string, headcount: number): Promise<void> {
   const { data: wave, error } = await supabaseAdmin
     .from("waves")
-    .select("id, total_wave_slots, wave_slots_used")
+    .select("id, people_capacity, people_used, wave_slots_used")
     .eq("id", waveId)
     .maybeSingle();
 
   if (error || !wave) {
-    console.error("addWaveSlots: wave not found", waveId, error?.message);
+    console.error("reserveSeats: wave not found", waveId, error?.message);
     return;
   }
 
-  const newUsed = Math.min(wave.total_wave_slots, wave.wave_slots_used + slotsToAdd);
+  const newPeopleUsed = Math.min(wave.people_capacity, wave.people_used + headcount);
   await supabaseAdmin
     .from("waves")
-    .update({ wave_slots_used: newUsed, status: newUsed >= wave.total_wave_slots ? "full" : undefined })
+    .update({
+      people_used: newPeopleUsed,
+      wave_slots_used: wave.wave_slots_used + 1,
+      status: newPeopleUsed >= wave.people_capacity ? "full" : undefined,
+    })
     .eq("id", waveId);
 }
 
-export async function releaseWaveSlots(waveId: string, slotsToRelease: number): Promise<void> {
+/** Gives a group's seats back — a reschedule away, or a cancelled booking. */
+export async function releaseSeats(waveId: string, headcount: number): Promise<void> {
   const { data: wave, error } = await supabaseAdmin
     .from("waves")
-    .select("id, total_wave_slots, wave_slots_used, status")
+    .select("id, people_capacity, people_used, wave_slots_used, status")
     .eq("id", waveId)
     .maybeSingle();
 
   if (error || !wave) {
-    console.error("releaseWaveSlots: wave not found", waveId, error?.message);
+    console.error("releaseSeats: wave not found", waveId, error?.message);
     return;
   }
 
-  const newUsed = Math.max(0, wave.wave_slots_used - slotsToRelease);
+  const newPeopleUsed = Math.max(0, wave.people_used - headcount);
   await supabaseAdmin
     .from("waves")
-    .update({ wave_slots_used: newUsed, status: wave.status === "full" ? "confirmed" : wave.status })
+    .update({
+      people_used: newPeopleUsed,
+      wave_slots_used: Math.max(0, wave.wave_slots_used - 1),
+      status: wave.status === "full" ? "confirmed" : wave.status,
+    })
     .eq("id", waveId);
 }
