@@ -133,7 +133,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
                 <button key={g.id} type="button" className={styles.tile} onClick={() => selectGroup(g)}>
                   <div className={styles.tileTime}>{g.timeLabel}</div>
                   <div className={styles.tileName}>{g.displayName}</div>
-                  <div className={styles.tileMeta}>{g.playerCount} players</div>
+                  <div className={styles.tileMeta}>{g.playerCount} {g.playerCount === 1 ? "player" : "players"}</div>
                 </button>
               ))}
             </div>

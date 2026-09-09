@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./PersistentProjctTab.module.css";
 
 // Fixed, on every page. Desktop: sits at the right screen edge, slides out on
@@ -15,8 +16,19 @@ import styles from "./PersistentProjctTab.module.css";
 // hidden` + an animated width/height on `.wrap`, rather than a transform —
 // that's what lets the logo hold the edge while collapsed and hand that
 // edge-flush spot to the text once expanded.
+// The venue tablets are appliances, not pages: a marketing link out of the
+// app is a wrong turn taken mid-round on a device that gets handed around,
+// and PROJCT's cobalt is the one thing on those screens that isn't the FOUND
+// palette. Everywhere else the tab stays.
+const APPLIANCE_ROUTES = ["/kiosk", "/checkin"];
+
 export function PersistentProjctTab() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (APPLIANCE_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return null;
+  }
 
   return (
     <div className={`${styles.wrap} ${open ? styles.open : ""}`}>
