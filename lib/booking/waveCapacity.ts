@@ -77,3 +77,38 @@ export async function releaseSeats(waveId: string, headcount: number): Promise<v
     })
     .eq("id", waveId);
 }
+
+/**
+ * Moves a start time's people counter without touching the group counter —
+ * the door adjusting an already-seated group's size (booked four, five turned
+ * up), not a new group arriving. Returns false and changes nothing if the
+ * extra people don't fit, so the caller can tell staff rather than overfill
+ * the floor.
+ */
+export async function adjustSeats(waveId: string, delta: number): Promise<boolean> {
+  if (delta === 0) return true;
+
+  const { data: wave, error } = await supabaseAdmin
+    .from("waves")
+    .select("id, people_capacity, people_used, status")
+    .eq("id", waveId)
+    .maybeSingle();
+
+  if (error || !wave) {
+    console.error("adjustSeats: wave not found", waveId, error?.message);
+    return false;
+  }
+
+  const newPeopleUsed = wave.people_used + delta;
+  if (newPeopleUsed > wave.people_capacity) return false;
+
+  const clamped = Math.max(0, newPeopleUsed);
+  await supabaseAdmin
+    .from("waves")
+    .update({
+      people_used: clamped,
+      status: clamped >= wave.people_capacity ? "full" : wave.status === "full" ? "confirmed" : wave.status,
+    })
+    .eq("id", waveId);
+  return true;
+}

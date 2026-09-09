@@ -138,3 +138,10 @@
   color: #b4341f;
   white-space: nowrap;
 }
+
+/* The two places staff go from the wave list: the door tablet, and partners. */
+.headLinks {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}

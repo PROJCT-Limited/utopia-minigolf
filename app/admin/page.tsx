@@ -18,9 +18,14 @@ export default async function AdminPage() {
           <span className="lbl">FOUND Admin</span>
           <h1 className={styles.title}>Start times</h1>
         </div>
-        <Link href="/admin/partners" className="hint">
-          Partners →
-        </Link>
+        <div className={styles.headLinks}>
+          <Link href="/checkin" className="hint">
+            Check in →
+          </Link>
+          <Link href="/admin/partners" className="hint">
+            Partners →
+          </Link>
+        </div>
       </div>
 
       <div className={styles.card}>

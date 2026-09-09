@@ -44,7 +44,7 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
 
   const { data: bookingRows, error: bookingsError } = await supabaseAdmin
     .from("bookings")
-    .select("id, wave_id, lead_name, headcount, ticket_type")
+    .select("id, wave_id, lead_name, headcount, present_headcount, ticket_type")
     .eq("status", "paid")
     .in("wave_id", waveIds);
   if (bookingsError) console.error("fetchCurrentGroups: bookings query failed:", bookingsError.message);
@@ -57,7 +57,9 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
       timeLabel: wave.startTime.slice(0, 5),
       ticketType: b.ticket_type,
       displayName: `${b.lead_name}’s group`,
-      playerCount: b.headcount,
+      // What the door confirmed beats what was sold: a booking for four whose
+      // fourth didn't show asks for three names here, not four.
+      playerCount: b.present_headcount ?? b.headcount,
     });
   }
 

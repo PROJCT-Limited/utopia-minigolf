@@ -2,8 +2,11 @@
 // -----------------------------------------------------------------------------
 // Two unrelated jobs, both required to run in the single proxy Next.js allows:
 //
-// 1. Protects /admin and /api/admin with the HMAC-signed session cookie from
-//    lib/admin/session.ts. Named `proxy.ts` per Next.js 16's renamed middleware
+// 1. Protects the staff-only routes — /admin, /api/admin and the door
+//    check-in tablet at /checkin — with the HMAC-signed session cookie from
+//    lib/admin/session.ts. (/checkin lists today's guests by name with their
+//    payment status, so unlike the public scoring kiosk at /kiosk it can't be
+//    left open; a tablet signs in once and the session lasts the shift.) Named `proxy.ts` per Next.js 16's renamed middleware
 //    convention (middleware.ts is deprecated as of v16 — see
 //    node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md).
 //    Runs on the Node.js runtime by default in v16, which is what lets
@@ -35,10 +38,12 @@ export const config = {
   ],
 };
 
+const STAFF_PREFIXES = ["/admin", "/api/admin", "/checkin"];
+
 export async function proxy(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+  if (STAFF_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return adminGate(req);
   }
 
