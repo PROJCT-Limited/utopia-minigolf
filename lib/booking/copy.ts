@@ -6,8 +6,15 @@
 //
 // The "opening dates are still provisional" notice that used to live here is
 // gone: every bookable wave is confirmed, so it never rendered.
+//
+// The early bird notice earns its place here for the same reason: it has to
+// read identically on the home page and at step 1 of the wizard.
 // -----------------------------------------------------------------------------
+
+import { EARLY_BIRD_DEADLINE_LABEL } from "./pricing";
 
 export const RESCHEDULE_CUTOFF_DAYS = Number(process.env.RESCHEDULE_CUTOFF_DAYS ?? 10);
 
 export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule to any available start time once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;
+
+export const EARLY_BIRD_NOTICE = `Book before ${EARLY_BIRD_DEADLINE_LABEL} and pay the early bird price!`;

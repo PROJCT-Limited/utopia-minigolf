@@ -7,7 +7,7 @@ import { Leaderboard } from "@/app/components/Leaderboard";
 import { NotifyMeForm } from "@/app/components/NotifyMeForm";
 import { SiteFooter } from "@/app/components/SiteFooter";
 import { Reveal, StaggerGroup, StaggerItem } from "@/app/components/ScrollReveal";
-import { TICKET_PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
+import { LIST_PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
 import { fetchLeaderboard } from "@/lib/scoring/leaderboardRepo";
 import styles from "./page.module.css";
 
@@ -120,7 +120,7 @@ export default async function ArchivedOriginalHomePage() {
                 </Link>
                 <div className={styles.meta}>
                   from
-                  <b>{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.standard)}</b>
+                  <b>{formatMoney(LIST_PRICE_PER_PERSON_CENTS.standard)}</b>
                 </div>
               </StaggerItem>
             </StaggerGroup>
@@ -249,7 +249,7 @@ export default async function ArchivedOriginalHomePage() {
               <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
                 Standard, per person
               </div>
-              <div className="big">{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.standard)}</div>
+              <div className="big">{formatMoney(LIST_PRICE_PER_PERSON_CENTS.standard)}</div>
               <div className="small">One 30-minute run, all 5 stations + 1 drink</div>
               <div className="cta">
                 <Link href="/book" className="btn btn-light" style={{ width: "100%" }}>
@@ -261,7 +261,7 @@ export default async function ArchivedOriginalHomePage() {
               <div className="lbl" style={{ color: "rgba(255,255,255,.75)" }}>
                 Unlimited, per person
               </div>
-              <div className="big">{formatMoney(TICKET_PRICE_PER_PERSON_CENTS.unlimited)}</div>
+              <div className="big">{formatMoney(LIST_PRICE_PER_PERSON_CENTS.unlimited)}</div>
               <div className="small">Play the full hour, re-entry included + bottomless drinks</div>
               <div className="cta">
                 <Link href="/book" className="btn btn-light" style={{ width: "100%" }}>

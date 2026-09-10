@@ -12,7 +12,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
-  computeBookingTotalCents,
+  computeListTotalCents,
   derivePartyTypeFromHeadcount,
   CURRENCY,
   type TicketType,
@@ -532,7 +532,7 @@ export async function createWalkIn(
       headcount: input.headcount,
       present_headcount: input.headcount,
       ticket_type: input.ticketType,
-      amount_paid_cents: computeBookingTotalCents(input.ticketType, input.headcount),
+      amount_paid_cents: computeListTotalCents(input.ticketType, input.headcount),
       currency: CURRENCY,
       status: "paid",
       source: "walk_in",

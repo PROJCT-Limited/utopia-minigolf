@@ -493,6 +493,34 @@
   font-weight: 400;
   color: var(--f-stone);
 }
+.tierWas {
+  margin-right: 10px;
+  font-weight: 400;
+  color: var(--f-stone);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.earlyBirdNote {
+  margin-top: 28px;
+  max-width: 46ch;
+  font-family: var(--f-archivo);
+  font-weight: 300;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--f-stone);
+}
+.earlyBirdTag {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 3px 9px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  background: var(--f-white);
+  vertical-align: 2px;
+}
 .tierReserve {
   display: inline-block;
   margin-top: 12px;

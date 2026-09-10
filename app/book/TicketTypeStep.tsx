@@ -1,4 +1,4 @@
-import { TICKET_PRICE_PER_PERSON_CENTS, type TicketType } from "@/lib/booking/pricing";
+import { LIST_PRICE_PER_PERSON_CENTS, priceTableFor, type TicketType } from "@/lib/booking/pricing";
 import styles from "./book.module.css";
 
 function formatMoney(cents: number): string {
@@ -23,10 +23,14 @@ const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: str
 export function TicketTypeStep({
   selected,
   onSelect,
+  earlyBird,
 }: {
   selected: TicketType | null;
   onSelect: (ticketType: TicketType) => void;
+  earlyBird: boolean;
 }) {
+  const prices = priceTableFor(earlyBird);
+
   return (
     <div className={styles.tierRows}>
       {TICKET_OPTIONS.map((option) => {
@@ -52,7 +56,10 @@ export function TicketTypeStep({
               </div>
               <div className={styles.tierRight}>
                 <div className={styles.tierPrice}>
-                  {formatMoney(TICKET_PRICE_PER_PERSON_CENTS[option.type])} <span className={styles.tierCurrency}>HKD</span>
+                  {earlyBird && (
+                    <span className={styles.tierWas}>{formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])}</span>
+                  )}
+                  {formatMoney(prices[option.type])} <span className={styles.tierCurrency}>HKD</span>
                 </div>
               </div>
             </div>

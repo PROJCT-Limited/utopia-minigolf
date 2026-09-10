@@ -3,7 +3,13 @@ import Link from "next/link";
 import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
-import { TICKET_PRICE_PER_PERSON_CENTS } from "@/lib/booking/pricing";
+import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
+import {
+  LIST_PRICE_PER_PERSON_CENTS,
+  isEarlyBirdActive,
+  priceTableFor,
+  type TicketType,
+} from "@/lib/booking/pricing";
 import { fetchLeaderboard } from "@/lib/scoring/leaderboardRepo";
 import styles from "./page.module.css";
 
@@ -26,18 +32,18 @@ const COMMUNITY_ROWS = [
   },
 ];
 
-const TIERS = [
+const TIERS: { type: TicketType; label: string; name: string; body: string }[] = [
   {
+    type: "standard",
     label: "ONE ROUND, PER PERSON",
     name: "One round",
     body: "All 5 stations + a drink",
-    priceCents: TICKET_PRICE_PER_PERSON_CENTS.standard,
   },
   {
+    type: "unlimited",
     label: "UNLIMITED PLAY, PER PERSON",
     name: "A full hour",
     body: "Keep playing + free flow drinks",
-    priceCents: TICKET_PRICE_PER_PERSON_CENTS.unlimited,
   },
 ];
 
@@ -46,6 +52,12 @@ function priceFigure(cents: number): string {
 }
 
 export default async function HomePage() {
+  // Server clock decides — this page is ISR'd at 60s, so the early bird price
+  // can read as live for up to a minute past the deadline. That's the whole cost
+  // of not making the marketing page dynamic, and a minute of goodwill is cheap.
+  const earlyBird = isEarlyBirdActive();
+  const prices = priceTableFor(earlyBird);
+
   const [dayRows, monthRows, allRows] = await Promise.all([
     fetchLeaderboard("day"),
     fetchLeaderboard("month"),
@@ -193,6 +205,12 @@ export default async function HomePage() {
               Come on your own or bring the whole group. Five stations, and the automated scoring for your
               convenience
             </p>
+            {earlyBird && (
+              <p className={styles.earlyBirdNote}>
+                <span className={styles.earlyBirdTag}>Early bird</span>
+                {EARLY_BIRD_NOTICE}
+              </p>
+            )}
           </div>
           <div>
             <div className={styles.tierRule} />
@@ -206,7 +224,10 @@ export default async function HomePage() {
                   </div>
                   <div className={styles.tierRight}>
                     <div className={styles.tierPrice}>
-                      {priceFigure(tier.priceCents)} <span className={styles.tierCurrency}>HKD</span>
+                      {earlyBird && (
+                        <span className={styles.tierWas}>{priceFigure(LIST_PRICE_PER_PERSON_CENTS[tier.type])}</span>
+                      )}
+                      {priceFigure(prices[tier.type])} <span className={styles.tierCurrency}>HKD</span>
                     </div>
                     <Link href="/book" className={styles.tierReserve}>
                       Reserve →

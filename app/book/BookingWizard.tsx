@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import {
-  computeBookingTotalCents,
+  computeDisplayTotalCents,
   TICKET_TYPE_LABELS,
   MIN_HEADCOUNT,
   MAX_HEADCOUNT,
   type TicketType,
 } from "@/lib/booking/pricing";
-import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { EARLY_BIRD_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import sharedStyles from "../components/found/shared.module.css";
@@ -26,7 +26,15 @@ function formatMoney(cents: number): string {
   return `HKD ${(cents / 100).toFixed(0)}`;
 }
 
-export function BookingWizard({ waves }: { waves: WaveView[] }) {
+export function BookingWizard({
+  waves,
+  earlyBird,
+}: {
+  waves: WaveView[];
+  // Resolved on the server in page.tsx. Display only — createBooking prices
+  // the charge again from the server's own clock.
+  earlyBird: boolean;
+}) {
   const [step, setStep] = useState(1);
   const [ticketType, setTicketType] = useState<TicketType | null>(null);
   const [headcount, setHeadcount] = useState(1);
@@ -100,8 +108,14 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
               Come on your own or bring the whole group. Five stations, and the automated scoring for your
               convenience
             </p>
+            {earlyBird && (
+              <p className={styles.earlyBirdNote}>
+                <span className={styles.earlyBirdTag}>Early bird</span>
+                {EARLY_BIRD_NOTICE}
+              </p>
+            )}
             <div className={styles.stepBody}>
-              <TicketTypeStep selected={ticketType} onSelect={setTicketType} />
+              <TicketTypeStep selected={ticketType} onSelect={setTicketType} earlyBird={earlyBird} />
             </div>
           </div>
         </section>
@@ -193,8 +207,10 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
                   </span>
                 </div>
                 <div className={`${confirmationStyles.row} ${sharedStyles.detailRowTotal}`}>
-                  <span className={sharedStyles.detailLabel}>Total</span>
-                  <span className={sharedStyles.detailValue}>{formatMoney(computeBookingTotalCents(ticketType, headcount))}</span>
+                  <span className={sharedStyles.detailLabel}>
+                    Total{earlyBird ? " (early bird)" : ""}
+                  </span>
+                  <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, earlyBird))}</span>
                 </div>
               </div>
 
@@ -218,7 +234,7 @@ export function BookingWizard({ waves }: { waves: WaveView[] }) {
               <PaymentStep
                 bookingId={payment.bookingId}
                 clientSecret={payment.clientSecret}
-                amountLabel={formatMoney(computeBookingTotalCents(ticketType, headcount))}
+                amountLabel={formatMoney(computeDisplayTotalCents(ticketType, headcount, earlyBird))}
               />
             </div>
           </div>

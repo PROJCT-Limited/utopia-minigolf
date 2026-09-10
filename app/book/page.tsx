@@ -1,4 +1,5 @@
 import { fetchUpcomingWaves } from "@/lib/booking/wavesRepo";
+import { isEarlyBirdActive } from "@/lib/booking/pricing";
 import { FoundHeader } from "../components/found/FoundHeader";
 import { FoundFooter } from "../components/found/FoundFooter";
 import sharedStyles from "../components/found/shared.module.css";
@@ -10,13 +11,16 @@ export const dynamic = "force-dynamic"; // wave availability changes constantly 
 
 export default async function BookPage() {
   const waves = await fetchUpcomingWaves();
+  // Worked out here, on the server, and handed down: the wizard is a client
+  // component, and a browser clock is not allowed to decide what a guest pays.
+  const earlyBird = isEarlyBirdActive();
 
   return (
     <div className={sharedStyles.pageWrap}>
       <FoundHeader />
       <main className={sharedStyles.pageMain}>
         <div className={styles.page}>
-          <BookingWizard waves={waves} />
+          <BookingWizard waves={waves} earlyBird={earlyBird} />
         </div>
       </main>
       <FoundFooter />

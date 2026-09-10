@@ -2,34 +2,95 @@
 import { describe, it, expect } from "vitest";
 import {
   computeBookingTotalCents,
+  computeDisplayTotalCents,
+  computeListTotalCents,
   isValidHeadcount,
   isValidTicketType,
+  isEarlyBirdActive,
   derivePartyTypeFromHeadcount,
-  TICKET_PRICE_PER_PERSON_CENTS,
+  priceTableFor,
+  EARLY_BIRD_ENDS_AT,
+  EARLY_BIRD_PRICE_PER_PERSON_CENTS,
+  LIST_PRICE_PER_PERSON_CENTS,
 } from "./pricing";
 
-describe("computeBookingTotalCents", () => {
-  it("charges HKD 150 per person for standard", () => {
-    expect(TICKET_PRICE_PER_PERSON_CENTS.standard).toBe(15000);
-    expect(computeBookingTotalCents("standard", 1)).toBe(15000);
-    expect(computeBookingTotalCents("standard", 2)).toBe(30000);
-    expect(computeBookingTotalCents("standard", 5)).toBe(75000);
+// Two instants that straddle the deadline, so no test depends on when it runs.
+const DURING = new Date(EARLY_BIRD_ENDS_AT.getTime() - 60_000);
+const AFTER = new Date(EARLY_BIRD_ENDS_AT.getTime() + 60_000);
+
+describe("list prices", () => {
+  it("is HKD 150 standard, HKD 220 unlimited", () => {
+    expect(LIST_PRICE_PER_PERSON_CENTS.standard).toBe(15000);
+    expect(LIST_PRICE_PER_PERSON_CENTS.unlimited).toBe(22000);
+  });
+});
+
+describe("early bird price", () => {
+  it("is HKD 120 standard, HKD 180 unlimited", () => {
+    expect(EARLY_BIRD_PRICE_PER_PERSON_CENTS.standard).toBe(12000);
+    expect(EARLY_BIRD_PRICE_PER_PERSON_CENTS.unlimited).toBe(18000);
   });
 
-  it("charges HKD 220 per person for unlimited", () => {
-    expect(TICKET_PRICE_PER_PERSON_CENTS.unlimited).toBe(22000);
-    expect(computeBookingTotalCents("unlimited", 1)).toBe(22000);
-    expect(computeBookingTotalCents("unlimited", 5)).toBe(110000);
+  it("ends at the close of 15 September 2026 Hong Kong time", () => {
+    // 23:59:59 +08:00 is 15:59:59Z the same day — the offset must survive,
+    // or the offer would close eight hours early on a UTC server.
+    expect(EARLY_BIRD_ENDS_AT.toISOString()).toBe("2026-09-15T15:59:59.000Z");
+  });
+
+  it("is live up to the deadline and not past it", () => {
+    expect(isEarlyBirdActive(DURING)).toBe(true);
+    expect(isEarlyBirdActive(EARLY_BIRD_ENDS_AT)).toBe(true);
+    expect(isEarlyBirdActive(AFTER)).toBe(false);
+  });
+
+  it("picks the right price table either side of it", () => {
+    expect(priceTableFor(true)).toBe(EARLY_BIRD_PRICE_PER_PERSON_CENTS);
+    expect(priceTableFor(false)).toBe(LIST_PRICE_PER_PERSON_CENTS);
+  });
+});
+
+describe("computeBookingTotalCents", () => {
+  it("charges the early bird price before the deadline", () => {
+    expect(computeBookingTotalCents("standard", 1, DURING)).toBe(12000);
+    expect(computeBookingTotalCents("standard", 5, DURING)).toBe(60000);
+    expect(computeBookingTotalCents("unlimited", 1, DURING)).toBe(18000);
+    expect(computeBookingTotalCents("unlimited", 5, DURING)).toBe(90000);
+  });
+
+  it("charges list price after the deadline", () => {
+    expect(computeBookingTotalCents("standard", 1, AFTER)).toBe(15000);
+    expect(computeBookingTotalCents("standard", 2, AFTER)).toBe(30000);
+    expect(computeBookingTotalCents("unlimited", 1, AFTER)).toBe(22000);
+    expect(computeBookingTotalCents("unlimited", 5, AFTER)).toBe(110000);
   });
 
   it("rejects headcounts outside 1-5", () => {
-    expect(() => computeBookingTotalCents("standard", 0)).toThrow();
-    expect(() => computeBookingTotalCents("standard", 6)).toThrow();
-    expect(() => computeBookingTotalCents("standard", 1.5)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 0, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 6, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 1.5, DURING)).toThrow();
   });
 
   it("rejects invalid ticket types", () => {
-    expect(() => computeBookingTotalCents("premium" as never, 2)).toThrow();
+    expect(() => computeBookingTotalCents("premium" as never, 2, DURING)).toThrow();
+  });
+});
+
+describe("computeListTotalCents", () => {
+  it("ignores the early bird price entirely — walk-ins pay list price", () => {
+    expect(computeListTotalCents("standard", 2)).toBe(30000);
+    expect(computeListTotalCents("unlimited", 2)).toBe(44000);
+  });
+
+  it("still validates its inputs", () => {
+    expect(() => computeListTotalCents("standard", 9)).toThrow();
+    expect(() => computeListTotalCents("premium" as never, 1)).toThrow();
+  });
+});
+
+describe("computeDisplayTotalCents", () => {
+  it("follows the flag it is given, not any clock", () => {
+    expect(computeDisplayTotalCents("standard", 3, true)).toBe(36000);
+    expect(computeDisplayTotalCents("standard", 3, false)).toBe(45000);
   });
 });
 

@@ -6,7 +6,7 @@ import {
   MIN_HEADCOUNT,
   TICKET_TYPES,
   TICKET_TYPE_LABELS,
-  TICKET_PRICE_PER_PERSON_CENTS,
+  LIST_PRICE_PER_PERSON_CENTS,
   type TicketType,
 } from "@/lib/booking/pricing";
 import { isValidPlayerName } from "@/lib/checkin/checkin";
@@ -42,7 +42,9 @@ export function WalkInScreen({
     };
   }, []);
 
-  const total = (TICKET_PRICE_PER_PERSON_CENTS[ticketType] * headcount) / 100;
+  // List price, always: the early bird price is for people booking a venue
+  // that isn't built yet, not for someone already standing in it.
+  const total = (LIST_PRICE_PER_PERSON_CENTS[ticketType] * headcount) / 100;
   const tooMany = slot !== null && headcount > slot.peopleLeft;
 
   return (
@@ -81,7 +83,7 @@ export function WalkInScreen({
               onClick={() => setTicketType(type)}
             >
               {TICKET_TYPE_LABELS[type]}
-              <span className={styles.choicePrice}>${TICKET_PRICE_PER_PERSON_CENTS[type] / 100} pp</span>
+              <span className={styles.choicePrice}>${LIST_PRICE_PER_PERSON_CENTS[type] / 100} pp</span>
             </button>
           ))}
         </div>

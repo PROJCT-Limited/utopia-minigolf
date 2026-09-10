@@ -18,10 +18,18 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>Bookings &amp; payment</h2>
               <p>
-                A FOUND reservation is charged in full, per person, at the time of booking. Standard tickets (HKD
-                150) cover one run across all five stations plus one drink; Unlimited tickets (HKD 220)
-                cover the full hour with re-entry and bottomless drinks. No card details are stored by FOUND,
-                payment is processed securely by Stripe.
+                A FOUND reservation is charged in full, per person, at the time of booking. Standard tickets
+                cover one run across all five stations plus one drink; Unlimited tickets cover the full hour
+                with re-entry and bottomless drinks. No card details are stored by FOUND, payment is processed
+                securely by Stripe.
+              </p>
+              <p>
+                Bookings made on or before 15 September 2026 (Hong Kong time) are charged at the early bird
+                price of HKD 120 for Standard and HKD 180 for Unlimited. Bookings made after that are charged
+                at HKD 150 and HKD 220. The price is fixed at the time of booking: rescheduling an existing
+                booking never re-prices it, and no refund of the difference is made on bookings placed before
+                the early bird price was introduced. Walk-in tickets bought at the door are charged at HKD 150
+                and HKD 220 regardless of date.
               </p>
             </div>
             <div className={styles.rule} />
