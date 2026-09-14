@@ -20,4 +20,4 @@ export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule 
 // No longer states the discount by crossing out the list price next to it —
 // the countdown strip carries the deadline, so this says plainly that the
 // prices shown are the reduced ones and won't last.
-export const EARLY_BIRD_NOTICE = `These are early bird prices — they go up after ${EARLY_BIRD_DEADLINE_LABEL}.`;
+export const EARLY_BIRD_NOTICE = `These are early bird prices — they go up after ${EARLY_BIRD_DEADLINE_LABEL}, Hong Kong time.`;

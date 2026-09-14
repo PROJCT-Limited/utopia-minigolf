@@ -56,6 +56,12 @@
 .unit {
   color: var(--f-grey);
 }
+/* The deadline itself, on the venue's clock. Quieter than the digits — it's
+   the answer to "whose midnight?", not the headline. */
+.deadline {
+  color: var(--f-grey);
+  white-space: nowrap;
+}
 
 @media (max-width: 640px) {
   .inner {
