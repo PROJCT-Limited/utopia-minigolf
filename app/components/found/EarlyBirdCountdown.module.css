@@ -1,11 +1,11 @@
-/* The early bird strip: a light band above everything, like the reference.
-   --f-white rather than --f-paper so it still separates from the paper page
-   background on /book, where the hairline below it does the rest of the work;
-   above the homepage's dark hero it reads as a crisp edge on its own. */
+/* The early bird strip. Amber rather than off-white: as a pale band it was
+   one more neutral in a page full of them and got read as chrome. The site is
+   otherwise greyscale, so a single warm band at the very top is the loudest
+   thing available without touching anything else. */
 .strip {
-  background: var(--f-white);
+  background: var(--f-amber);
   color: var(--f-ink);
-  border-bottom: 1px solid rgba(19, 18, 16, 0.08);
+  border-bottom: 1px solid rgba(19, 18, 16, 0.14);
 }
 .inner {
   max-width: 1500px;
@@ -21,7 +21,7 @@
   line-height: 1.5;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--f-grey);
+  color: rgba(19, 18, 16, 0.62);
 }
 .cta {
   color: var(--f-ink);
@@ -54,7 +54,7 @@
   color: var(--f-ink);
 }
 .unit {
-  color: var(--f-grey);
+  color: rgba(19, 18, 16, 0.62);
 }
 /* The venue's timezone, set off from the digits it qualifies. Quieter than
    them too — it's the answer to "whose midnight?", not the headline. The gap
@@ -62,7 +62,7 @@
    spacing would swallow a single character's worth of room. */
 .deadline {
   margin-left: 9px;
-  color: var(--f-grey);
+  color: rgba(19, 18, 16, 0.62);
   white-space: nowrap;
 }
 
