@@ -43,27 +43,18 @@ export function DailyDigestEmail({ stats, adminUrl }: DailyDigestEmailProps) {
       <MonoLabel>{formatDigestDay(stats.day)} &middot; Hong Kong</MonoLabel>
       <EmailHeading>{digestHeadline(stats)}</EmailHeading>
 
-      {today.people === 0 ? (
-        <Text style={bodyText}>
-          Nothing sold today.
-          {today.pendingPeople > 0
-            ? ` ${today.pendingPeople} ${today.pendingPeople === 1 ? "person" : "people"} started a checkout and didn't finish it.`
-            : " No checkouts were started either."}
-        </Text>
-      ) : (
-        <Text style={bodyText}>
-          Paid and confirmed today, with the season total underneath.
-          {today.pendingPeople > 0
-            ? ` A further ${today.pendingPeople} ${today.pendingPeople === 1 ? "person" : "people"} started a checkout without finishing it.`
-            : ""}
-        </Text>
-      )}
-
+      {/* No prose. The figures are the message, and a sentence restating
+          them in words is a line to skim past on the way to the box. The
+          unfinished checkouts became a row of their own rather than an
+          aside. */}
       <EmailDetailBox
         rows={[
           { label: "People", value: String(today.people) },
           { label: "Groups", value: String(today.groups) },
           ...today.byTicketType.map((t) => ({ label: t.label, value: `${t.people} people` })),
+          ...(today.pendingPeople > 0
+            ? [{ label: "Mid-checkout", value: `${today.pendingPeople} people` }]
+            : []),
           { label: "Taken", value: formatMoney(today.revenueCents, "hkd") },
         ]}
       />

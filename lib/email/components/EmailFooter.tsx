@@ -41,9 +41,10 @@ export function EmailFooter({ manageUrl, internal = false }: EmailFooterProps) {
   return (
     <Section style={{ marginTop: "44px" }}>
       <Hr style={{ borderColor: colors.ink, borderTopWidth: "1px", margin: "0 0 22px" }} />
-      {internal ? (
-        <Text style={noteStyle}>Sent nightly from 189found.club. Nobody outside the team gets this.</Text>
-      ) : (
+      {/* Staff mail gets no footer copy at all: the guest lines explain
+          FOUND to people who work there, and an internal note about who
+          receives the report is one more line nobody reads twice. */}
+      {internal ? null : (
         <>
           <Text style={noteStyle}>{aboutLine}</Text>
           <Text style={noteStyle}>Questions? Just reply to this email.</Text>
