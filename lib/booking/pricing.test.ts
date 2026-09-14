@@ -8,7 +8,7 @@ import {
   isValidTicketType,
   isEarlyBirdActive,
   derivePartyTypeFromHeadcount,
-  formatDeadlineInVenueTime,
+  VENUE_TIME_ZONE,
   priceTableFor,
   EARLY_BIRD_ENDS_AT,
   EARLY_BIRD_PRICE_PER_PERSON_CENTS,
@@ -38,16 +38,17 @@ describe("early bird price", () => {
     expect(EARLY_BIRD_ENDS_AT.toISOString()).toBe("2026-09-23T15:59:59.000Z");
   });
 
-  it("states the deadline on the venue's clock, whatever the reader's", () => {
-    // The machine running this sits in whatever timezone it sits in; the label
-    // is Hong Kong's either way. This is the guarantee behind the strip
-    // saying "23 Sept, 23:59 HKT" to a guest reading it from anywhere.
-    expect(formatDeadlineInVenueTime()).toBe("23 Sept, 23:59 HKT");
-  });
-
-  it("keeps the label tied to the deadline constant", () => {
-    // Move the instant and the words move with it — the two can't drift.
-    expect(formatDeadlineInVenueTime(new Date("2026-10-01T12:30:00+08:00"))).toBe("1 Oct, 12:30 HKT");
+  it("lands at midnight on the venue's own clock", () => {
+    // The marker in the countdown strip says HKT; this is what makes that
+    // true, whatever timezone the machine reading it happens to be in.
+    expect(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: VENUE_TIME_ZONE,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(EARLY_BIRD_ENDS_AT)
+    ).toBe("23:59");
   });
 
   it("is live up to the deadline and not past it", () => {

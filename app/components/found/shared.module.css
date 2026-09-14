@@ -238,21 +238,33 @@
   align-items: center;
   gap: 16px;
 }
+/* Filled rather than outlined: party size is the one control on this step,
+   and as two thin outlines it read as decoration and got walked past. */
 .stepperBtn {
   width: 40px;
   height: 40px;
   border: 1px solid var(--f-ink);
-  background: transparent;
-  color: var(--f-ink);
+  background: var(--f-ink);
+  color: var(--f-white);
   font-family: var(--f-archivo);
-  font-size: 16px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.15s;
 }
+.stepperBtn:hover:not(:disabled) {
+  opacity: 0.82;
+}
+/* At one player there's nothing to subtract, and at five nothing to add —
+   an unavailable button empties out rather than dimming the fill, so it
+   reads as "not now" instead of "greyed-out ink". */
 .stepperBtn:disabled {
-  opacity: 0.35;
+  background: transparent;
+  border-color: rgba(19, 18, 16, 0.25);
+  color: rgba(19, 18, 16, 0.3);
   cursor: default;
 }
 .stepperCount {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { VENUE_TIME_ZONE_LABEL } from "@/lib/booking/pricing";
 import styles from "./EarlyBirdCountdown.module.css";
 
 /**
@@ -25,19 +26,10 @@ import styles from "./EarlyBirdCountdown.module.css";
 export function EarlyBirdCountdown({
   endsAtMs,
   serverNowMs,
-  deadlineLabel,
   withCta = true,
 }: {
   endsAtMs: number;
   serverNowMs: number;
-  /**
-   * The deadline on the venue's clock ("23 Sept, 23:59 HKT"), formatted on
-   * the server by formatDeadlineInVenueTime(). Passed in rather than worked
-   * out here so the strip states Hong Kong's midnight to every guest, wherever
-   * they're reading it — a browser asked to format this would answer in its
-   * own timezone, and would disagree with the server-rendered HTML besides.
-   */
-  deadlineLabel: string;
   /** Off on /book itself, where a "Reserve now" link would point at the page
       the guest is already standing on. */
   withCta?: boolean;
@@ -81,7 +73,7 @@ export function EarlyBirdCountdown({
               </span>
             ))}
           </span>
-          <span className={styles.deadline}> &middot; {deadlineLabel}</span>
+          <span className={styles.deadline}>{VENUE_TIME_ZONE_LABEL}</span>
         </span>
       </div>
     </div>

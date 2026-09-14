@@ -1,5 +1,5 @@
 import { fetchUpcomingWaves } from "@/lib/booking/wavesRepo";
-import { EARLY_BIRD_ENDS_AT, formatDeadlineInVenueTime, isEarlyBirdActive } from "@/lib/booking/pricing";
+import { EARLY_BIRD_ENDS_AT, isEarlyBirdActive } from "@/lib/booking/pricing";
 import { EarlyBirdCountdown } from "../components/found/EarlyBirdCountdown";
 import { FoundHeader } from "../components/found/FoundHeader";
 import { FoundFooter } from "../components/found/FoundFooter";
@@ -23,7 +23,6 @@ export default async function BookPage() {
         <EarlyBirdCountdown
           endsAtMs={EARLY_BIRD_ENDS_AT.getTime()}
           serverNowMs={now.getTime()}
-          deadlineLabel={formatDeadlineInVenueTime()}
           withCta={false}
         />
       )}

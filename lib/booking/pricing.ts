@@ -39,32 +39,17 @@ export const EARLY_BIRD_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
 export const EARLY_BIRD_ENDS_AT = new Date("2026-09-23T23:59:59+08:00");
 export const EARLY_BIRD_DEADLINE_LABEL = "23 September";
 
-/** The venue's clock. Every deadline a guest is shown is stated in it. */
-export const VENUE_TIME_ZONE = "Asia/Hong_Kong";
-
 /**
- * The deadline written out on the venue's clock — "23 Sept, 23:59 HKT".
+ * The venue's clock, and the two-letter answer to "whose midnight?".
  *
- * The countdown itself was never in the wrong timezone: it measures the gap
- * between two instants, which is the same number of seconds whether you read
- * it in Hong Kong or in Lisbon. What it couldn't do was *say* so, and a bare
- * "ends in 9 days" gives an overseas guest no way to tell whose midnight it
- * means. This derives the label from EARLY_BIRD_ENDS_AT through Intl rather
- * than spelling it out, so the words can never drift from the actual instant
- * — move the constant and the label moves with it.
+ * The countdown was never in the wrong timezone — it measures the gap between
+ * two instants, the same number of seconds in Hong Kong as in Lisbon, and the
+ * deadline above carries +08:00. What it couldn't do was say so, which is all
+ * this marker is for: the digits are the headline, and HKT is the footnote
+ * that tells a guest abroad which midnight they're counting down to.
  */
-export function formatDeadlineInVenueTime(at: Date = EARLY_BIRD_ENDS_AT): string {
-  const formatted = new Intl.DateTimeFormat("en-GB", {
-    timeZone: VENUE_TIME_ZONE,
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(at);
-
-  return `${formatted} HKT`;
-}
+export const VENUE_TIME_ZONE = "Asia/Hong_Kong";
+export const VENUE_TIME_ZONE_LABEL = "HKT";
 
 export const TICKET_TYPE_LABELS: Record<TicketType, string> = {
   standard: "Standard",

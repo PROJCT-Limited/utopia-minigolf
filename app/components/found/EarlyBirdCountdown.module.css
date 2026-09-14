@@ -56,9 +56,12 @@
 .unit {
   color: var(--f-grey);
 }
-/* The deadline itself, on the venue's clock. Quieter than the digits — it's
-   the answer to "whose midnight?", not the headline. */
+/* The venue's timezone, set off from the digits it qualifies. Quieter than
+   them too — it's the answer to "whose midnight?", not the headline. The gap
+   is a margin rather than a space in the markup, since the strip's letter
+   spacing would swallow a single character's worth of room. */
 .deadline {
+  margin-left: 9px;
   color: var(--f-grey);
   white-space: nowrap;
 }

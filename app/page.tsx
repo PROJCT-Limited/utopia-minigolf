@@ -7,7 +7,6 @@ import { EarlyBirdCountdown } from "./components/found/EarlyBirdCountdown";
 import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
 import {
   EARLY_BIRD_ENDS_AT,
-  formatDeadlineInVenueTime,
   isEarlyBirdActive,
   priceTableFor,
   type TicketType,
@@ -75,7 +74,6 @@ export default async function HomePage() {
         <EarlyBirdCountdown
           endsAtMs={EARLY_BIRD_ENDS_AT.getTime()}
           serverNowMs={now.getTime()}
-          deadlineLabel={formatDeadlineInVenueTime()}
         />
       )}
 
