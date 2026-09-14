@@ -107,11 +107,16 @@ export function DailyDigestEmail({ stats, adminUrl }: DailyDigestEmailProps) {
 }
 
 function formatSlotDate(date: string): string {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
+  const formatted = new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
   });
+
+  // "9 Oct" is a character shorter than "17 Oct", which walks the times out of
+  // line down a monospaced list. A non-breaking space holds the column —
+  // HTML would collapse an ordinary one.
+  return formatted.length < 6 ? `\u00a0${formatted}` : formatted;
 }
 
 export default DailyDigestEmail;
