@@ -24,7 +24,7 @@ export default function TermsPage() {
                 securely by Stripe.
               </p>
               <p>
-                Bookings made on or before 23 September 2026 (Hong Kong time) are charged at the early bird
+                Bookings made on or before 20 September 2026 (Hong Kong time) are charged at the early bird
                 price of HKD 120 for Standard and HKD 180 for Unlimited. Bookings made after that are charged
                 at HKD 150 and HKD 220. The price is fixed at the time of booking: rescheduling an existing
                 booking never re-prices it, and no refund of the difference is made on bookings placed before

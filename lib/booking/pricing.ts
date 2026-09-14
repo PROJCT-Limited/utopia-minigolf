@@ -30,14 +30,14 @@ export const EARLY_BIRD_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
   unlimited: 180_00,
 };
 
-// End of 23 September 2026, Hong Kong time — a fortnight and a day before
-// the doors open on 8 October, the same run-up the old 15 September deadline
-// gave the old 30 September opening. Moving the season moved this with it.
+// End of 20 September 2026, Hong Kong time — pulled in from the 23rd, so the
+// offer closes a clear fortnight and a half before the doors open on
+// 8 October rather than trailing into the fortnight before it.
 // The offset is written into the literal on purpose: the server runs in UTC
 // on Vercel, so an offset-less date string would close the offer eight hours
 // early for everyone in HK.
-export const EARLY_BIRD_ENDS_AT = new Date("2026-09-23T23:59:59+08:00");
-export const EARLY_BIRD_DEADLINE_LABEL = "23 September";
+export const EARLY_BIRD_ENDS_AT = new Date("2026-09-20T23:59:59+08:00");
+export const EARLY_BIRD_DEADLINE_LABEL = "20 September";
 
 /**
  * The venue's clock, and the two-letter answer to "whose midnight?".

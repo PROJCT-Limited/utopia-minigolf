@@ -32,10 +32,10 @@ describe("early bird price", () => {
     expect(EARLY_BIRD_PRICE_PER_PERSON_CENTS.unlimited).toBe(18000);
   });
 
-  it("ends at the close of 23 September 2026 Hong Kong time", () => {
+  it("ends at the close of 20 September 2026 Hong Kong time", () => {
     // 23:59:59 +08:00 is 15:59:59Z the same day — the offset must survive,
     // or the offer would close eight hours early on a UTC server.
-    expect(EARLY_BIRD_ENDS_AT.toISOString()).toBe("2026-09-23T15:59:59.000Z");
+    expect(EARLY_BIRD_ENDS_AT.toISOString()).toBe("2026-09-20T15:59:59.000Z");
   });
 
   it("lands at midnight on the venue's own clock", () => {
