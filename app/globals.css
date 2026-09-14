@@ -34,11 +34,11 @@
   --projct-blue: #0e50c8;
 
   /* The one colour in an otherwise greyscale site: the early bird band at the
-     top of the page. Pitched between a clean yellow and a muted gold so it
-     carries against black-and-white photography without going neon next to
-     the warm neutrals (--f-paper, --f-stone) it sits among. Ink stays legible
-     on it at roughly 10:1, so the band needs no second treatment for text. */
-  --f-amber: #edc658;
+     top of the page. An acid yellow, deliberately louder than the warm
+     neutrals around it — against black-and-white photography it's the single
+     thing on the page that can't be skimmed past. Ink on it runs about 14:1,
+     so the band needs no second treatment for text. */
+  --f-highlight: #ebf21b;
 
   --font-body: var(--font-manrope), sans-serif;
   /* Futura Book, self-hosted via next/font/local — see the provenance note

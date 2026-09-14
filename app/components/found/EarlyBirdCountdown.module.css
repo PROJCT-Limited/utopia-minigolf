@@ -1,9 +1,9 @@
-/* The early bird strip. Amber rather than off-white: as a pale band it was
+/* The early bird strip. Colour rather than off-white: as a pale band it was
    one more neutral in a page full of them and got read as chrome. The site is
-   otherwise greyscale, so a single warm band at the very top is the loudest
-   thing available without touching anything else. */
+   otherwise greyscale, so a single acid-yellow band at the very top is the
+   loudest thing available without touching anything else. */
 .strip {
-  background: var(--f-amber);
+  background: var(--f-highlight);
   color: var(--f-ink);
   border-bottom: 1px solid rgba(19, 18, 16, 0.14);
 }
