@@ -39,6 +39,14 @@ export function BookingWizard({
   const [ticketType, setTicketType] = useState<TicketType | null>(null);
   const [headcount, setHeadcount] = useState(1);
   const [selectedWaveId, setSelectedWaveId] = useState<string | null>(null);
+  /**
+   * Step 2 asks two things, and asking them both at once buried the first:
+   * party size sat above a full calendar, so people scrolled past it and then
+   * met "that start time doesn't fit your group". The times stay closed until
+   * the group is settled, because how many spaces a start time needs is the
+   * thing that decides which ones can be offered at all.
+   */
+  const [partySettled, setPartySettled] = useState(false);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -59,7 +67,9 @@ export function BookingWizard({
   }
 
   const step1Valid = ticketType !== null;
-  const step2Valid = selectedWave !== null && hasRoomFor(selectedWave, headcount);
+  const step2Valid = partySettled
+    ? selectedWave !== null && hasRoomFor(selectedWave, headcount)
+    : true; // any group of 1–5 is a valid answer; the button just opens the times
   const step3Valid = leadName.trim().length > 0 && EMAIL_RE.test(leadEmail.trim());
 
   const recap: string[] = [];
@@ -69,11 +79,13 @@ export function BookingWizard({
   const continueHint =
     step === 1 && !step1Valid
       ? "Select a ticket to continue"
-      : step === 2 && !step2Valid
-        ? "Pick a start time that fits your group to continue"
-        : step === 3 && !step3Valid
-          ? "Add your name and email to continue"
-          : null;
+      : step === 2 && !partySettled
+        ? null
+        : step === 2 && !step2Valid
+          ? "Pick a start time that fits your group to continue"
+          : step === 3 && !step3Valid
+            ? "Add your name and email to continue"
+            : null;
 
   async function handlePay() {
     if (!selectedWaveId || !ticketType) return;
@@ -124,7 +136,7 @@ export function BookingWizard({
       {step === 2 && (
         <section className={styles.stepSection}>
           <div className={styles.stepInner}>
-            <h2 className={styles.stepHeading}>Pick a slot</h2>
+            <h2 className={styles.stepHeading}>{partySettled ? "Pick a slot" : "Who's playing?"}</h2>
             <div className={styles.stepBody}>
               <div className={styles.field}>
                 <label>Players in your group</label>
@@ -150,14 +162,16 @@ export function BookingWizard({
                   </button>
                 </div>
               </div>
-              <div className={styles.slotPicker}>
-                <WavePicker
-                  waves={waves}
-                  headcount={headcount}
-                  selectedWaveId={selectedWaveId}
-                  onSelect={setSelectedWaveId}
-                />
-              </div>
+              {partySettled && (
+                <div className={styles.slotPicker}>
+                  <WavePicker
+                    waves={waves}
+                    headcount={headcount}
+                    selectedWaveId={selectedWaveId}
+                    onSelect={setSelectedWaveId}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -258,10 +272,19 @@ export function BookingWizard({
                 <button
                   type="button"
                   className={styles.continueBtn}
-                  onClick={() => setStep((s) => Math.min(4, s + 1))}
+                  onClick={() => {
+                    // Same button, two jobs on step 2: settle the group, then
+                    // move on. One primary action beats a second button
+                    // competing with it halfway down the step.
+                    if (step === 2 && !partySettled) {
+                      setPartySettled(true);
+                      return;
+                    }
+                    setStep((s) => Math.min(4, s + 1));
+                  }}
                   disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid) || (step === 3 && !step3Valid)}
                 >
-                  Continue →
+                  {step === 2 && !partySettled ? "See the times →" : "Continue →"}
                 </button>
                 {continueHint && <p className={styles.continueHint}>{continueHint}</p>}
               </div>
