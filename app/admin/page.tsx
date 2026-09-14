@@ -114,13 +114,18 @@ export default async function AdminPage({
                 <Fragment key={day}>
                   <tr className={styles.dayRow}>
                     <th scope="colgroup">{formatDayHeading(day)}</th>
+                    {/* Only what the rows below don't already say. The day's
+                        people total lived here too, next to a column of the
+                        same figure — what's left is the pair of things a row
+                        can't show: checkouts nobody finished, and start times
+                        that aren't publicly listed. */}
                     <td colSpan={2} className={styles.dayFigures}>
-                      {load?.peopleBooked ?? 0} {load?.peopleBooked === 1 ? "person" : "people"}
                       {load && load.pendingPeople > 0 && (
-                        <span className={styles.pendingNote}> · {load.pendingPeople} mid-checkout</span>
+                        <span className={styles.pendingNote}>{load.pendingPeople} mid-checkout</span>
                       )}
+                      {load && load.pendingPeople > 0 && load.hiddenCount > 0 && " · "}
                       {load && load.hiddenCount > 0 && (
-                        <span className={styles.hiddenNote}> · {load.hiddenCount} unlisted</span>
+                        <span className={styles.hiddenNote}>{load.hiddenCount} unlisted</span>
                       )}
                     </td>
                   </tr>
