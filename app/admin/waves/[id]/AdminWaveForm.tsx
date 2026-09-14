@@ -51,6 +51,15 @@ export function AdminWaveForm({ waveId, wave }: { waveId: string; wave: WaveView
           <option value="full">Full</option>
         </select>
       </div>
+      <div className={styles.field}>
+        <label htmlFor="visibility">Listing</label>
+        {/* Switching to Unlisted mints the private link on save; switching
+            back to Public destroys it, and any link already sent with it. */}
+        <select id="visibility" name="visibility" defaultValue={wave.visibility}>
+          <option value="public">Public</option>
+          <option value="hidden">Unlisted (link only)</option>
+        </select>
+      </div>
       <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? "Saving…" : "Save changes"}
       </button>

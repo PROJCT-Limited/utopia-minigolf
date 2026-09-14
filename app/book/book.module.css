@@ -618,3 +618,17 @@
     /* rows already stack — nothing extra needed */
   }
 }
+
+/* The one start time a private link offers, in place of the picker. */
+.lockedSlot {
+  border: 1px solid var(--f-ink);
+  padding: 20px 22px;
+  margin-top: 24px;
+}
+.lockedSlotTime {
+  margin-top: 6px;
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}

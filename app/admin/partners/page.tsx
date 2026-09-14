@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchPartnerReport } from "@/lib/admin/partners";
 import { CreatePartnerForm } from "./CreatePartnerForm";
 import { CopyRefLink } from "./CopyRefLink";
+import { AdminShell } from "../AdminShell";
 import styles from "../admin.module.css";
 
 function refLinkFor(refCode: string): string {
@@ -37,17 +38,7 @@ export default async function PartnersPage({
   const exportHref = `/api/admin/partners/export?from=${from}&to=${to}`;
 
   return (
-    <main className={`wrap ${styles.page}`}>
-      <div className={styles.headRow}>
-        <div>
-          <span className="lbl">FOUND Admin</span>
-          <h1 className={styles.title}>Partners</h1>
-        </div>
-        <Link href="/admin" className="hint">
-          ← Slots
-        </Link>
-      </div>
-
+    <AdminShell active="partners" title="Partners" subtitle="Referral codes, their sales, and commission owed.">
       <div className={styles.card}>
         <h3 style={{ marginBottom: 14, fontSize: 15 }}>Add a partner</h3>
         <CreatePartnerForm />
@@ -119,6 +110,6 @@ export default async function PartnersPage({
           </tbody>
         </table>
       </div>
-    </main>
+    </AdminShell>
   );
 }

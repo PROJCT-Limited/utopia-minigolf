@@ -16,7 +16,18 @@ export interface WaveRow {
   /** Groups booked at this start time — a display figure, never a limit. */
   wave_slots_used: number;
   status: "provisional" | "confirmed" | "full";
+  /**
+   * 'hidden' start times are unlisted: bookable only through their private
+   * link. Optional because a deploy that lands before
+   * 020_hidden_start_times.sql has run reads rows that have no such column —
+   * toWaveView() treats a missing value as 'public', which is what every row
+   * written before that migration was.
+   */
+  visibility?: WaveVisibility;
 }
+
+export const WAVE_VISIBILITIES = ["public", "hidden"] as const;
+export type WaveVisibility = (typeof WAVE_VISIBILITIES)[number];
 
 export interface WaveView {
   id: string;
@@ -34,6 +45,9 @@ export interface WaveView {
   isLowAvailability: boolean;
   /** What the booking UI shows in place of a real time for provisional waves. */
   timeLabel: string;
+  visibility: WaveVisibility;
+  /** Unlisted: reachable only through its private link. */
+  isHidden: boolean;
 }
 
 /**
@@ -71,6 +85,11 @@ export function toWaveView(row: WaveRow): WaveView {
     isFull,
     isLowAvailability: !isFull && peopleLeft < LOW_AVAILABILITY_PEOPLE,
     timeLabel: row.status === "provisional" ? PROVISIONAL_LABEL : formatTime(row.start_time),
+    // A row written before 020_hidden_start_times.sql ran has no visibility
+    // at all; the safe reading of a missing value is the listed default,
+    // since that's what every such row already was.
+    visibility: row.visibility ?? "public",
+    isHidden: row.visibility === "hidden",
   };
 }
 

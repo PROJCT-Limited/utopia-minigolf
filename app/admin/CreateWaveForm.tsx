@@ -53,6 +53,15 @@ export function CreateWaveForm({ defaultPeopleCapacity }: { defaultPeopleCapacit
           <option value="confirmed">Confirmed</option>
         </select>
       </div>
+      <div className={styles.field}>
+        <label htmlFor="visibility">Listing</label>
+        {/* Unlisted start times are created with their private link already
+            minted — open the start time to copy it. */}
+        <select id="visibility" name="visibility" defaultValue="public">
+          <option value="public">Public</option>
+          <option value="hidden">Unlisted (link only)</option>
+        </select>
+      </div>
       <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? "Adding…" : "Add start time"}
       </button>

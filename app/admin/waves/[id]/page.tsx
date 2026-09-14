@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchWaveAdminDetail } from "@/lib/admin/waves";
+import { privateBookingUrl } from "@/lib/admin/privateLink";
 import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
+import { AdminShell } from "../../AdminShell";
 import { AdminWaveForm } from "./AdminWaveForm";
+import { PrivateLinkCard } from "./PrivateLinkCard";
 import styles from "../../admin.module.css";
 
 export const metadata = { title: "Manage start time — FOUND Admin" };
@@ -17,24 +20,21 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
   const detail = await fetchWaveAdminDetail(id);
   if (!detail) notFound();
 
-  const { wave, bookings, paidBookingCount, paidPeopleCount } = detail;
+  const { wave, privateToken, bookings, paidBookingCount, paidPeopleCount } = detail;
 
   return (
-    <main className={`wrap ${styles.page}`}>
-      <div className={styles.headRow}>
-        <div>
-          <Link href="/admin" className="hint">
-            ← All start times
-          </Link>
-          <h1 className={styles.title} style={{ marginTop: 8 }}>
-            {wave.date}, {wave.startTime.slice(0, 5)}
-          </h1>
-          <p className="hint" style={{ marginTop: 6 }}>
-            {paidBookingCount} {paidBookingCount === 1 ? "group" : "groups"} · {paidPeopleCount} / {wave.peopleCapacity}{" "}
-            people
-          </p>
-        </div>
-      </div>
+    <AdminShell
+      active="waves"
+      title={`${wave.date}, ${wave.startTime.slice(0, 5)}`}
+      subtitle={
+        <>
+          {paidBookingCount} {paidBookingCount === 1 ? "group" : "groups"} · {paidPeopleCount} /{" "}
+          {wave.peopleCapacity} people
+          {wave.isHidden && " · unlisted"} · <Link href="/admin">back to all start times</Link>
+        </>
+      }
+    >
+      {wave.isHidden && privateToken && <PrivateLinkCard waveId={wave.id} url={privateBookingUrl(privateToken)} />}
 
       <div className={styles.card}>
         <h3 style={{ marginBottom: 14, fontSize: 15 }}>Edit start time</h3>
@@ -79,7 +79,6 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
           </tbody>
         </table>
       </div>
-
-    </main>
+    </AdminShell>
   );
 }

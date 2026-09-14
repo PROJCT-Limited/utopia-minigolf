@@ -72,7 +72,11 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
   }
 
   const newWave = await fetchWaveById(newWaveId);
-  if (!newWave) return { ok: false, error: "That start time no longer exists." };
+  // Same message for "gone" and "unlisted" on purpose: a guest who guessed an
+  // id shouldn't be able to tell a private start time apart from a deleted
+  // one. The picker never offers these (fetchUpcomingWaves filters them out);
+  // this is the guard for an id posted straight at the action.
+  if (!newWave || newWave.isHidden) return { ok: false, error: "That start time no longer exists." };
   // Capacity is people, so the same start time can have room for a pair and
   // none for this booking's group.
   if (!hasRoomForGroup(newWave, booking.headcount)) {

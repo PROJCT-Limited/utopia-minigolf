@@ -29,24 +29,35 @@ function formatMoney(cents: number): string {
 export function BookingWizard({
   waves,
   earlyBird,
+  lockedWave = null,
 }: {
   waves: WaveView[];
   // Resolved on the server in page.tsx. Display only — createBooking prices
   // the charge again from the server's own clock.
   earlyBird: boolean;
+  /**
+   * Set when the wizard was reached through an unlisted start time's private
+   * link (app/book/private/[token]): there is exactly one slot on offer, so
+   * step 2 states it instead of asking. Everything else about the flow —
+   * pricing, capacity checks, payment — is the ordinary path.
+   */
+  lockedWave?: WaveView | null;
 }) {
   const [step, setStep] = useState(1);
   const [ticketType, setTicketType] = useState<TicketType | null>(null);
   const [headcount, setHeadcount] = useState(1);
-  const [selectedWaveId, setSelectedWaveId] = useState<string | null>(null);
+  const [selectedWaveId, setSelectedWaveId] = useState<string | null>(lockedWave?.id ?? null);
   /**
    * Step 2 asks two things, and asking them both at once buried the first:
    * party size sat above a full calendar, so people scrolled past it and then
    * met "that start time doesn't fit your group". The times stay closed until
    * the group is settled, because how many spaces a start time needs is the
    * thing that decides which ones can be offered at all.
+   *
+   * A private link starts settled: there is one start time, it's already
+   * chosen, and there's nothing for the group size to open.
    */
-  const [partySettled, setPartySettled] = useState(false);
+  const [partySettled, setPartySettled] = useState(lockedWave !== null);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +71,11 @@ export function BookingWizard({
   // has to be given up rather than silently failing at payment.
   function changeHeadcount(next: number) {
     setHeadcount(next);
+    // A locked slot is the only one on offer, so giving it up would leave the
+    // guest with nothing to pick instead: keep it selected and let step 2 say
+    // the group no longer fits.
+    if (lockedWave) return;
+
     const stillSelected = waves.find((w) => w.id === selectedWaveId);
     if (stillSelected && !hasRoomFor(stillSelected, next)) {
       setSelectedWaveId(null);
@@ -82,7 +98,9 @@ export function BookingWizard({
       : step === 2 && !partySettled
         ? null
         : step === 2 && !step2Valid
-          ? "Pick a start time that fits your group to continue"
+          ? lockedWave
+            ? `Only ${lockedWave.peopleLeft} ${lockedWave.peopleLeft === 1 ? "space" : "spaces"} left at this start time`
+            : "Pick a start time that fits your group to continue"
           : step === 3 && !step3Valid
             ? "Add your name and email to continue"
             : null;
@@ -136,7 +154,9 @@ export function BookingWizard({
       {step === 2 && (
         <section className={styles.stepSection}>
           <div className={styles.stepInner}>
-            <h2 className={styles.stepHeading}>{partySettled ? "Pick a slot" : "Who's playing?"}</h2>
+            <h2 className={styles.stepHeading}>
+              {lockedWave ? "Your group" : partySettled ? "Pick a slot" : "Who's playing?"}
+            </h2>
             <div className={styles.stepBody}>
               <div className={styles.field}>
                 <label>Players in your group</label>
@@ -162,15 +182,27 @@ export function BookingWizard({
                   </button>
                 </div>
               </div>
-              {partySettled && (
-                <div className={styles.slotPicker}>
-                  <WavePicker
-                    waves={waves}
-                    headcount={headcount}
-                    selectedWaveId={selectedWaveId}
-                    onSelect={setSelectedWaveId}
-                  />
+              {lockedWave ? (
+                <div className={styles.lockedSlot}>
+                  <span className={sharedStyles.detailLabel}>Your start time</span>
+                  <p className={styles.lockedSlotTime}>
+                    {formatWaveDate(lockedWave.date)}, {lockedWave.timeLabel}
+                  </p>
+                  <p className="hint">
+                    Held for you — this one isn&rsquo;t in the public calendar.
+                  </p>
                 </div>
+              ) : (
+                partySettled && (
+                  <div className={styles.slotPicker}>
+                    <WavePicker
+                      waves={waves}
+                      headcount={headcount}
+                      selectedWaveId={selectedWaveId}
+                      onSelect={setSelectedWaveId}
+                    />
+                  </div>
+                )
               )}
             </div>
           </div>

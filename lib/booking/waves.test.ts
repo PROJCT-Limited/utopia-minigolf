@@ -27,6 +27,22 @@ function row(overrides: Partial<WaveRow> = {}): WaveRow {
   };
 }
 
+describe("toWaveView visibility", () => {
+  it("reads an unlisted start time as hidden", () => {
+    const view = toWaveView(row({ visibility: "hidden" }));
+    expect(view.visibility).toBe("hidden");
+    expect(view.isHidden).toBe(true);
+  });
+
+  it("treats a row written before the visibility column as public", () => {
+    // A deploy can land ahead of 020_hidden_start_times.sql; the rows it reads
+    // then are all listed ones, and must not silently become invisible.
+    const view = toWaveView(row({ visibility: undefined }));
+    expect(view.visibility).toBe("public");
+    expect(view.isHidden).toBe(false);
+  });
+});
+
 describe("toWaveView", () => {
   it("computes people left from the cap minus the people booked", () => {
     const view = toWaveView(row({ people_capacity: 15, people_used: 4 }));

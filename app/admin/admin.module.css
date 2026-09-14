@@ -1,6 +1,16 @@
 /* Admin — kept functional and minimal per the FOUND remaining-pages brief
    (section 8): colours/fonts/rule-based rows only, no layout rework. */
 
+/* Native date, time, number and select controls each pick their own intrinsic
+   height, which left a row of labels above them stepping up and down by a few
+   pixels. One height for all of them puts every label and every box on the
+   same line. Declared on both admin roots — the login card sits outside
+   .page. */
+.page,
+.loginCard {
+  --admin-control-h: 42px;
+}
+
 .page {
   padding-top: 40px;
   padding-bottom: 90px;
@@ -47,10 +57,19 @@
   padding: 0 10px 10px;
   border-bottom: 1px solid var(--f-ink);
 }
+/* The list runs to hundreds of rows — keep the column header in view while
+   scrolling through them. */
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-top: 14px;
+  background: var(--f-paper);
+}
 .table td {
-  padding: 12px 10px;
+  padding: 11px 10px;
   border-bottom: 1px solid rgba(19, 18, 16, 0.12);
-  vertical-align: top;
+  vertical-align: baseline;
 }
 .table tr:last-child td {
   border-bottom: none;
@@ -60,6 +79,7 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .badge {
@@ -85,8 +105,19 @@
 .formGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  gap: 12px 14px;
   align-items: end;
+}
+/* Buttons sit on the same baseline as the inputs beside them rather than
+   stretching to fill their grid cell — a two-line "Save / changes" pill was
+   the giveaway that they were. */
+.formGrid button,
+.formGrid a {
+  height: var(--admin-control-h);
+  align-self: end;
+  justify-self: start;
+  padding: 0 24px;
+  white-space: nowrap;
 }
 
 .field {
@@ -94,6 +125,7 @@
   flex-direction: column;
   gap: 6px;
 }
+
 .field label {
   font-family: var(--f-mono);
   font-size: 11px;
@@ -103,9 +135,11 @@
 }
 .field input,
 .field select {
+  box-sizing: border-box;
+  height: var(--admin-control-h);
   border: 1px solid var(--f-ink);
   border-radius: 0;
-  padding: 10px 12px;
+  padding: 0 12px;
   font-size: 14px;
   font-family: var(--f-archivo);
   background: var(--f-paper);
@@ -144,4 +178,429 @@
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+/* =============================================================================
+   Shell — left-hand tabs beside the page. One panel, two ways of reading the
+   same start times: the calendar for "how is the season going", the list for
+   "what is happening at 19:15 on the 12th".
+   ============================================================================= */
+.shell {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+.sidebar {
+  position: sticky;
+  top: 40px;
+}
+.tabs {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tab {
+  display: block;
+  padding: 10px 14px;
+  border-left: 2px solid rgba(19, 18, 16, 0.12);
+  color: var(--f-ink);
+  text-decoration: none;
+}
+.tab:hover {
+  background: rgba(19, 18, 16, 0.04);
+}
+.tabOn {
+  border-left-color: var(--f-ink);
+  background: rgba(19, 18, 16, 0.06);
+}
+.tabLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+.content {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  /* The site-wide PROJCT tab is fixed to the right edge at 36px wide. On the
+     public pages it overlays nothing that can be clicked; here it lands on
+     the row actions, so hold the panel clear of it. */
+  .page {
+    padding-right: 46px;
+  }
+  .shell {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .sidebar {
+    position: static;
+  }
+  .tabs {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .tab {
+    border-left: none;
+    border-bottom: 2px solid rgba(19, 18, 16, 0.12);
+    white-space: nowrap;
+  }
+  .tabOn {
+    border-bottom-color: var(--f-ink);
+  }
+}
+
+/* ---------- list filters ---------- */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--f-ink);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  text-decoration: none;
+}
+.filterChipOn {
+  background: var(--f-ink);
+  color: var(--f-white);
+}
+.filterCount {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+/* ---------- a day of start times ---------- */
+/* Day headings are rows inside the single list table. The generous space
+   belongs above the heading, where it separates one day from the last row of
+   the day before; below it the heading should sit tight to its own rows. */
+.dayRow th,
+.dayRow td {
+  padding: 30px 10px 7px;
+  border-bottom: 2px solid var(--f-ink);
+  vertical-align: baseline;
+  background: var(--f-paper);
+}
+.dayRow th {
+  font-family: var(--f-archivo);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--f-ink);
+  text-align: left;
+  white-space: nowrap;
+}
+/* The first day sits directly under the column header, which already
+   provides the gap. */
+.table tbody tr:first-child th,
+.table tbody tr:first-child td {
+  padding-top: 10px;
+}
+.dayFigures {
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--f-grey);
+  text-align: right;
+}
+/* Fixed column widths so every day reads down the same grid. */
+.colTime {
+  width: 14%;
+}
+.colPeople {
+  width: 66%;
+}
+.colManage {
+  width: 20%;
+}
+
+/* The occupancy meter. A column of these is readable at a glance in a way a
+   column of "3 / 15" never is: you see which evenings are carrying weight
+   without reading a single number, and the numbers are still there for when
+   the answer matters exactly. */
+.peopleCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.meter {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 7px;
+  background: rgba(19, 18, 16, 0.1);
+}
+.meterFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--f-ink);
+}
+.peopleFigure {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.peopleFigure strong {
+  font-weight: 400;
+  font-size: 14px;
+}
+.peopleEmpty {
+  color: var(--f-stone);
+}
+.manageCell {
+  text-align: right;
+}
+.pendingNote {
+  color: #8a6d12;
+}
+.hiddenNote {
+  color: var(--f-grey);
+}
+
+/* The whole point of the filter bar: a row with someone on it should never
+   look like the 23 empty rows around it. Booked rows keep full-strength ink
+   and carry a marker in the gutter; free rows recede. */
+.rowBooked td {
+  color: var(--f-ink);
+}
+.rowBooked .timeCell {
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--f-ink);
+}
+.rowFree td {
+  color: var(--f-grey);
+}
+.rowHidden .timeCell {
+  box-shadow: inset 3px 0 0 #8a6d12;
+}
+.timeCell {
+  font-family: var(--f-mono);
+  padding-left: 12px;
+  white-space: nowrap;
+}
+.unlistedTag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid #8a6d12;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a6d12;
+}
+/* An empty result is one line of text — a bordered card around it read as a
+   large box holding nothing. */
+.emptyNote {
+  margin: 26px 0 30px;
+  font-family: var(--f-archivo);
+  font-size: 14px;
+  color: var(--f-grey);
+}
+/* Closed, this is a single row: it shouldn't carry a full card's padding
+   until it's opened. */
+.addCard {
+  margin-top: 30px;
+  padding: 16px 24px;
+}
+.addSummary {
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+}
+.addBody {
+  margin-top: 20px;
+  padding-bottom: 8px;
+}
+
+/* =============================================================================
+   Calendar tab
+   ============================================================================= */
+.calHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.calNav {
+  border: 1px solid var(--f-ink);
+  padding: 2px 12px 6px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--f-ink);
+  text-decoration: none;
+}
+.calMonth {
+  text-align: center;
+}
+.calMonthLabel {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+}
+.calWeekdays,
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.calWeekdays {
+  margin-bottom: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+}
+.calPad {
+  min-height: 96px;
+}
+.calCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 96px;
+  padding: 8px 9px;
+  border: 1px solid rgba(19, 18, 16, 0.18);
+  color: var(--f-ink);
+  text-decoration: none;
+}
+.calCell:hover {
+  border-color: var(--f-ink);
+}
+.calDay {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: inherit;
+  opacity: 0.75;
+}
+.calClosed {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 5px,
+    rgba(19, 18, 16, 0.05) 5px,
+    rgba(19, 18, 16, 0.05) 10px
+  );
+  border-style: dashed;
+}
+.calClosedNote,
+.calEmpty {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: var(--f-grey);
+}
+.calFigures {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.calPeople {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.calPeopleUnit,
+.calGroups,
+.calMarks {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  opacity: 0.8;
+}
+.calGroups {
+  margin-top: 4px;
+}
+.calMarks {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+.calHidden {
+  color: #8a6d12;
+}
+
+/* Five steps of ink, scaled against the busiest day on the board — see
+   loadLevel() in lib/admin/dayLoad.ts for why it isn't scaled to capacity.
+   The top two steps flip the text white to stay legible on the dark ground. */
+.level0 {
+  background: var(--f-paper);
+}
+.level1 {
+  background: rgba(19, 18, 16, 0.12);
+}
+.level2 {
+  background: rgba(19, 18, 16, 0.32);
+}
+.level3 {
+  background: rgba(19, 18, 16, 0.62);
+  color: var(--f-white);
+}
+.level4 {
+  background: var(--f-ink);
+  color: var(--f-white);
+}
+.level3 .calHidden,
+.level4 .calHidden {
+  color: #e3c766;
+}
+
+.calLegend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.legendSwatch {
+  width: 22px;
+  height: 14px;
+  border: 1px solid rgba(19, 18, 16, 0.18);
+}
+
+@media (max-width: 700px) {
+  .calCell,
+  .calPad {
+    min-height: 74px;
+  }
+  .calPeople {
+    font-size: 16px;
+  }
+  .calGroups,
+  .calMarks,
+  .calPeopleUnit {
+    display: none;
+  }
+}
+
+/* ---------- private link ---------- */
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.linkBox {
+  flex: 1 1 320px;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 12px;
+  border: 1px solid var(--f-ink);
+  background: #fff;
+  font-family: var(--f-mono);
+  font-size: 12px;
 }
