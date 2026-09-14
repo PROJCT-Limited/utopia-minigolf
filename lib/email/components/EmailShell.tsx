@@ -15,10 +15,12 @@ import { EmailFooter } from "./EmailFooter";
 export interface EmailShellProps {
   previewText: string;
   manageUrl?: string;
+  /** Staff mail — see EmailFooter's `internal`. */
+  internal?: boolean;
   children: ReactNode;
 }
 
-export function EmailShell({ previewText, manageUrl, children }: EmailShellProps) {
+export function EmailShell({ previewText, manageUrl, internal, children }: EmailShellProps) {
   return (
     <Html>
       <Head>
@@ -48,7 +50,7 @@ export function EmailShell({ previewText, manageUrl, children }: EmailShellProps
         >
           <EmailLogo />
           {children}
-          <EmailFooter manageUrl={manageUrl} />
+          <EmailFooter manageUrl={manageUrl} internal={internal} />
         </Container>
       </Body>
     </Html>

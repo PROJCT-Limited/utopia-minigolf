@@ -11,6 +11,12 @@ import { aboutLine, colors, companyAddress, archivoStack, monoStack } from "./th
 
 export interface EmailFooterProps {
   manageUrl?: string;
+  /**
+   * Staff mail (the daily digest) drops the guest lines: nobody internal
+   * needs FOUND explained to them, and "just reply to this email" points at
+   * an inbox they're already standing in.
+   */
+  internal?: boolean;
 }
 
 const metaStyle = {
@@ -31,12 +37,18 @@ const noteStyle = {
   color: colors.grey,
 };
 
-export function EmailFooter({ manageUrl }: EmailFooterProps) {
+export function EmailFooter({ manageUrl, internal = false }: EmailFooterProps) {
   return (
     <Section style={{ marginTop: "44px" }}>
       <Hr style={{ borderColor: colors.ink, borderTopWidth: "1px", margin: "0 0 22px" }} />
-      <Text style={noteStyle}>{aboutLine}</Text>
-      <Text style={noteStyle}>Questions? Just reply to this email.</Text>
+      {internal ? (
+        <Text style={noteStyle}>Sent nightly from 189found.club. Nobody outside the team gets this.</Text>
+      ) : (
+        <>
+          <Text style={noteStyle}>{aboutLine}</Text>
+          <Text style={noteStyle}>Questions? Just reply to this email.</Text>
+        </>
+      )}
       {manageUrl ? (
         <Text style={noteStyle}>
           Manage your booking:{" "}
