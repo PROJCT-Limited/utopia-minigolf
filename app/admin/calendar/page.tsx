@@ -52,11 +52,7 @@ export default async function AdminCalendarPage({
   const monthCapacity = monthDays.reduce((sum, d) => sum + d.peopleCapacity, 0);
 
   return (
-    <AdminShell
-      active="calendar"
-      title="Calendar"
-      subtitle="Every day of the season, shaded by how much business it's holding. Click a day for its start times."
-    >
+    <AdminShell active="calendar" title="Calendar">
       <div className={styles.card}>
         <div className={styles.calHead}>
           <Link
