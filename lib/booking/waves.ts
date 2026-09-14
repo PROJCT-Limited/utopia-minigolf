@@ -52,8 +52,8 @@ const LOW_AVAILABILITY_PEOPLE = 5;
 export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
 /** The only bookable date range — nothing outside it is fetched or shown. */
-export const BOOKABLE_WINDOW_START = "2026-09-30";
-export const BOOKABLE_WINDOW_END = "2026-10-31";
+export const BOOKABLE_WINDOW_START = "2026-10-08";
+export const BOOKABLE_WINDOW_END = "2026-11-11";
 
 export function toWaveView(row: WaveRow): WaveView {
   const peopleLeft = Math.max(0, row.people_capacity - row.people_used);
@@ -133,7 +133,7 @@ function groupBy(waves: WaveView[], keyFn: (w: WaveView) => string): WaveGroup[]
 // -----------------------------------------------------------------------------
 
 export interface HourGroup {
-  key: string; // `${date}-${hour}`, e.g. "2026-09-30-16:00"
+  key: string; // `${date}-${hour}`, e.g. "2026-10-08-16:00"
   date: string;
   hour: string; // "16:00"
   waves: WaveView[]; // the quarter-hour start times within this hour, sorted

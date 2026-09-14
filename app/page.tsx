@@ -3,9 +3,10 @@ import Link from "next/link";
 import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
+import { EarlyBirdCountdown } from "./components/found/EarlyBirdCountdown";
 import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
 import {
-  LIST_PRICE_PER_PERSON_CENTS,
+  EARLY_BIRD_ENDS_AT,
   isEarlyBirdActive,
   priceTableFor,
   type TicketType,
@@ -55,7 +56,10 @@ export default async function HomePage() {
   // Server clock decides — this page is ISR'd at 60s, so the early bird price
   // can read as live for up to a minute past the deadline. That's the whole cost
   // of not making the marketing page dynamic, and a minute of goodwill is cheap.
-  const earlyBird = isEarlyBirdActive();
+  // `now` is also what seeds the countdown strip's first paint (see
+  // EarlyBirdCountdown): cached with the HTML, then corrected on mount.
+  const now = new Date();
+  const earlyBird = isEarlyBirdActive(now);
   const prices = priceTableFor(earlyBird);
 
   const [dayRows, monthRows, allRows] = await Promise.all([
@@ -66,6 +70,10 @@ export default async function HomePage() {
 
   return (
     <div className={styles.found}>
+      {earlyBird && (
+        <EarlyBirdCountdown endsAtMs={EARLY_BIRD_ENDS_AT.getTime()} serverNowMs={now.getTime()} />
+      )}
+
       {/* HERO */}
       <header className={styles.hero}>
         <Image
@@ -91,7 +99,7 @@ export default async function HomePage() {
           </nav>
 
           <div className={styles.heroContent}>
-            <p className={styles.heroDates}>30 Sept &mdash; 31 Oct 2026</p>
+            <p className={styles.heroDates}>8 Oct &mdash; 11 Nov 2026</p>
             <Link href="/book" className={styles.heroCta}>
               Reserve your place
               <span className={styles.heroCtaArrow} aria-hidden>
@@ -224,9 +232,6 @@ export default async function HomePage() {
                   </div>
                   <div className={styles.tierRight}>
                     <div className={styles.tierPrice}>
-                      {earlyBird && (
-                        <span className={styles.tierWas}>{priceFigure(LIST_PRICE_PER_PERSON_CENTS[tier.type])}</span>
-                      )}
                       {priceFigure(prices[tier.type])} <span className={styles.tierCurrency}>HKD</span>
                     </div>
                     <Link href="/book" className={styles.tierReserve}>

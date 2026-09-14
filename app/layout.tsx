@@ -46,7 +46,7 @@ const futuraBook = localFont({
 export const metadata: Metadata = {
   title: "FOUND — Minigolf Social Club",
   description:
-    "A five-station indoor minigolf club by PROJCT. 30 Sept — 31 Oct 2026, Sai Ying Pun, Hong Kong. Reserve your place.",
+    "A five-station indoor minigolf club by PROJCT. 8 Oct — 11 Nov 2026, Sai Ying Pun, Hong Kong. Reserve your place.",
 };
 
 export default function RootLayout({

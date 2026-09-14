@@ -1,0 +1,71 @@
+/* The early bird strip: a light band above everything, like the reference.
+   --f-white rather than --f-paper so it still separates from the paper page
+   background on /book, where the hairline below it does the rest of the work;
+   above the homepage's dark hero it reads as a crisp edge on its own. */
+.strip {
+  background: var(--f-white);
+  color: var(--f-ink);
+  border-bottom: 1px solid rgba(19, 18, 16, 0.08);
+}
+.inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 11px var(--f-pad-x);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+}
+.cta {
+  color: var(--f-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.cta:hover {
+  opacity: 0.6;
+}
+.dash {
+  margin-right: 10px;
+}
+/* Keeps the label and its clock on one line as a unit, so a narrow viewport
+   wraps between "Reserve now" and the sentence rather than mid-sentence. */
+.line {
+  white-space: nowrap;
+}
+.clock {
+  /* Digits change every second; proportional figures would make the whole
+     line twitch as they do. */
+  font-variant-numeric: tabular-nums;
+}
+.part:not(:last-child) {
+  margin-right: 10px;
+}
+.value {
+  margin-right: 5px;
+  color: var(--f-ink);
+}
+.unit {
+  color: var(--f-grey);
+}
+
+@media (max-width: 640px) {
+  .inner {
+    justify-content: flex-start;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+  /* At this size the full sentence won't hold a single line on the narrowest
+     phones; let it wrap rather than overflow the band. */
+  .line {
+    white-space: normal;
+  }
+}

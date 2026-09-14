@@ -17,4 +17,7 @@ export const RESCHEDULE_CUTOFF_DAYS = Number(process.env.RESCHEDULE_CUTOFF_DAYS 
 
 export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule to any available start time once, self-serve, up until ${RESCHEDULE_CUTOFF_DAYS} days before it.`;
 
-export const EARLY_BIRD_NOTICE = `Book before ${EARLY_BIRD_DEADLINE_LABEL} and pay the early bird price!`;
+// No longer states the discount by crossing out the list price next to it —
+// the countdown strip carries the deadline, so this says plainly that the
+// prices shown are the reduced ones and won't last.
+export const EARLY_BIRD_NOTICE = `These are early bird prices — they go up after ${EARLY_BIRD_DEADLINE_LABEL}.`;

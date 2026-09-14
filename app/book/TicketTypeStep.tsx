@@ -1,4 +1,4 @@
-import { LIST_PRICE_PER_PERSON_CENTS, priceTableFor, type TicketType } from "@/lib/booking/pricing";
+import { priceTableFor, type TicketType } from "@/lib/booking/pricing";
 import styles from "./book.module.css";
 
 function formatMoney(cents: number): string {
@@ -56,9 +56,6 @@ export function TicketTypeStep({
               </div>
               <div className={styles.tierRight}>
                 <div className={styles.tierPrice}>
-                  {earlyBird && (
-                    <span className={styles.tierWas}>{formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])}</span>
-                  )}
                   {formatMoney(prices[option.type])} <span className={styles.tierCurrency}>HKD</span>
                 </div>
               </div>

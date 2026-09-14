@@ -273,13 +273,6 @@
   font-weight: 400;
   color: var(--f-grey);
 }
-.tierWas {
-  margin-right: 10px;
-  font-weight: 400;
-  color: var(--f-grey);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-}
 .earlyBirdNote {
   margin-top: 18px;
   max-width: 52ch;
