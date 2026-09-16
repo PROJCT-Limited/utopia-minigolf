@@ -24,7 +24,6 @@ export const revalidate = 60;
 const COMMUNITY_OCCASIONS = [
   "Birthdays",
   "Social nights",
-  "Friends nights",
   "Celebrations",
   "Get-togethers",
   "Business socials",
@@ -199,8 +198,8 @@ export default async function HomePage() {
             </div>
           ))}
           <p className={styles.communitySizes}>
-            Up to 5 players a booking &middot; 15 people on the floor at any start time &middot; book a run of
-            times back to back for a bigger group
+            One booking covers up to 5 players. Coming as a bigger group? Book the same start time more than
+            once &mdash; 15 can play at any one time.
           </p>
           <div className={styles.communityFooter}>
             <p>Planning something? We&rsquo;d love to help you host it.</p>
