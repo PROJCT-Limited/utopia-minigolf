@@ -50,7 +50,7 @@
 .labBody {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   margin-top: 6px;
   max-width: 62ch;
@@ -66,7 +66,7 @@
 .contactRow p {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   max-width: 46ch;
 }

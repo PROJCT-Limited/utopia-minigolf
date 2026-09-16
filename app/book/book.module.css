@@ -93,7 +93,7 @@
 .stepIntro {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 16.5px;
+  font-size: 18px;
   color: var(--f-grey);
   margin-top: 12px;
 }
@@ -178,7 +178,7 @@
 .selectRowBody {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   margin-top: 6px;
   margin-left: 30px;
@@ -250,7 +250,7 @@
   margin-top: 8px;
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
 }
 .tierRow.on .tierBody {
@@ -269,7 +269,7 @@
 }
 .tierCurrency {
   font-family: var(--f-mono);
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--f-grey);
 }
@@ -278,7 +278,7 @@
   max-width: 52ch;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 14.5px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--f-grey);
 }
@@ -474,7 +474,7 @@
 }
 .hourDate {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--f-grey);
   flex-shrink: 0;
 }
@@ -582,7 +582,7 @@
 .continueHint {
   margin-top: 10px;
   font-family: var(--f-archivo);
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-stone);
 }
 
@@ -592,7 +592,7 @@
   padding: 4px 0 4px 16px;
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   line-height: 1.6;
 }
@@ -600,7 +600,7 @@
 .hint {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
 }
 

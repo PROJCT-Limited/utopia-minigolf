@@ -61,7 +61,7 @@
 .subhead {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   margin-top: 16px;
 }
@@ -351,7 +351,7 @@
   margin-top: 24px;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
 }
 .lbRows {
@@ -367,7 +367,7 @@
 }
 .lbRank {
   font-family: var(--f-mono);
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-stone);
 }
 .lbPlayer {
@@ -377,13 +377,13 @@
 }
 .lbContext {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--f-grey);
 }
 .lbStrokes {
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   text-align: right;
 }
@@ -420,7 +420,7 @@
   margin-top: 22px;
   max-width: 54ch;
   font-family: var(--f-mono);
-  font-size: 14.5px;
+  font-size: 16px;
   line-height: 1.7;
   color: var(--f-grey);
 }
@@ -496,7 +496,7 @@
   margin-top: 8px;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-stone);
 }
 .tierRight {
@@ -513,7 +513,7 @@
 }
 .tierCurrency {
   font-family: var(--f-mono);
-  font-size: 14.5px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--f-stone);
 }
@@ -522,7 +522,7 @@
   max-width: 46ch;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 14.5px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--f-stone);
 }
@@ -628,7 +628,7 @@
   margin-top: 14px;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 14.5px;
+  font-size: 16px;
   color: var(--f-grey);
   max-width: 40ch;
 }
