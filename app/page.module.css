@@ -541,17 +541,26 @@
   background: var(--f-highlight);
   vertical-align: 2px;
 }
-/* The price the ticket returns to on 21 September. Set well below the live
-   figure — stone, lighter, smaller — so the row still reads as one price with
-   a note attached rather than two prices competing. */
-.tierWas {
-  margin-right: 12px;
-  font-size: 0.62em;
-  font-weight: 400;
+/* Heads the two groups of rows: the lime tag over the early bird prices, and
+   a plain date over the ones they revert to. */
+.tierGroupHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 34px 0 14px;
+}
+.tierGroupNote {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--f-stone);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  vertical-align: 4px;
+}
+/* The rows nobody can buy yet — the prices from the 21st. Present for
+   comparison, so they recede and carry no action. */
+.tierRowQuiet {
+  opacity: 0.55;
 }
 .tierReserve {
   display: inline-block;

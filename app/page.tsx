@@ -6,8 +6,10 @@ import { FoundFooter } from "./components/found/FoundFooter";
 import { EarlyBirdCountdown } from "./components/found/EarlyBirdCountdown";
 import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
 import {
+  EARLY_BIRD_DEADLINE_LABEL,
   EARLY_BIRD_ENDS_AT,
   LIST_PRICE_PER_PERSON_CENTS,
+  VENUE_TIME_ZONE,
   isEarlyBirdActive,
   priceTableFor,
   type TicketType,
@@ -50,6 +52,45 @@ const TIERS: { type: TicketType; label: string; name: string; body: string }[] =
 
 function priceFigure(cents: number): string {
   return (cents / 100).toFixed(0);
+}
+
+/** The day the list price takes over — the morning after the deadline. */
+const DAY_AFTER_EARLY_BIRD_LABEL = new Date(EARLY_BIRD_ENDS_AT.getTime() + 24 * 60 * 60_000).toLocaleDateString(
+  "en-GB",
+  { day: "numeric", month: "long", timeZone: VENUE_TIME_ZONE }
+);
+
+function TierRow({
+  tier,
+  priceCents,
+  bookable,
+}: {
+  tier: (typeof TIERS)[number];
+  priceCents: number;
+  bookable: boolean;
+}) {
+  return (
+    <>
+      <div className={`${styles.tierRow} ${bookable ? "" : styles.tierRowQuiet}`}>
+        <div>
+          <span className={styles.monoLabel}>{tier.label}</span>
+          <div className={styles.tierName}>{tier.name}</div>
+          <div className={styles.tierBody}>{tier.body}</div>
+        </div>
+        <div className={styles.tierRight}>
+          <div className={styles.tierPrice}>
+            {priceFigure(priceCents)} <span className={styles.tierCurrency}>HKD</span>
+          </div>
+          {bookable && (
+            <Link href="/book" className={styles.tierReserve}>
+              Reserve →
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className={styles.tierRule} />
+    </>
+  );
 }
 
 export default async function HomePage() {
@@ -222,38 +263,41 @@ export default async function HomePage() {
               convenience
             </p>
             {earlyBird && (
-              <p className={styles.earlyBirdNote}>
-                <span className={styles.earlyBirdTag}>Early bird</span>
-                {EARLY_BIRD_NOTICE}
-              </p>
+              <p className={styles.earlyBirdNote}>{EARLY_BIRD_NOTICE}</p>
             )}
           </div>
           <div>
-            <div className={styles.tierRule} />
-            {TIERS.map((tier) => (
-              <div key={tier.name}>
-                <div className={styles.tierRow}>
-                  <div>
-                    <span className={styles.monoLabel}>{tier.label}</span>
-                    <div className={styles.tierName}>{tier.name}</div>
-                    <div className={styles.tierBody}>{tier.body}</div>
-                  </div>
-                  <div className={styles.tierRight}>
-                    <div className={styles.tierPrice}>
-                      {earlyBird && (
-                        <span className={styles.tierWas}>
-                          {priceFigure(LIST_PRICE_PER_PERSON_CENTS[tier.type])}
-                        </span>
-                      )}
-                      {priceFigure(prices[tier.type])} <span className={styles.tierCurrency}>HKD</span>
-                    </div>
-                    <Link href="/book" className={styles.tierReserve}>
-                      Reserve →
-                    </Link>
-                  </div>
+            {/* Four rows while the offer runs, not two with a line through
+                them: the early bird prices on top, flagged, and the prices
+                they go back to underneath. Same thing a struck-through figure
+                says, without the page looking like a sale rack — and the
+                lower rows carry no Reserve, because 150 isn't a price anyone
+                can pay today. */}
+            {earlyBird && (
+              <>
+                <div className={styles.tierGroupHead}>
+                  <span className={styles.earlyBirdTag}>Early bird</span>
+                  <span className={styles.tierGroupNote}>until {EARLY_BIRD_DEADLINE_LABEL}</span>
                 </div>
                 <div className={styles.tierRule} />
-              </div>
+                {TIERS.map((tier) => (
+                  <TierRow key={`eb-${tier.name}`} tier={tier} priceCents={prices[tier.type]} bookable />
+                ))}
+                <div className={styles.tierGroupHead}>
+                  <span className={styles.tierGroupNote}>
+                    From {DAY_AFTER_EARLY_BIRD_LABEL}
+                  </span>
+                </div>
+              </>
+            )}
+            <div className={styles.tierRule} />
+            {TIERS.map((tier) => (
+              <TierRow
+                key={`list-${tier.name}`}
+                tier={tier}
+                priceCents={LIST_PRICE_PER_PERSON_CENTS[tier.type]}
+                bookable={!earlyBird}
+              />
             ))}
           </div>
         </div>

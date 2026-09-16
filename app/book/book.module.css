@@ -294,15 +294,15 @@
   background: var(--f-highlight);
   vertical-align: 2px;
 }
-/* Matches .tierWas on the homepage — the same row, on paper instead of ink. */
-.tierWas {
-  margin-right: 12px;
-  font-size: 0.62em;
-  font-weight: 400;
+/* What this ticket costs once the early bird closes — the homepage says the
+   same thing in its own pair of rows. */
+.tierAfter {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
   color: var(--f-stone);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  vertical-align: 4px;
 }
 .tierRow.on .tierCurrency {
   color: var(--f-stone);

@@ -56,11 +56,17 @@ export function TicketTypeStep({
               </div>
               <div className={styles.tierRight}>
                 <div className={styles.tierPrice}>
-                  {earlyBird && (
-                    <span className={styles.tierWas}>{formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])}</span>
-                  )}
                   {formatMoney(prices[option.type])} <span className={styles.tierCurrency}>HKD</span>
                 </div>
+                {/* The homepage puts the later prices in rows of their own,
+                    which works on a price list. This is a chooser — a row
+                    nobody can select would be a dead option — so the same
+                    fact goes under the price instead. */}
+                {earlyBird && (
+                  <span className={styles.tierAfter}>
+                    {formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])} from 21 Sept
+                  </span>
+                )}
               </div>
             </div>
           </button>
