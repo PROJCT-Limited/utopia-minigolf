@@ -7,6 +7,7 @@ import { EarlyBirdCountdown } from "./components/found/EarlyBirdCountdown";
 import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
 import {
   EARLY_BIRD_ENDS_AT,
+  LIST_PRICE_PER_PERSON_CENTS,
   isEarlyBirdActive,
   priceTableFor,
   type TicketType,
@@ -239,6 +240,11 @@ export default async function HomePage() {
                   </div>
                   <div className={styles.tierRight}>
                     <div className={styles.tierPrice}>
+                      {earlyBird && (
+                        <span className={styles.tierWas}>
+                          {priceFigure(LIST_PRICE_PER_PERSON_CENTS[tier.type])}
+                        </span>
+                      )}
                       {priceFigure(prices[tier.type])} <span className={styles.tierCurrency}>HKD</span>
                     </div>
                     <Link href="/book" className={styles.tierReserve}>
