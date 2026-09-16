@@ -67,6 +67,18 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                 </td>
                 <td>
                   <span className={styles.badge}>{b.status}</span>
+                  {/* A pending row is a guest who got as far as the card form
+                      and didn't finish. This link re-opens that exact booking
+                      at the same price — copy it to them rather than asking
+                      them to start again. */}
+                  {b.status === "pending" && (
+                    <>
+                      <br />
+                      <Link href={`/book/resume/${b.id}`} className={styles.resumeLink}>
+                        finish this booking →
+                      </Link>
+                    </>
+                  )}
                 </td>
                 <td>{formatMoney(b.amountPaidCents, b.currency)}</td>
               </tr>

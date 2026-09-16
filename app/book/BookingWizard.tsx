@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import {
   computeDisplayTotalCents,
@@ -14,6 +14,7 @@ import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import sharedStyles from "../components/found/shared.module.css";
 import confirmationStyles from "../confirmation.module.css";
+import { loadWizardState, saveWizardState } from "./wizardState";
 import { WavePicker } from "./WavePicker";
 import { TicketTypeStep } from "./TicketTypeStep";
 import { PaymentStep } from "./PaymentStep";
@@ -63,6 +64,44 @@ export function BookingWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<{ bookingId: string; clientSecret: string } | null>(null);
+
+  // Restoring happens in an effect rather than in the initial state, because
+  // the server rendered this wizard at step 1 and the first client render has
+  // to agree with that HTML. The correction lands a frame later.
+  const [restored, setRestored] = useState(false);
+  /* eslint-disable react-hooks/set-state-in-effect -- reading back an
+     external store on mount is what this effect is for, and the alternatives
+     are worse: a lazy useState initializer would read sessionStorage during
+     the first client render, which the server rendered without, and hydration
+     would mismatch. The writes below happen once. */
+  useEffect(() => {
+    const saved = lockedWave ? null : loadWizardState();
+    if (saved) {
+      // A start time can sell out or be withdrawn while a guest is away, and
+      // a restored booking must never point at one that's gone: drop back to
+      // the picker rather than resuming onto a slot that can't be paid for.
+      const savedWave = saved.selectedWaveId
+        ? (waves.find((w) => w.id === saved.selectedWaveId) ?? null)
+        : null;
+      const waveUsable = savedWave !== null && hasRoomFor(savedWave, saved.headcount);
+
+      setTicketType(saved.ticketType);
+      setHeadcount(saved.headcount);
+      setPartySettled(saved.partySettled);
+      setLeadName(saved.leadName);
+      setLeadEmail(saved.leadEmail);
+      setSelectedWaveId(waveUsable ? saved.selectedWaveId : null);
+      setPayment(waveUsable ? saved.payment : null);
+      setStep(waveUsable ? saved.step : Math.min(saved.step, 2));
+    }
+    setRestored(true);
+  }, [lockedWave, waves]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    if (!restored || lockedWave) return;
+    saveWizardState({ step, ticketType, headcount, selectedWaveId, partySettled, leadName, leadEmail, payment });
+  }, [restored, lockedWave, step, ticketType, headcount, selectedWaveId, partySettled, leadName, leadEmail, payment]);
 
   const selectedWave = waves.find((w) => w.id === selectedWaveId) ?? null;
 

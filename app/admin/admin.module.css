@@ -604,3 +604,14 @@
   font-family: var(--f-mono);
   font-size: 12px;
 }
+
+/* The rescue link on a pending booking — quieter than a Manage action, since
+   it's for copying and sending rather than for staff to follow. */
+.resumeLink {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #8a6d12 !important;
+}

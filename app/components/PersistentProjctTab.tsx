@@ -22,11 +22,20 @@ import styles from "./PersistentProjctTab.module.css";
 // palette. Everywhere else the tab stays.
 const APPLIANCE_ROUTES = ["/kiosk", "/checkin"];
 
+// Checkout is the other place it doesn't belong, for a plainer reason: the
+// tab is fixed to the right edge at 36px wide with z-index 200, and at phone
+// width the booking column's right edge is only 20px from the screen, so it
+// lands on top of the full-width Pay button. A tap near that end opens a
+// marketing panel instead of paying.
+const CHECKOUT_ROUTES = ["/book"];
+
+const HIDDEN_ROUTES = [...APPLIANCE_ROUTES, ...CHECKOUT_ROUTES];
+
 export function PersistentProjctTab() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  if (APPLIANCE_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+  if (HIDDEN_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return null;
   }
 

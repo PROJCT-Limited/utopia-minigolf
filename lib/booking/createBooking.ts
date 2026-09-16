@@ -16,6 +16,7 @@ import {
   isValidHeadcount,
   isValidTicketType,
   CURRENCY,
+  TICKET_TYPE_LABELS,
   type TicketType,
 } from "./pricing";
 import { hasRoomForGroup } from "./waveCapacity";
@@ -34,6 +35,15 @@ export interface CreateBookingInput {
 export type CreateBookingResult =
   | { ok: true; bookingId: string; clientSecret: string }
   | { ok: false; error: string };
+
+/** What shows against the charge in Stripe, so a payout can be read back. */
+function describeBooking(
+  ticketType: TicketType,
+  headcount: number,
+  wave: { date: string; timeLabel: string }
+): string {
+  return `FOUND · ${headcount} × ${TICKET_TYPE_LABELS[ticketType]} · ${wave.date} ${wave.timeLabel}`;
+}
 
 export async function createBookingWithPaymentIntent(
   input: CreateBookingInput
@@ -97,7 +107,15 @@ export async function createBookingWithPaymentIntent(
       amount: amountCents,
       currency: CURRENCY,
       metadata: { booking_id: booking.id },
-      automatic_payment_methods: { enabled: true },
+      // Cards only, deliberately. `automatic_payment_methods` let the
+      // dashboard decide, and for HKD that resolved to card + Link — which
+      // hands a returning guest an SMS code to fetch mid-checkout. Switching
+      // apps to read it can cost them the page (see the sessionStorage
+      // restore in BookingWizard), and every failed checkout in this
+      // account's history is an intent no card was ever submitted against.
+      // Apple Pay and Google Pay ride on the card type, so they stay.
+      payment_method_types: ["card"],
+      description: describeBooking(ticketType, headcount, wave),
     });
   } catch (err) {
     console.error("createBookingWithPaymentIntent: Stripe PaymentIntent failed:", (err as Error).message);
