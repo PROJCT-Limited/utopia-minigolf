@@ -43,7 +43,7 @@ const STRIPE_APPEARANCE: Appearance = {
       boxShadow: "none",
     },
     ".Label": {
-      fontSize: "11px",
+      fontSize: "12px",
       letterSpacing: "0.08em",
       textTransform: "uppercase",
       color: "#75736b",

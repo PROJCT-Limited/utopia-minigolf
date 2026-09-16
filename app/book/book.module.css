@@ -28,7 +28,7 @@
   align-items: baseline;
   gap: 28px;
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -66,7 +66,7 @@
 }
 .recapChip {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--f-grey);
@@ -93,7 +93,7 @@
 .stepIntro {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--f-grey);
   margin-top: 12px;
 }
@@ -102,7 +102,7 @@
 .includedList {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 16px;
+  font-size: 17.5px;
   line-height: 1.6;
   letter-spacing: 0;
   max-width: 40ch;
@@ -178,7 +178,7 @@
 .selectRowBody {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
   margin-top: 6px;
   margin-left: 30px;
@@ -233,7 +233,7 @@
 }
 .tierLabel {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--f-grey);
@@ -250,7 +250,7 @@
   margin-top: 8px;
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
 }
 .tierRow.on .tierBody {
@@ -269,7 +269,7 @@
 }
 .tierCurrency {
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 400;
   color: var(--f-grey);
 }
@@ -278,7 +278,7 @@
   max-width: 52ch;
   font-family: var(--f-archivo);
   font-weight: 300;
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1.6;
   color: var(--f-grey);
 }
@@ -287,7 +287,7 @@
   margin-right: 10px;
   padding: 3px 9px;
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--f-paper);
@@ -319,7 +319,7 @@
 }
 .viewToggle button {
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 14.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--f-stone);
@@ -343,7 +343,7 @@
   justify-content: space-between;
   margin-bottom: 16px;
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 14.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -353,7 +353,7 @@
   border: 1px solid var(--f-ink);
   background: transparent;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 16.5px;
   line-height: 1;
   color: var(--f-ink);
 }
@@ -369,7 +369,7 @@
 .calendarWeekdays span {
   text-align: center;
   font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--f-stone);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -395,7 +395,7 @@
   background: transparent;
   cursor: pointer;
   font-family: var(--f-archivo);
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-ink);
 }
 .calendarDay:hover:not(:disabled) {
@@ -474,7 +474,7 @@
 }
 .hourDate {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--f-grey);
   flex-shrink: 0;
 }
@@ -485,7 +485,7 @@
 }
 .hourAvailability {
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--f-grey);
@@ -502,7 +502,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1;
   transition: transform 0.15s;
 }
@@ -532,7 +532,7 @@
   background: transparent;
   color: var(--f-ink);
   font-family: var(--f-mono);
-  font-size: 14px;
+  font-size: 15.5px;
   padding: 14px 0;
   cursor: pointer;
   text-align: center;
@@ -582,7 +582,7 @@
 .continueHint {
   margin-top: 10px;
   font-family: var(--f-archivo);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--f-stone);
 }
 
@@ -592,7 +592,7 @@
   padding: 4px 0 4px 16px;
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
   line-height: 1.6;
 }
@@ -600,7 +600,7 @@
 .hint {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
 }
 

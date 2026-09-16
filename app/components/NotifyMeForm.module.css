@@ -8,7 +8,7 @@
   border: 1.5px solid var(--line);
   border-radius: 100px;
   padding: 13px 18px;
-  font-size: 14px;
+  font-size: 15.5px;
   font-family: inherit;
   background: var(--panel-2);
   color: var(--ink);
@@ -20,12 +20,12 @@
 }
 
 .error {
-  font-size: 13px;
+  font-size: 14.5px;
   color: #c0293b;
 }
 
 .done {
-  font-size: 14px;
+  font-size: 15.5px;
   color: var(--ink-2);
   line-height: 1.5;
 }

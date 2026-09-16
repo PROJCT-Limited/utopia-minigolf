@@ -33,7 +33,7 @@
 .body {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16.5px;
   line-height: 1.65;
   color: var(--f-grey);
   margin-top: 16px;
@@ -54,12 +54,12 @@
 .bannerTitle {
   font-family: var(--f-archivo);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17.5px;
 }
 .bannerBody {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
   margin: 6px 0 16px;
 }
@@ -71,7 +71,7 @@
 }
 .bannerCode {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: 13px;
   word-break: break-all;
   display: block;
   margin-bottom: 12px;
@@ -79,7 +79,7 @@
 
 .pending {
   font-family: var(--f-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--f-grey);

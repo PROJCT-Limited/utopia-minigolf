@@ -14,7 +14,7 @@
 }
 .copy {
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 14.5px;
   line-height: 1.75;
   color: var(--f-ink);
   max-width: 62ch;
@@ -50,7 +50,7 @@
 .labBody {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
   margin-top: 6px;
   max-width: 62ch;
@@ -66,7 +66,7 @@
 .contactRow p {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--f-grey);
   max-width: 46ch;
 }

@@ -26,7 +26,7 @@
 .section p {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16.5px;
   line-height: 1.7;
   color: var(--f-grey);
 }
@@ -39,7 +39,7 @@
 .section li {
   font-family: var(--f-archivo);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16.5px;
   line-height: 1.7;
   color: var(--f-grey);
 }

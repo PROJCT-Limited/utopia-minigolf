@@ -18,19 +18,17 @@ import styles from "./page.module.css";
 // rather than making the whole marketing page dynamic on every request.
 export const revalidate = 60;
 
-const COMMUNITY_ROWS = [
-  {
-    title: "Birthdays",
-    body: "Round up your crew for a birthday that isn't just dinner and drinks.",
-  },
-  {
-    title: "Work socials & team nights",
-    body: "Swap the usual bar night for something everyone actually talks about after.",
-  },
-  {
-    title: "Celebrations & get-togethers",
-    body: "Any excuse to gather — we'll help you make it one to remember.",
-  },
+// Occasions, not descriptions of occasions. Anyone reading this already knows
+// what a birthday is; what they don't know is whether their group fits, which
+// is what the line underneath answers.
+const COMMUNITY_OCCASIONS = [
+  "Birthdays",
+  "Social nights",
+  "Friends nights",
+  "Celebrations",
+  "Get-togethers",
+  "Business socials",
+  "Fun days",
 ];
 
 const TIERS: { type: TicketType; label: string; name: string; body: string }[] = [
@@ -110,9 +108,9 @@ export default async function HomePage() {
               </span>
             </Link>
             <p className={styles.heroBody}>
-              Come play indoor mini golf, reimagined with things you&rsquo;d never expect to find on a golf
-              course. Five fun stations, drinks at the bar, and a playful experience made for good times with
-              friends. Come for the game, stay for the atmosphere.
+              Discover mini golf &mdash; reimagined in a game play and design you have never seen before! Five
+              uniquely designed stations, themed drinks at the bar, just a fun experience for you and your
+              friends. Come for the game, stay for the vibes.
             </p>
           </div>
 
@@ -165,6 +163,9 @@ export default async function HomePage() {
             a fixed form, we let the materials lead.
           </p>
           <p className={styles.conceptP}>The result is a series of minigolf stations built through this process of discovery.</p>
+          <Link href="/book" className={styles.conceptCta}>
+            Reserve your place →
+          </Link>
         </div>
       </section>
 
@@ -189,15 +190,18 @@ export default async function HomePage() {
         </div>
         <div>
           <div className={styles.communityRule} />
-          {COMMUNITY_ROWS.map((row) => (
-            <div key={row.title}>
-              <div className={styles.communityRow}>
-                <h3 className={styles.communityTitle}>{row.title}</h3>
-                <p className={styles.communityBody}>{row.body}</p>
-              </div>
-              <div className={styles.communityRule} />
-            </div>
-          ))}
+          <ul className={styles.occasions}>
+            {COMMUNITY_OCCASIONS.map((occasion) => (
+              <li key={occasion} className={styles.occasion}>
+                {occasion}
+              </li>
+            ))}
+          </ul>
+          <div className={styles.communityRule} />
+          <p className={styles.communitySizes}>
+            Up to 5 players a booking &middot; 15 people on the floor at any start time &middot; book a run of
+            times back to back for a bigger group
+          </p>
           <div className={styles.communityFooter}>
             <p>Planning something? We&rsquo;d love to help you host it.</p>
             <a href="mailto:hi@projct.co?subject=Hosting%20at%20FOUND" className={styles.getInTouch}>
