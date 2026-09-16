@@ -16,3 +16,16 @@ export function getStripe(): Promise<StripeJs | null> {
   }
   return stripePromise;
 }
+
+/**
+ * Forget a failed load so the next getStripe() fetches js.stripe.com again.
+ *
+ * loadStripe() caches its promise, rejection included: once the script fails
+ * — a blocker, a captive portal, a dropped connection on venue wifi — every
+ * later call returns the same rejected promise, and the payment form stays
+ * dead for as long as the tab is open. The retry in PaymentStep calls this
+ * first so a second attempt is a real one.
+ */
+export function resetStripe(): void {
+  stripePromise = null;
+}

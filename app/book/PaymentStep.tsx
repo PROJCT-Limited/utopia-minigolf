@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import type { Appearance } from "@stripe/stripe-js";
-import { getStripe } from "@/lib/stripe/client";
+import { getStripe, resetStripe } from "@/lib/stripe/client";
 import sharedStyles from "../components/found/shared.module.css";
 import styles from "./book.module.css";
 
@@ -50,11 +50,95 @@ const STRIPE_APPEARANCE: Appearance = {
   },
 };
 
+/**
+ * Stripe.js is a third-party script, and on a phone at an event it does not
+ * always arrive: a tracking blocker, a captive portal, a dropped connection.
+ * When it doesn't, <Elements> renders nothing and useStripe() stays null
+ * forever — which used to leave a guest looking at an empty card panel and a
+ * permanently disabled Pay button, with nothing on screen saying why. Every
+ * failed checkout in this account's history reached Stripe with no card
+ * attempt recorded at all, which is exactly what that looks like from the
+ * outside. So: watch the load, and say something when it doesn't happen.
+ */
+function useStripeLoadState(): { failed: boolean; slow: boolean; retry: () => void } {
+  const [failed, setFailed] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const slowTimer = setTimeout(() => {
+      if (!cancelled) setSlow(true);
+    }, 8000);
+
+    getStripe()
+      .then((stripe) => {
+        if (cancelled) return;
+        clearTimeout(slowTimer);
+        if (!stripe) setFailed(true);
+        else setSlow(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearTimeout(slowTimer);
+        setFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(slowTimer);
+    };
+  }, [attempt]);
+
+  return {
+    failed,
+    slow,
+    // Clearing the old outcome belongs here rather than at the top of the
+    // effect: setting state synchronously in an effect body kicks off a
+    // second render pass for no reason, and a retry is the only thing that
+    // needs the reset.
+    retry: () => {
+      resetStripe();
+      setFailed(false);
+      setSlow(false);
+      setAttempt((n) => n + 1);
+    },
+  };
+}
+
 export function PaymentStep({ bookingId, clientSecret, amountLabel, returnPath }: PaymentStepProps) {
+  const { failed, slow, retry } = useStripeLoadState();
+
+  if (failed) {
+    return (
+      <div className={styles.paymentUnavailable}>
+        <p className={styles.error}>
+          The card form couldn&rsquo;t load. This is usually a blocked script or a patchy connection rather
+          than anything wrong with your booking — nothing has been charged.
+        </p>
+        <button type="button" className={sharedStyles.pillBtn} onClick={retry} style={{ marginTop: 14 }}>
+          Try again
+        </button>
+        <p className={styles.hint} style={{ marginTop: 12 }}>
+          Still stuck? Turn off any ad or tracking blocker for this page, or switch off wifi and use mobile
+          data. Your place is held — email hi@projct.co and we&rsquo;ll take it from there.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Elements stripe={getStripe()} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
-      <PaymentForm bookingId={bookingId} amountLabel={amountLabel} returnPath={returnPath} />
-    </Elements>
+    <>
+      {slow && (
+        <p className={styles.hint} style={{ marginBottom: 12 }}>
+          Still loading the card form…
+        </p>
+      )}
+      <Elements stripe={getStripe()} options={{ clientSecret, appearance: STRIPE_APPEARANCE }}>
+        <PaymentForm bookingId={bookingId} amountLabel={amountLabel} returnPath={returnPath} />
+      </Elements>
+    </>
   );
 }
 
@@ -75,7 +159,10 @@ function PaymentForm({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      setError("The card form isn't ready yet. Give it a moment and try again.");
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -104,6 +191,14 @@ function PaymentForm({
       return;
     }
 
+    // Anything else — an authentication the bank abandoned, a Link window
+    // that closed, a payment method that came back needing another one. This
+    // branch used to just re-enable the button and say nothing, which reads
+    // as "the page is broken" rather than "try again".
+    console.error("confirmPayment returned an unfinished intent:", paymentIntent?.status);
+    setError(
+      "That didn't go through, and nothing has been charged. Try again, or use a different card."
+    );
     setSubmitting(false);
   }
 
