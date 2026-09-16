@@ -20,7 +20,9 @@ export const revalidate = 60;
 
 // Occasions, not descriptions of occasions. Anyone reading this already knows
 // what a birthday is; what they don't know is whether their group fits, which
-// is what the line underneath answers.
+// is what the line underneath answers — in range terms rather than mechanics,
+// since a 30-person social is arranged with us rather than self-served (a
+// booking holds 5, a start time holds 15).
 const COMMUNITY_OCCASIONS = [
   "Birthdays",
   "Social nights",
@@ -198,8 +200,7 @@ export default async function HomePage() {
             </div>
           ))}
           <p className={styles.communitySizes}>
-            One booking covers up to 5 players. Coming as a bigger group? Book the same start time more than
-            once &mdash; 15 can play at any one time.
+            From intimate get-togethers to socials of up to 30 people.
           </p>
           <div className={styles.communityFooter}>
             <p>Planning something? We&rsquo;d love to help you host it.</p>
