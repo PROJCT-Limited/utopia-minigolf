@@ -402,30 +402,18 @@
   background: var(--f-ink);
   width: 100%;
 }
-/* Just the occasions. They're set large and left to run on, because the list
-   is the point — reading it should feel like scanning reasons to come, not
-   working through a table of three. */
-.occasions {
-  list-style: none;
-  margin: 0;
-  padding: 26px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 0;
+/* The original rule-separated rows, with the grey explanations dropped — so
+   each row is one occasion and nothing else. The padding comes in from the
+   26px those rows carried when they held two lines apiece; at one line that
+   much air read as a gap rather than a rhythm. */
+.communityRow {
+  padding: 17px 0;
 }
-.occasion {
+.communityTitle {
   font-family: var(--f-archivo);
   font-weight: 700;
-  font-size: clamp(20px, 1.9vw, 26px);
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
-.occasion:not(:last-child)::after {
-  content: "·";
-  margin: 0 14px;
-  font-weight: 400;
-  color: var(--f-stone);
+  font-size: 20px;
+  letter-spacing: -0.01em;
 }
 /* The practical question the occasion names raise: will my group fit? */
 .communitySizes {

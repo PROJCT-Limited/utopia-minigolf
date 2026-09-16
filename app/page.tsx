@@ -190,14 +190,14 @@ export default async function HomePage() {
         </div>
         <div>
           <div className={styles.communityRule} />
-          <ul className={styles.occasions}>
-            {COMMUNITY_OCCASIONS.map((occasion) => (
-              <li key={occasion} className={styles.occasion}>
-                {occasion}
-              </li>
-            ))}
-          </ul>
-          <div className={styles.communityRule} />
+          {COMMUNITY_OCCASIONS.map((occasion) => (
+            <div key={occasion}>
+              <div className={styles.communityRow}>
+                <h3 className={styles.communityTitle}>{occasion}</h3>
+              </div>
+              <div className={styles.communityRule} />
+            </div>
+          ))}
           <p className={styles.communitySizes}>
             Up to 5 players a booking &middot; 15 people on the floor at any start time &middot; book a run of
             times back to back for a bigger group
