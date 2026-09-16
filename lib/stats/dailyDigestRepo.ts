@@ -9,6 +9,7 @@ import {
   digestDayFor,
   summarizeDay,
   type DigestBookingRow,
+  type DigestEventRow,
   type DigestStats,
   type DigestWaveRow,
 } from "./dailyDigest";
@@ -22,8 +23,9 @@ export async function fetchDailyDigest(day: string = digestDayFor()): Promise<Di
     "bookings",
     "created_at, status, headcount, ticket_type, amount_paid_cents, wave_id"
   );
+  const events = await fetchAll<DigestEventRow>("checkout_events", "type, created_at");
 
-  return summarizeDay({ day, bookings, waves });
+  return summarizeDay({ day, bookings, waves, events });
 }
 
 async function fetchAll<T>(table: string, columns: string): Promise<T[]> {

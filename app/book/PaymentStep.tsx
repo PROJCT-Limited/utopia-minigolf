@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import type { Appearance } from "@stripe/stripe-js";
 import { getStripe, resetStripe } from "@/lib/stripe/client";
+import { reportCheckoutEvent } from "./reportCheckoutEvent";
 import sharedStyles from "../components/found/shared.module.css";
 import styles from "./book.module.css";
 
@@ -60,7 +61,7 @@ const STRIPE_APPEARANCE: Appearance = {
  * attempt recorded at all, which is exactly what that looks like from the
  * outside. So: watch the load, and say something when it doesn't happen.
  */
-function useStripeLoadState(): { failed: boolean; slow: boolean; retry: () => void } {
+function useStripeLoadState(bookingId: string): { failed: boolean; slow: boolean; retry: () => void } {
   const [failed, setFailed] = useState(false);
   const [slow, setSlow] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -69,27 +70,37 @@ function useStripeLoadState(): { failed: boolean; slow: boolean; retry: () => vo
     let cancelled = false;
 
     const slowTimer = setTimeout(() => {
-      if (!cancelled) setSlow(true);
+      if (cancelled) return;
+      setSlow(true);
+      reportCheckoutEvent("stripe_js_slow", { bookingId });
     }, 8000);
 
     getStripe()
       .then((stripe) => {
         if (cancelled) return;
         clearTimeout(slowTimer);
-        if (!stripe) setFailed(true);
-        else setSlow(false);
+        if (stripe) {
+          setSlow(false);
+          return;
+        }
+        setFailed(true);
+        reportCheckoutEvent("stripe_js_failed", { bookingId, detail: "loadStripe resolved null" });
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (cancelled) return;
         clearTimeout(slowTimer);
         setFailed(true);
+        reportCheckoutEvent("stripe_js_failed", {
+          bookingId,
+          detail: err instanceof Error ? err.message : "load rejected",
+        });
       });
 
     return () => {
       cancelled = true;
       clearTimeout(slowTimer);
     };
-  }, [attempt]);
+  }, [attempt, bookingId]);
 
   return {
     failed,
@@ -108,7 +119,7 @@ function useStripeLoadState(): { failed: boolean; slow: boolean; retry: () => vo
 }
 
 export function PaymentStep({ bookingId, clientSecret, amountLabel, returnPath }: PaymentStepProps) {
-  const { failed, slow, retry } = useStripeLoadState();
+  const { failed, slow, retry } = useStripeLoadState(bookingId);
 
   if (failed) {
     return (
@@ -182,6 +193,10 @@ function PaymentForm({
 
     if (confirmError) {
       setError(confirmError.message ?? "Payment failed. Please try again.");
+      reportCheckoutEvent("confirm_error", {
+        bookingId,
+        detail: [confirmError.type, confirmError.code, confirmError.decline_code].filter(Boolean).join("/"),
+      });
       setSubmitting(false);
       return;
     }
@@ -196,6 +211,7 @@ function PaymentForm({
     // branch used to just re-enable the button and say nothing, which reads
     // as "the page is broken" rather than "try again".
     console.error("confirmPayment returned an unfinished intent:", paymentIntent?.status);
+    reportCheckoutEvent("intent_unfinished", { bookingId, detail: paymentIntent?.status ?? "no intent" });
     setError(
       "That didn't go through, and nothing has been charged. Try again, or use a different card."
     );

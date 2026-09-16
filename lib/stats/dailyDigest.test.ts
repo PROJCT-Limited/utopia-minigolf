@@ -130,6 +130,53 @@ describe("summarizeDay", () => {
   });
 });
 
+describe("checkout problems", () => {
+  it("counts failures that broke in front of a guest today", () => {
+    const stats = summarizeDay({
+      day: DAY,
+      waves: WAVES,
+      bookings: [],
+      events: [
+        { type: "stripe_js_failed", created_at: "2026-09-14T04:00:00.000Z" },
+        { type: "confirm_error", created_at: "2026-09-14T15:30:00.000Z" },
+        { type: "intent_unfinished", created_at: "2026-09-14T06:00:00.000Z" },
+      ],
+    });
+
+    expect(stats.today.checkoutProblems).toBe(3);
+  });
+
+  it("leaves out breadcrumbs that aren't failures", () => {
+    // A slow load that then worked, and a resume link someone opened, are
+    // both worth recording and neither is a checkout that broke.
+    const stats = summarizeDay({
+      day: DAY,
+      waves: WAVES,
+      bookings: [],
+      events: [
+        { type: "stripe_js_slow", created_at: "2026-09-14T04:00:00.000Z" },
+        { type: "resume_opened", created_at: "2026-09-14T04:00:00.000Z" },
+      ],
+    });
+
+    expect(stats.today.checkoutProblems).toBe(0);
+  });
+
+  it("counts them on Hong Kong's day, like everything else here", () => {
+    const stats = summarizeDay({
+      day: DAY,
+      waves: WAVES,
+      bookings: [],
+      events: [
+        { type: "stripe_js_failed", created_at: "2026-09-14T15:30:00.000Z" }, // 23:30 HK, today
+        { type: "stripe_js_failed", created_at: "2026-09-14T16:30:00.000Z" }, // 00:30 HK, tomorrow
+      ],
+    });
+
+    expect(stats.today.checkoutProblems).toBe(1);
+  });
+});
+
 describe("digestDayFor", () => {
   it("reports the day that just ended when it runs at Hong Kong midnight", () => {
     // 16:00Z is 00:00 the next day in HK; the digest should still be about the

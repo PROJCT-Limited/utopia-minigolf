@@ -615,3 +615,12 @@
   letter-spacing: 0.04em;
   color: #8a6d12 !important;
 }
+
+/* What the browser reported when a checkout failed in front of a guest. */
+.checkoutProblem {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: #b4341f;
+}

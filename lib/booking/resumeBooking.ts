@@ -51,6 +51,14 @@ export async function fetchResumableBooking(bookingId: string): Promise<Resumabl
   const clientSecret = await usablePaymentIntent(bookingId, row.stripe_payment_intent_id, booking);
   if (!clientSecret) return { state: "gone", reason: "not-found" };
 
+  // Worth knowing how often a checkout has to be picked up again, and by
+  // whom — recorded here rather than from the browser, since the page is
+  // server-rendered and the fact doesn't depend on any script loading.
+  const { error: eventError } = await supabaseAdmin
+    .from("checkout_events")
+    .insert({ booking_id: bookingId, type: "resume_opened" });
+  if (eventError) console.error("fetchResumableBooking: couldn't record the resume:", eventError.message);
+
   return { state: "resumable", booking, clientSecret, waveTimeLabel: wave.timeLabel };
 }
 

@@ -55,6 +55,14 @@ export function DailyDigestEmail({ stats, adminUrl }: DailyDigestEmailProps) {
           ...(today.pendingPeople > 0
             ? [{ label: "Mid-checkout", value: `${today.pendingPeople} people` }]
             : []),
+          ...(today.checkoutProblems > 0
+            ? [
+                {
+                  label: "Checkout problems",
+                  value: `${today.checkoutProblems} ${today.checkoutProblems === 1 ? "guest" : "guests"}`,
+                },
+              ]
+            : []),
           { label: "Taken", value: formatMoney(today.revenueCents, "hkd") },
         ]}
       />

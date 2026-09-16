@@ -14,6 +14,7 @@
 import { todayInHongKong } from "@/lib/scoring/activeWindow";
 import { BOOKABLE_WINDOW_END, BOOKABLE_WINDOW_START } from "@/lib/booking/waves";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
+import { CHECKOUT_FAILURE_TYPES, type CheckoutEventType } from "@/lib/booking/checkoutEvents";
 
 export interface DigestBookingRow {
   created_at: string;
@@ -22,6 +23,11 @@ export interface DigestBookingRow {
   ticket_type: TicketType;
   amount_paid_cents: number;
   wave_id: string;
+}
+
+export interface DigestEventRow {
+  type: string;
+  created_at: string;
 }
 
 export interface DigestWaveRow {
@@ -50,6 +56,12 @@ export interface DigestStats {
     byTicketType: { label: string; people: number }[];
     /** Which start times today's bookings were for, busiest first. */
     slots: BookedSlot[];
+    /**
+     * Checkouts that broke in front of a guest today — a card form that
+     * never loaded, a payment refused, one that came back unfinished. The
+     * number that was invisible until something like this counted it.
+     */
+    checkoutProblems: number;
   };
   season: {
     groups: number;
@@ -79,10 +91,12 @@ export function summarizeDay({
   day,
   bookings,
   waves,
+  events = [],
 }: {
   day: string;
   bookings: DigestBookingRow[];
   waves: DigestWaveRow[];
+  events?: DigestEventRow[];
 }): DigestStats {
   const waveById = new Map(waves.map((w) => [w.id, w]));
   const inSeason = (waveId: string) => {
@@ -124,6 +138,9 @@ export function summarizeDay({
       byTicketType: [...peopleByType.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([type, people]) => ({ label: TICKET_TYPE_LABELS[type], people })),
+      checkoutProblems: events.filter(
+        (e) => hongKongDayOf(e.created_at) === day && CHECKOUT_FAILURE_TYPES.includes(e.type as CheckoutEventType)
+      ).length,
       slots: [...peopleBySlot.values()].sort(
         (a, b) => b.people - a.people || a.date.localeCompare(b.date) || a.time.localeCompare(b.time)
       ),

@@ -8,6 +8,11 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { toWaveView, type WaveRow, type WaveView } from "@/lib/booking/waves";
 import type { TicketType } from "@/lib/booking/pricing";
+import {
+  CHECKOUT_EVENT_LABELS,
+  CHECKOUT_FAILURE_TYPES,
+  type CheckoutEventType,
+} from "@/lib/booking/checkoutEvents";
 
 // Staff see every start time, listed or not, and need the private link's
 // token to hand out — the public column set (wavesRepo.ts) carries neither.
@@ -104,6 +109,13 @@ function emptyTally(): WaveTally {
 
 export interface AdminBookingRow {
   id: string;
+  /**
+   * Checkout failures recorded against this booking (see
+   * migrations/022_checkout_events.sql) — newest first. A pending row with
+   * these attached is a guest who tried and couldn't, not one who wandered
+   * off, and that's the difference between chasing them and leaving them be.
+   */
+  checkoutProblems: { label: string; detail: string | null; at: string }[];
   leadName: string;
   leadEmail: string;
   partyType: "solo" | "pair" | "group";
@@ -143,8 +155,28 @@ export async function fetchWaveAdminDetail(waveId: string): Promise<AdminWaveDet
     console.error("fetchWaveAdminDetail: bookings query failed:", bookingsError.message);
   }
 
+  const { data: eventRows } = await supabaseAdmin
+    .from("checkout_events")
+    .select("booking_id, type, detail, created_at")
+    .in("booking_id", (bookingRows ?? []).map((b) => b.id).length ? (bookingRows ?? []).map((b) => b.id) : ["none"])
+    .in("type", CHECKOUT_FAILURE_TYPES)
+    .order("created_at", { ascending: false });
+
+  const problemsByBooking = new Map<string, AdminBookingRow["checkoutProblems"]>();
+  for (const row of eventRows ?? []) {
+    if (!row.booking_id) continue;
+    const list = problemsByBooking.get(row.booking_id) ?? [];
+    list.push({
+      label: CHECKOUT_EVENT_LABELS[row.type as CheckoutEventType] ?? row.type,
+      detail: row.detail,
+      at: row.created_at,
+    });
+    problemsByBooking.set(row.booking_id, list);
+  }
+
   const bookings: AdminBookingRow[] = (bookingRows ?? []).map((b) => ({
     id: b.id,
+    checkoutProblems: problemsByBooking.get(b.id) ?? [],
     leadName: b.lead_name,
     leadEmail: b.lead_email,
     partyType: b.party_type,

@@ -79,6 +79,13 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                       </Link>
                     </>
                   )}
+                  {/* Why it's still pending, when the browser managed to say. */}
+                  {b.checkoutProblems.length > 0 && (
+                    <span className={styles.checkoutProblem}>
+                      {b.checkoutProblems[0].label}
+                      {b.checkoutProblems.length > 1 ? ` ×${b.checkoutProblems.length}` : ""}
+                    </span>
+                  )}
                 </td>
                 <td>{formatMoney(b.amountPaidCents, b.currency)}</td>
               </tr>
