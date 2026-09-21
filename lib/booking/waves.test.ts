@@ -27,6 +27,30 @@ function row(overrides: Partial<WaveRow> = {}): WaveRow {
   };
 }
 
+describe("a day closed by hand", () => {
+  it("reads as sold out even with every seat unsold", () => {
+    // How an evening given over to a private event is closed: status, not
+    // capacity. The seats stay untouched so reopening is exact.
+    const day = summarizeWavesByDay([
+      toWaveView(row({ id: "a", status: "full" })),
+      toWaveView(row({ id: "b", start_time: "16:15:00", status: "full" })),
+    ]);
+
+    expect(day.get("2026-09-30")?.peopleLeft).toBe(0);
+    expect(busynessForDay(day.get("2026-09-30"))).toBe("full");
+  });
+
+  it("still shows room when only part of the evening is closed", () => {
+    const day = summarizeWavesByDay([
+      toWaveView(row({ id: "a", status: "full" })),
+      toWaveView(row({ id: "b", start_time: "16:15:00" })),
+    ]);
+
+    expect(day.get("2026-09-30")?.peopleLeft).toBe(15);
+    expect(busynessForDay(day.get("2026-09-30"))).not.toBe("full");
+  });
+});
+
 describe("toWaveView visibility", () => {
   it("reads an unlisted start time as hidden", () => {
     const view = toWaveView(row({ visibility: "hidden" }));

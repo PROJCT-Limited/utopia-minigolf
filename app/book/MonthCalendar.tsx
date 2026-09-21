@@ -72,17 +72,30 @@ export function MonthCalendar({
           const busyness = busynessForDay(daySummaries.get(date));
           const fits = daysThatFit.has(date);
           const dayNum = Number(date.slice(8, 10));
+          const soldOut = busyness === "full";
           return (
             <button
               key={date}
               type="button"
-              className={`${styles.calendarCell} ${styles.calendarDay} ${selectedDate === date ? styles.calendarDayOn : ""}`}
+              className={`${styles.calendarCell} ${styles.calendarDay} ${soldOut ? styles.calendarDaySoldOut : ""} ${selectedDate === date ? styles.calendarDayOn : ""}`}
               disabled={busyness === "none" || !fits}
-              title={busyness !== "none" && !fits ? `No room for ${headcount} that day` : undefined}
+              title={
+                soldOut
+                  ? "Sold out"
+                  : busyness !== "none" && !fits
+                    ? `No room for ${headcount} that day`
+                    : undefined
+              }
               onClick={() => setSelectedDate(date)}
             >
-              <span>{dayNum}</span>
-              {busyness !== "none" && <span className={`${styles.calendarDot} ${styles["busy-" + busyness]}`} />}
+              <span className={soldOut ? styles.calendarDayNumSoldOut : ""}>{dayNum}</span>
+              {soldOut ? (
+                <span className={styles.calendarSoldOut}>Sold out</span>
+              ) : (
+                busyness !== "none" && (
+                  <span className={`${styles.calendarDot} ${styles["busy-" + busyness]}`} />
+                )
+              )}
             </button>
           );
         })}

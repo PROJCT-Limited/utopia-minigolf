@@ -36,7 +36,7 @@ export function WaveRow({
       className={`${styles.quarterCell} ${selected ? styles.on : ""}`}
       disabled={!fits}
       onClick={() => onSelect(wave.id)}
-      title={fits ? undefined : wave.isFull ? "Full" : `Not enough room for ${headcount}`}
+      title={fits ? undefined : wave.isFull ? "Sold out" : `Not enough room for ${headcount}`}
     >
       {cellLabel(wave)}
     </button>

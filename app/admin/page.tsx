@@ -14,6 +14,7 @@ import { PEOPLE_PER_START_TIME } from "@/lib/booking/capacityConfig";
 import { formatWaveDate } from "../utils/formatWave";
 import { AdminShell } from "./AdminShell";
 import { CreateWaveForm } from "./CreateWaveForm";
+import { DaySoldOutButton } from "./DaySoldOutButton";
 import styles from "./admin.module.css";
 
 export const metadata = { title: "Start times — FOUND Admin" };
@@ -70,6 +71,16 @@ export default async function AdminPage({
         )
       }
     >
+      {/* Selling out a whole evening is a day-level act, so it lives here,
+          where the list is already narrowed to one. */}
+      {date && (
+        <DaySoldOutButton
+          date={date}
+          openCount={scoped.filter((w) => !w.isHidden && w.status !== "full").length}
+          soldOutCount={scoped.filter((w) => !w.isHidden && w.status === "full").length}
+        />
+      )}
+
       <div className={styles.filterBar} role="group" aria-label="Filter start times">
         {WAVE_FILTERS.map((f) => (
           <Link

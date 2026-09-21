@@ -46,7 +46,7 @@ export function HourGroupRow({
             guests don't see exact availability counts. */}
         {closed && (
           <span className={styles.hourAvailability}>
-            {hourGroup.isFull ? "Full" : `No room for ${headcount}`}
+            {hourGroup.isFull ? "Sold out" : `No room for ${headcount}`}
           </span>
         )}
         {!closed && (

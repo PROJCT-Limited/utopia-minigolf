@@ -225,7 +225,11 @@ export function summarizeWavesByDay(waves: WaveView[]): Map<string, DaySummary> 
     existing.startTimeCount += 1;
     existing.groupsBooked += w.groupsBooked;
     existing.peopleUsed += w.peopleUsed;
-    existing.peopleLeft += w.peopleLeft;
+    // A start time marked sold out has no space to offer, whatever its seat
+    // counter says — staff close an evening by status, not by filling it with
+    // imaginary guests. Counting its empty seats here would leave a sold-out
+    // day looking merely quiet.
+    existing.peopleLeft += w.isFull ? 0 : w.peopleLeft;
     existing.peopleCapacity += w.peopleCapacity;
     byDate.set(w.date, existing);
   }

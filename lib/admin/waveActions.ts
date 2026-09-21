@@ -157,3 +157,45 @@ export async function rerollPrivateLinkAction(waveId: string): Promise<UpdateWav
   revalidatePath(`/admin/waves/${waveId}`);
   return { ok: true };
 }
+
+/**
+ * Sell out (or reopen) a whole evening in one action.
+ *
+ * When a night goes to a private event, the alternative was editing two dozen
+ * start times one at a time — so in practice the evening got taken off the
+ * calendar instead, and a guest looking for that date just found nothing
+ * there. Marking it sold out says something truer: we're open, that night has
+ * gone.
+ *
+ * It moves `status`, never capacity. A sold-out start time still knows how
+ * many people are actually booked on it, so reopening is exact rather than a
+ * guess at what the cap used to be.
+ *
+ * Unlisted start times are left alone. They're not in the public calendar, so
+ * selling them out changes nothing a guest can see — and it would quietly
+ * break the private link for the very event that's taking the evening.
+ */
+export async function setDaySoldOutAction(date: string, soldOut: boolean): Promise<UpdateWaveResult> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { ok: false, error: "Invalid date." };
+  }
+
+  const { error } = await supabaseAdmin
+    .from("waves")
+    .update({ status: soldOut ? "full" : "confirmed" })
+    .eq("date", date)
+    .eq("visibility", "public")
+    // Only flip the ones in the state we're moving away from: a provisional
+    // start time shouldn't silently become confirmed because someone reopened
+    // the evening around it.
+    .eq("status", soldOut ? "confirmed" : "full");
+
+  if (error) {
+    console.error("setDaySoldOutAction: update failed:", error.message);
+    return { ok: false, error: "Couldn't change the evening." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/calendar");
+  return { ok: true };
+}

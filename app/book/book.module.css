@@ -649,3 +649,22 @@
   padding: 22px 24px;
   margin-top: 8px;
 }
+
+/* A day with nothing left on it. Struck and labelled rather than simply
+   unclickable — an evening taken by a private event should read as gone,
+   not as a date the calendar is refusing for some unexplained reason. */
+.calendarDaySoldOut {
+  border-style: dashed;
+}
+.calendarDayNumSoldOut {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.calendarSoldOut {
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--f-stone);
+  line-height: 1;
+}
