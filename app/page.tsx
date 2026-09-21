@@ -3,14 +3,14 @@ import Link from "next/link";
 import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
-import { EarlyBirdCountdown } from "./components/found/EarlyBirdCountdown";
-import { EARLY_BIRD_NOTICE } from "@/lib/booking/copy";
+import { PrebookingCountdown } from "./components/found/PrebookingCountdown";
+import { PREBOOKING_NOTICE } from "@/lib/booking/copy";
 import {
-  EARLY_BIRD_DEADLINE_LABEL,
-  EARLY_BIRD_ENDS_AT,
+  PREBOOKING_DEADLINE_LABEL,
+  PREBOOKING_ENDS_AT,
   LIST_PRICE_PER_PERSON_CENTS,
   VENUE_TIME_ZONE,
-  isEarlyBirdActive,
+  isPrebookingActive,
   priceTableFor,
   type TicketType,
 } from "@/lib/booking/pricing";
@@ -55,7 +55,7 @@ function priceFigure(cents: number): string {
 }
 
 /** The day the list price takes over — the morning after the deadline. */
-const DAY_AFTER_EARLY_BIRD_LABEL = new Date(EARLY_BIRD_ENDS_AT.getTime() + 24 * 60 * 60_000).toLocaleDateString(
+const DAY_AFTER_PREBOOKING_LABEL = new Date(PREBOOKING_ENDS_AT.getTime() + 24 * 60 * 60_000).toLocaleDateString(
   "en-GB",
   { day: "numeric", month: "long", timeZone: VENUE_TIME_ZONE }
 );
@@ -94,14 +94,14 @@ function TierRow({
 }
 
 export default async function HomePage() {
-  // Server clock decides — this page is ISR'd at 60s, so the early bird price
+  // Server clock decides — this page is ISR'd at 60s, so the pre-booking price
   // can read as live for up to a minute past the deadline. That's the whole cost
   // of not making the marketing page dynamic, and a minute of goodwill is cheap.
   // `now` is also what seeds the countdown strip's first paint (see
-  // EarlyBirdCountdown): cached with the HTML, then corrected on mount.
+  // PrebookingCountdown): cached with the HTML, then corrected on mount.
   const now = new Date();
-  const earlyBird = isEarlyBirdActive(now);
-  const prices = priceTableFor(earlyBird);
+  const prebooking = isPrebookingActive(now);
+  const prices = priceTableFor(prebooking);
 
   const [dayRows, monthRows, allRows] = await Promise.all([
     fetchLeaderboard("day"),
@@ -111,9 +111,9 @@ export default async function HomePage() {
 
   return (
     <div className={styles.found}>
-      {earlyBird && (
-        <EarlyBirdCountdown
-          endsAtMs={EARLY_BIRD_ENDS_AT.getTime()}
+      {prebooking && (
+        <PrebookingCountdown
+          endsAtMs={PREBOOKING_ENDS_AT.getTime()}
           serverNowMs={now.getTime()}
         />
       )}
@@ -262,22 +262,22 @@ export default async function HomePage() {
               Come on your own or bring the whole group. Five stations, and the automated scoring for your
               convenience
             </p>
-            {earlyBird && (
-              <p className={styles.earlyBirdNote}>{EARLY_BIRD_NOTICE}</p>
+            {prebooking && (
+              <p className={styles.prebookingNote}>{PREBOOKING_NOTICE}</p>
             )}
           </div>
           <div>
             {/* Four rows while the offer runs, not two with a line through
-                them: the early bird prices on top, flagged, and the prices
+                them: the pre-booking prices on top, flagged, and the prices
                 they go back to underneath. Same thing a struck-through figure
                 says, without the page looking like a sale rack — and the
                 lower rows carry no Reserve, because 150 isn't a price anyone
                 can pay today. */}
-            {earlyBird && (
+            {prebooking && (
               <>
                 <div className={styles.tierGroupHead}>
-                  <span className={styles.earlyBirdTag}>Early bird</span>
-                  <span className={styles.tierGroupNote}>until {EARLY_BIRD_DEADLINE_LABEL}</span>
+                  <span className={styles.prebookingTag}>Pre-booking</span>
+                  <span className={styles.tierGroupNote}>until {PREBOOKING_DEADLINE_LABEL}</span>
                 </div>
                 <div className={styles.tierRule} />
                 {TIERS.map((tier) => (
@@ -285,7 +285,7 @@ export default async function HomePage() {
                 ))}
                 <div className={styles.tierGroupHead}>
                   <span className={styles.tierGroupNote}>
-                    From {DAY_AFTER_EARLY_BIRD_LABEL}
+                    From {DAY_AFTER_PREBOOKING_LABEL}
                   </span>
                 </div>
               </>
@@ -296,7 +296,7 @@ export default async function HomePage() {
                 key={`list-${tier.name}`}
                 tier={tier}
                 priceCents={LIST_PRICE_PER_PERSON_CENTS[tier.type]}
-                bookable={!earlyBird}
+                bookable={!prebooking}
               />
             ))}
           </div>

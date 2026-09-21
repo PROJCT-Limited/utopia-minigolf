@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchWaveByPrivateToken } from "@/lib/booking/wavesRepo";
-import { EARLY_BIRD_ENDS_AT, isEarlyBirdActive } from "@/lib/booking/pricing";
-import { EarlyBirdCountdown } from "../../../components/found/EarlyBirdCountdown";
+import { PREBOOKING_ENDS_AT, isPrebookingActive } from "@/lib/booking/pricing";
+import { PrebookingCountdown } from "../../../components/found/PrebookingCountdown";
 import { FoundHeader } from "../../../components/found/FoundHeader";
 import { FoundFooter } from "../../../components/found/FoundFooter";
 import sharedStyles from "../../../components/found/shared.module.css";
@@ -33,13 +33,13 @@ export default async function PrivateBookPage({ params }: { params: Promise<{ to
   if (!wave || !wave.isHidden) notFound();
 
   const now = new Date();
-  const earlyBird = isEarlyBirdActive(now);
+  const prebooking = isPrebookingActive(now);
 
   return (
     <div className={sharedStyles.pageWrap}>
-      {earlyBird && (
-        <EarlyBirdCountdown
-          endsAtMs={EARLY_BIRD_ENDS_AT.getTime()}
+      {prebooking && (
+        <PrebookingCountdown
+          endsAtMs={PREBOOKING_ENDS_AT.getTime()}
           serverNowMs={now.getTime()}
           withCta={false}
         />
@@ -47,7 +47,7 @@ export default async function PrivateBookPage({ params }: { params: Promise<{ to
       <FoundHeader />
       <main className={sharedStyles.pageMain}>
         <div className={styles.page}>
-          <BookingWizard waves={[wave]} earlyBird={earlyBird} lockedWave={wave} />
+          <BookingWizard waves={[wave]} prebooking={prebooking} lockedWave={wave} />
         </div>
       </main>
       <FoundFooter />

@@ -42,7 +42,7 @@ export function WalkInScreen({
     };
   }, []);
 
-  // List price, always: the early bird price is for people booking a venue
+  // List price, always: the pre-booking price is for people booking a venue
   // that isn't built yet, not for someone already standing in it.
   const total = (LIST_PRICE_PER_PERSON_CENTS[ticketType] * headcount) / 100;
   const tooMany = slot !== null && headcount > slot.peopleLeft;

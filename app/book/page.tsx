@@ -1,6 +1,6 @@
 import { fetchUpcomingWaves } from "@/lib/booking/wavesRepo";
-import { EARLY_BIRD_ENDS_AT, isEarlyBirdActive } from "@/lib/booking/pricing";
-import { EarlyBirdCountdown } from "../components/found/EarlyBirdCountdown";
+import { PREBOOKING_ENDS_AT, isPrebookingActive } from "@/lib/booking/pricing";
+import { PrebookingCountdown } from "../components/found/PrebookingCountdown";
 import { FoundHeader } from "../components/found/FoundHeader";
 import { FoundFooter } from "../components/found/FoundFooter";
 import sharedStyles from "../components/found/shared.module.css";
@@ -15,13 +15,13 @@ export default async function BookPage() {
   // Worked out here, on the server, and handed down: the wizard is a client
   // component, and a browser clock is not allowed to decide what a guest pays.
   const now = new Date();
-  const earlyBird = isEarlyBirdActive(now);
+  const prebooking = isPrebookingActive(now);
 
   return (
     <div className={sharedStyles.pageWrap}>
-      {earlyBird && (
-        <EarlyBirdCountdown
-          endsAtMs={EARLY_BIRD_ENDS_AT.getTime()}
+      {prebooking && (
+        <PrebookingCountdown
+          endsAtMs={PREBOOKING_ENDS_AT.getTime()}
           serverNowMs={now.getTime()}
           withCta={false}
         />
@@ -29,7 +29,7 @@ export default async function BookPage() {
       <FoundHeader />
       <main className={sharedStyles.pageMain}>
         <div className={styles.page}>
-          <BookingWizard waves={waves} earlyBird={earlyBird} />
+          <BookingWizard waves={waves} prebooking={prebooking} />
         </div>
       </main>
       <FoundFooter />

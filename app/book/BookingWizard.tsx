@@ -9,7 +9,7 @@ import {
   MAX_HEADCOUNT,
   type TicketType,
 } from "@/lib/booking/pricing";
-import { EARLY_BIRD_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { PREBOOKING_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import sharedStyles from "../components/found/shared.module.css";
@@ -29,13 +29,13 @@ function formatMoney(cents: number): string {
 
 export function BookingWizard({
   waves,
-  earlyBird,
+  prebooking,
   lockedWave = null,
 }: {
   waves: WaveView[];
   // Resolved on the server in page.tsx. Display only — createBooking prices
   // the charge again from the server's own clock.
-  earlyBird: boolean;
+  prebooking: boolean;
   /**
    * Set when the wizard was reached through an unlisted start time's private
    * link (app/book/private/[token]): there is exactly one slot on offer, so
@@ -177,14 +177,14 @@ export function BookingWizard({
               Come on your own or bring the whole group. Five stations, and the automated scoring for your
               convenience
             </p>
-            {earlyBird && (
-              <p className={styles.earlyBirdNote}>
-                <span className={styles.earlyBirdTag}>Early bird</span>
-                {EARLY_BIRD_NOTICE}
+            {prebooking && (
+              <p className={styles.prebookingNote}>
+                <span className={styles.prebookingTag}>Pre-booking</span>
+                {PREBOOKING_NOTICE}
               </p>
             )}
             <div className={styles.stepBody}>
-              <TicketTypeStep selected={ticketType} onSelect={setTicketType} earlyBird={earlyBird} />
+              <TicketTypeStep selected={ticketType} onSelect={setTicketType} prebooking={prebooking} />
             </div>
           </div>
         </section>
@@ -293,9 +293,9 @@ export function BookingWizard({
                 </div>
                 <div className={`${confirmationStyles.row} ${sharedStyles.detailRowTotal}`}>
                   <span className={sharedStyles.detailLabel}>
-                    Total{earlyBird ? " (early bird)" : ""}
+                    Total{prebooking ? " (pre-booking)" : ""}
                   </span>
-                  <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, earlyBird))}</span>
+                  <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking))}</span>
                 </div>
               </div>
 
@@ -319,7 +319,7 @@ export function BookingWizard({
               <PaymentStep
                 bookingId={payment.bookingId}
                 clientSecret={payment.clientSecret}
-                amountLabel={formatMoney(computeDisplayTotalCents(ticketType, headcount, earlyBird))}
+                amountLabel={formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking))}
               />
             </div>
           </div>

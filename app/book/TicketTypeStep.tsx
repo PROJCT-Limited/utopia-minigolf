@@ -23,13 +23,13 @@ const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: str
 export function TicketTypeStep({
   selected,
   onSelect,
-  earlyBird,
+  prebooking,
 }: {
   selected: TicketType | null;
   onSelect: (ticketType: TicketType) => void;
-  earlyBird: boolean;
+  prebooking: boolean;
 }) {
-  const prices = priceTableFor(earlyBird);
+  const prices = priceTableFor(prebooking);
 
   return (
     <div className={styles.tierRows}>
@@ -62,7 +62,7 @@ export function TicketTypeStep({
                     which works on a price list. This is a chooser — a row
                     nobody can select would be a dead option — so the same
                     fact goes under the price instead. */}
-                {earlyBird && (
+                {prebooking && (
                   <span className={styles.tierAfter}>
                     {formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])} from 21 Sept
                   </span>

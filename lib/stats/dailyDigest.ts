@@ -7,7 +7,7 @@
 //
 // "Today" is a Hong Kong day, not a UTC one. The server runs in UTC on
 // Vercel, and a digest that cut the day at 08:00 local would put an evening's
-// bookings in the wrong column — the same reasoning as the early bird
+// bookings in the wrong column — the same reasoning as the pre-booking
 // deadline in lib/booking/pricing.ts.
 // -----------------------------------------------------------------------------
 

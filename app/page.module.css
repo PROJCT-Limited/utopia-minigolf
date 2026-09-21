@@ -517,7 +517,7 @@
   font-weight: 400;
   color: var(--f-stone);
 }
-.earlyBirdNote {
+.prebookingNote {
   margin-top: 28px;
   max-width: 46ch;
   font-family: var(--f-archivo);
@@ -529,7 +529,7 @@
 /* The one accent on the site, doing the same job here as it does in the
    countdown strip at the top of the page: marking the offer that's running
    out. Ink on lime reads at about 14:1, dark section or light. */
-.earlyBirdTag {
+.prebookingTag {
   display: inline-block;
   margin-right: 10px;
   padding: 3px 9px;
@@ -541,7 +541,7 @@
   background: var(--f-highlight);
   vertical-align: 2px;
 }
-/* Heads the two groups of rows: the lime tag over the early bird prices, and
+/* Heads the two groups of rows: the lime tag over the pre-booking prices, and
    a plain date over the ones they revert to. */
 .tierGroupHead {
   display: flex;

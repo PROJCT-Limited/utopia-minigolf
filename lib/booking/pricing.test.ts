@@ -6,36 +6,41 @@ import {
   computeListTotalCents,
   isValidHeadcount,
   isValidTicketType,
-  isEarlyBirdActive,
+  isPrebookingActive,
   derivePartyTypeFromHeadcount,
   VENUE_TIME_ZONE,
   priceTableFor,
-  EARLY_BIRD_ENDS_AT,
-  EARLY_BIRD_PRICE_PER_PERSON_CENTS,
+  PREBOOKING_ENDS_AT,
+  PREBOOKING_PRICE_PER_PERSON_CENTS,
   LIST_PRICE_PER_PERSON_CENTS,
 } from "./pricing";
 
 // Two instants that straddle the deadline, so no test depends on when it runs.
-const DURING = new Date(EARLY_BIRD_ENDS_AT.getTime() - 60_000);
-const AFTER = new Date(EARLY_BIRD_ENDS_AT.getTime() + 60_000);
+const DURING = new Date(PREBOOKING_ENDS_AT.getTime() - 60_000);
+const AFTER = new Date(PREBOOKING_ENDS_AT.getTime() + 60_000);
 
-describe("list prices", () => {
-  it("is HKD 150 standard, HKD 220 unlimited", () => {
-    expect(LIST_PRICE_PER_PERSON_CENTS.standard).toBe(15000);
-    expect(LIST_PRICE_PER_PERSON_CENTS.unlimited).toBe(22000);
+describe("door prices", () => {
+  it("is HKD 170 standard, HKD 240 unlimited from opening day", () => {
+    expect(LIST_PRICE_PER_PERSON_CENTS.standard).toBe(17000);
+    expect(LIST_PRICE_PER_PERSON_CENTS.unlimited).toBe(24000);
   });
 });
 
-describe("early bird price", () => {
-  it("is HKD 120 standard, HKD 180 unlimited", () => {
-    expect(EARLY_BIRD_PRICE_PER_PERSON_CENTS.standard).toBe(12000);
-    expect(EARLY_BIRD_PRICE_PER_PERSON_CENTS.unlimited).toBe(18000);
+describe("pre-booking price", () => {
+  it("is HKD 150 standard, HKD 220 unlimited", () => {
+    expect(PREBOOKING_PRICE_PER_PERSON_CENTS.standard).toBe(15000);
+    expect(PREBOOKING_PRICE_PER_PERSON_CENTS.unlimited).toBe(22000);
   });
 
-  it("ends at the close of 20 September 2026 Hong Kong time", () => {
+  it("undercuts the door price, which is the whole point of it", () => {
+    expect(PREBOOKING_PRICE_PER_PERSON_CENTS.standard).toBeLessThan(LIST_PRICE_PER_PERSON_CENTS.standard);
+    expect(PREBOOKING_PRICE_PER_PERSON_CENTS.unlimited).toBeLessThan(LIST_PRICE_PER_PERSON_CENTS.unlimited);
+  });
+
+  it("ends at the close of 7 October 2026 Hong Kong time", () => {
     // 23:59:59 +08:00 is 15:59:59Z the same day — the offset must survive,
     // or the offer would close eight hours early on a UTC server.
-    expect(EARLY_BIRD_ENDS_AT.toISOString()).toBe("2026-09-20T15:59:59.000Z");
+    expect(PREBOOKING_ENDS_AT.toISOString()).toBe("2026-10-07T15:59:59.000Z");
   });
 
   it("lands at midnight on the venue's own clock", () => {
@@ -47,35 +52,35 @@ describe("early bird price", () => {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
-      }).format(EARLY_BIRD_ENDS_AT)
+      }).format(PREBOOKING_ENDS_AT)
     ).toBe("23:59");
   });
 
   it("is live up to the deadline and not past it", () => {
-    expect(isEarlyBirdActive(DURING)).toBe(true);
-    expect(isEarlyBirdActive(EARLY_BIRD_ENDS_AT)).toBe(true);
-    expect(isEarlyBirdActive(AFTER)).toBe(false);
+    expect(isPrebookingActive(DURING)).toBe(true);
+    expect(isPrebookingActive(PREBOOKING_ENDS_AT)).toBe(true);
+    expect(isPrebookingActive(AFTER)).toBe(false);
   });
 
   it("picks the right price table either side of it", () => {
-    expect(priceTableFor(true)).toBe(EARLY_BIRD_PRICE_PER_PERSON_CENTS);
+    expect(priceTableFor(true)).toBe(PREBOOKING_PRICE_PER_PERSON_CENTS);
     expect(priceTableFor(false)).toBe(LIST_PRICE_PER_PERSON_CENTS);
   });
 });
 
 describe("computeBookingTotalCents", () => {
-  it("charges the early bird price before the deadline", () => {
-    expect(computeBookingTotalCents("standard", 1, DURING)).toBe(12000);
-    expect(computeBookingTotalCents("standard", 5, DURING)).toBe(60000);
-    expect(computeBookingTotalCents("unlimited", 1, DURING)).toBe(18000);
-    expect(computeBookingTotalCents("unlimited", 5, DURING)).toBe(90000);
+  it("charges the pre-booking price before the deadline", () => {
+    expect(computeBookingTotalCents("standard", 1, DURING)).toBe(15000);
+    expect(computeBookingTotalCents("standard", 5, DURING)).toBe(75000);
+    expect(computeBookingTotalCents("unlimited", 1, DURING)).toBe(22000);
+    expect(computeBookingTotalCents("unlimited", 5, DURING)).toBe(110000);
   });
 
-  it("charges list price after the deadline", () => {
-    expect(computeBookingTotalCents("standard", 1, AFTER)).toBe(15000);
-    expect(computeBookingTotalCents("standard", 2, AFTER)).toBe(30000);
-    expect(computeBookingTotalCents("unlimited", 1, AFTER)).toBe(22000);
-    expect(computeBookingTotalCents("unlimited", 5, AFTER)).toBe(110000);
+  it("charges the door price after the deadline", () => {
+    expect(computeBookingTotalCents("standard", 1, AFTER)).toBe(17000);
+    expect(computeBookingTotalCents("standard", 2, AFTER)).toBe(34000);
+    expect(computeBookingTotalCents("unlimited", 1, AFTER)).toBe(24000);
+    expect(computeBookingTotalCents("unlimited", 5, AFTER)).toBe(120000);
   });
 
   it("rejects headcounts outside 1-5", () => {
@@ -90,9 +95,9 @@ describe("computeBookingTotalCents", () => {
 });
 
 describe("computeListTotalCents", () => {
-  it("ignores the early bird price entirely — walk-ins pay list price", () => {
-    expect(computeListTotalCents("standard", 2)).toBe(30000);
-    expect(computeListTotalCents("unlimited", 2)).toBe(44000);
+  it("ignores the pre-booking price entirely — walk-ins pay the door price", () => {
+    expect(computeListTotalCents("standard", 2)).toBe(34000);
+    expect(computeListTotalCents("unlimited", 2)).toBe(48000);
   });
 
   it("still validates its inputs", () => {
@@ -103,8 +108,8 @@ describe("computeListTotalCents", () => {
 
 describe("computeDisplayTotalCents", () => {
   it("follows the flag it is given, not any clock", () => {
-    expect(computeDisplayTotalCents("standard", 3, true)).toBe(36000);
-    expect(computeDisplayTotalCents("standard", 3, false)).toBe(45000);
+    expect(computeDisplayTotalCents("standard", 3, true)).toBe(45000);
+    expect(computeDisplayTotalCents("standard", 3, false)).toBe(51000);
   });
 });
 

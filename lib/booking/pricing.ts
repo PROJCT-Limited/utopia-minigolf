@@ -4,9 +4,9 @@
 // that's ever charged is recomputed here, on the server, from ticket type and
 // headcount alone. The client total is decoration; this file is truth.
 //
-// The early bird price makes that rule matter more, not less. What a guest is
+// The pre-booking price makes that rule matter more, not less. What a guest is
 // shown depends on a deadline, and a browser clock can be set to anything —
-// so the server decides whether the offer is live (`isEarlyBirdActive()`),
+// so the server decides whether the window is open (`isPrebookingActive()`),
 // hands the answer down as a prop, and recomputes the charge from its own
 // clock at `createBooking`. A client is never asked what time it is.
 // -----------------------------------------------------------------------------
@@ -18,26 +18,29 @@ export type TicketType = (typeof TICKET_TYPES)[number];
 // by a duration anywhere guest-facing — players aren't timed.
 // Unlimited: a standing slot held for the full hour (re-entry every cycle) +
 // bottomless drinks.
+//
+// The door price, charged from opening day and to every walk-in. Until the
+// doors open it is the price a booking *becomes*, not one anybody pays.
 export const LIST_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
+  standard: 170_00,
+  unlimited: 240_00,
+};
+
+// The pre-booking price: what you pay for committing to a venue before it
+// opens. It succeeded the early bird price (120/180), which ran until
+// 20 September and is closed — bookings made under it keep what they paid,
+// since a charge is stored on the booking, never recomputed.
+export const PREBOOKING_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
   standard: 150_00,
   unlimited: 220_00,
 };
 
-// The early bird price: what pre-opening guests pay for booking a venue that
-// isn't built yet, against a date that could still move.
-export const EARLY_BIRD_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
-  standard: 120_00,
-  unlimited: 180_00,
-};
-
-// End of 20 September 2026, Hong Kong time — pulled in from the 23rd, so the
-// offer closes a clear fortnight and a half before the doors open on
-// 8 October rather than trailing into the fortnight before it.
-// The offset is written into the literal on purpose: the server runs in UTC
-// on Vercel, so an offset-less date string would close the offer eight hours
-// early for everyone in HK.
-export const EARLY_BIRD_ENDS_AT = new Date("2026-09-20T23:59:59+08:00");
-export const EARLY_BIRD_DEADLINE_LABEL = "20 September";
+// End of 7 October 2026, Hong Kong time — the last night before the doors
+// open on the 8th. The offset is written into the literal on purpose: the
+// server runs in UTC on Vercel, so an offset-less date string would close the
+// window eight hours early for everyone in HK.
+export const PREBOOKING_ENDS_AT = new Date("2026-10-07T23:59:59+08:00");
+export const PREBOOKING_DEADLINE_LABEL = "7 October";
 
 /**
  * The venue's clock, and the two-letter answer to "whose midnight?".
@@ -85,16 +88,16 @@ export function derivePartyTypeFromHeadcount(headcount: number): "solo" | "pair"
 }
 
 /**
- * Is the early bird price still live? Call this on the server — the default
+ * Is the pre-booking price still live? Call this on the server — the default
  * argument is the machine's clock, and only the server's is trustworthy.
  */
-export function isEarlyBirdActive(at: Date = new Date()): boolean {
-  return at.getTime() <= EARLY_BIRD_ENDS_AT.getTime();
+export function isPrebookingActive(at: Date = new Date()): boolean {
+  return at.getTime() <= PREBOOKING_ENDS_AT.getTime();
 }
 
-/** The per-person prices in force, given whether the early bird is live. */
-export function priceTableFor(earlyBirdActive: boolean): Record<TicketType, number> {
-  return earlyBirdActive ? EARLY_BIRD_PRICE_PER_PERSON_CENTS : LIST_PRICE_PER_PERSON_CENTS;
+/** The per-person prices in force, given whether pre-booking is still open. */
+export function priceTableFor(prebookingActive: boolean): Record<TicketType, number> {
+  return prebookingActive ? PREBOOKING_PRICE_PER_PERSON_CENTS : LIST_PRICE_PER_PERSON_CENTS;
 }
 
 function totalFromTable(
@@ -113,15 +116,15 @@ function totalFromTable(
 }
 
 /**
- * What to *show* a guest, given an early-bird flag the server worked out.
+ * What to *show* a guest, given a pre-booking flag the server worked out.
  * Display only — never the source of a charge.
  */
 export function computeDisplayTotalCents(
   ticketType: TicketType,
   headcount: number,
-  earlyBirdActive: boolean
+  prebookingActive: boolean
 ): number {
-  return totalFromTable(priceTableFor(earlyBirdActive), ticketType, headcount, "computeDisplayTotalCents");
+  return totalFromTable(priceTableFor(prebookingActive), ticketType, headcount, "computeDisplayTotalCents");
 }
 
 /**
@@ -129,7 +132,7 @@ export function computeDisplayTotalCents(
  *
  * A Stripe PaymentIntent's amount is fixed when it's created, so someone who
  * reaches the payment step at 23:58 on the deadline and pays at 00:02 pays
- * the early bird price. That's deliberate — the alternative is repricing a
+ * the pre-booking price. That's deliberate — the alternative is repricing a
  * checkout underneath someone mid-payment.
  */
 export function computeBookingTotalCents(
@@ -138,7 +141,7 @@ export function computeBookingTotalCents(
   at: Date = new Date()
 ): number {
   return totalFromTable(
-    priceTableFor(isEarlyBirdActive(at)),
+    priceTableFor(isPrebookingActive(at)),
     ticketType,
     headcount,
     "computeBookingTotalCents"
@@ -146,9 +149,9 @@ export function computeBookingTotalCents(
 }
 
 /**
- * List price, whatever the date. Walk-ins pay this: the early bird price buys
- * the risk of booking a venue that doesn't exist yet, and someone standing at
- * the door of one that plainly does is taking no such risk.
+ * Door price, whatever the date. Walk-ins pay this: the pre-booking price buys
+ * the risk of committing to a venue that isn't open yet, and someone standing
+ * at the door of one that plainly is takes no such risk.
  */
 export function computeListTotalCents(ticketType: TicketType, headcount: number): number {
   return totalFromTable(LIST_PRICE_PER_PERSON_CENTS, ticketType, headcount, "computeListTotalCents");

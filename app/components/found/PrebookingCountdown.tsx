@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { VENUE_TIME_ZONE_LABEL } from "@/lib/booking/pricing";
-import styles from "./EarlyBirdCountdown.module.css";
+import styles from "./PrebookingCountdown.module.css";
 
 /**
- * The strip across the top of the page: "RESERVE NOW — EARLY BIRD PRICES END
+ * The strip across the top of the page: "RESERVE NOW — PRE-BOOKING PRICES END
  * IN 1 DAY 10 HRS 23 MINS 13 SECS". It replaced the struck-through list price
  * on the tier rows — a crossed-out number reads as a permanent sale tag,
  * where a clock that's visibly running says the same thing with a deadline
  * attached.
  *
  * Whether the offer is live is still the server's call: callers render this
- * only inside an `isEarlyBirdActive()` check and hand down the deadline. The
+ * only inside an `isPrebookingActive()` check and hand down the deadline. The
  * client clock is trusted for one thing only — animating the digits between
  * server renders — and never for what anyone is charged.
  *
@@ -23,7 +23,7 @@ import styles from "./EarlyBirdCountdown.module.css";
  * can't. The effect then re-anchors to the real clock on mount, which also
  * corrects for the homepage's 60s ISR window.
  */
-export function EarlyBirdCountdown({
+export function PrebookingCountdown({
   endsAtMs,
   serverNowMs,
   withCta = true,
@@ -64,7 +64,7 @@ export function EarlyBirdCountdown({
               &mdash;
             </span>
           )}
-          Early bird prices end in{" "}
+          Pre-booking prices end in{" "}
           <span className={styles.clock}>
             {parts.map((part) => (
               <span key={part.unit} className={styles.part}>

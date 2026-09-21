@@ -68,7 +68,7 @@ export async function fetchResumableBooking(bookingId: string): Promise<Resumabl
  *
  * Reusing it matters: the amount was fixed when the booking was made, so a
  * guest who started before a price change still pays what they were quoted —
- * the same rule the early bird deadline follows in pricing.ts.
+ * the same rule the pre-booking deadline follows in pricing.ts.
  */
 async function usablePaymentIntent(
   bookingId: string,

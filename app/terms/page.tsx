@@ -24,12 +24,13 @@ export default function TermsPage() {
                 securely by Stripe.
               </p>
               <p>
-                Bookings made on or before 20 September 2026 (Hong Kong time) are charged at the early bird
-                price of HKD 120 for Standard and HKD 180 for Unlimited. Bookings made after that are charged
-                at HKD 150 and HKD 220. The price is fixed at the time of booking: rescheduling an existing
-                booking never re-prices it, and no refund of the difference is made on bookings placed before
-                the early bird price was introduced. Walk-in tickets bought at the door are charged at HKD 150
-                and HKD 220 regardless of date.
+                Bookings made on or before 7 October 2026 (Hong Kong time) are charged at the pre-booking
+                price of HKD 150 for Standard and HKD 220 for Unlimited. Bookings made after that are charged
+                at HKD 170 and HKD 240. Earlier bookings, made under the early bird price that ran until
+                20 September 2026, were charged HKD 120 and HKD 180. The price is fixed at the time of
+                booking: rescheduling an existing booking never re-prices it, and no refund of the difference
+                is made when a price changes either way. Walk-in tickets bought at the door are charged at
+                HKD 170 and HKD 240 regardless of date.
               </p>
             </div>
             <div className={styles.rule} />
