@@ -30,15 +30,20 @@ export function WaveRow({
 }) {
   const fits = hasRoomFor(wave, headcount);
 
+  // A sold-out start time says so, rather than showing its own time crossed
+  // out. Which quarter it was is still obvious from its place in the row of
+  // four, and "gone" is the thing worth reading at a glance. A cell that's
+  // merely too small for this group keeps its time, struck: that one is about
+  // the group, and changing the party size brings it back.
   return (
     <button
       type="button"
-      className={`${styles.quarterCell} ${selected ? styles.on : ""}`}
+      className={`${styles.quarterCell} ${wave.isFull ? styles.quarterSoldOut : ""} ${selected ? styles.on : ""}`}
       disabled={!fits}
       onClick={() => onSelect(wave.id)}
       title={fits ? undefined : wave.isFull ? "Sold out" : `Not enough room for ${headcount}`}
     >
-      {cellLabel(wave)}
+      {wave.isFull ? "Sold out" : cellLabel(wave)}
     </button>
   );
 }

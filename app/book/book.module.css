@@ -556,8 +556,26 @@
 }
 .quarterCell:disabled {
   opacity: 0.35;
-  text-decoration: line-through;
   cursor: default;
+}
+/* Struck only where a time is still shown — a cell reading "Sold out" has no
+   number to cross out. */
+.quarterCell:disabled:not(.quarterSoldOut) {
+  text-decoration: line-through;
+}
+/* Sold out is a statement, not a dimmed number: readable, in the smaller
+   label size, and outlined rather than solid so it still reads as a cell
+   that's out of play. Written to beat `.quarterCell:disabled`, which these
+   cells also match — its 0.35 opacity is right for a struck time and far too
+   faint for words. */
+.quarterCell:disabled.quarterSoldOut {
+  opacity: 1;
+  border-style: dashed;
+  border-color: rgba(19, 18, 16, 0.3);
+  color: var(--f-stone);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* ---------- footer nav ---------- */
