@@ -85,3 +85,45 @@
   color: var(--f-grey);
   padding: 60px 0;
 }
+
+/* ---------- challenge a friend ---------- */
+.shareBox {
+  margin-top: 30px;
+  padding: 24px 26px;
+  border: 1px solid var(--f-ink);
+}
+.shareLead {
+  margin-top: 8px;
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+/* The message itself, shown as the thing being sent rather than described —
+   set in mono on a tinted ground so it reads as a quotation of the text. */
+.shareMessage {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: rgba(19, 18, 16, 0.05);
+  font-family: var(--f-mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--f-ink);
+}
+.shareActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+/* The native share sheet is a phone affordance: offered where tapping is the
+   input, hidden where there's a pointer and the WhatsApp and copy buttons
+   already cover it. */
+.shareNative {
+  display: none;
+}
+@media (hover: none) {
+  .shareNative {
+    display: inline-flex;
+  }
+}

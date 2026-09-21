@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
 import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "../../utils/formatWave";
+import { ShareChallenge } from "./ShareChallenge";
 import sharedStyles from "../../components/found/shared.module.css";
 import styles from "../../confirmation.module.css";
 
@@ -121,6 +122,8 @@ export function ConfirmationView({
           <span className={sharedStyles.detailValue}>{formatMoney(initialBooking.amountPaidCents, initialBooking.currency)}</span>
         </div>
       </div>
+
+      <ShareChallenge waveDate={initialBooking.waveDate} waveIsConfirmed={waveIsConfirmed} />
 
       <p className={styles.body}>
         Check your email for a receipt and a link to manage or reschedule your booking. {RESCHEDULE_NOTICE}
