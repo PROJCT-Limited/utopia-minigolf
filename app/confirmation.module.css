@@ -8,8 +8,13 @@
   padding-bottom: 40px;
 }
 
+/* Centred, and the same 640px column the booking wizard uses: a guest comes
+   straight here from that flow, and the page they land on shouldn't jump to
+   the left edge. It has hugged the left since this page was first built —
+   the /manage page, which shares these styles, moves with it. */
 .card {
-  max-width: 620px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .kicker {
