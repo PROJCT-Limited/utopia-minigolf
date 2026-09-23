@@ -26,7 +26,7 @@ describe("arrivalScene", () => {
   it("leads with the player, since that's what the group is checking", () => {
     const scene = arrivalScene({ stationNumber: 3, playerId: "p1", playerName: "Mika", groupName: "Mika's group" });
     expect(scene.headline).toBe("Mika");
-    expect(scene.eyebrow).toBe("Mika's group · Station 3");
+    expect(scene.eyebrow).toEqual(["Mika's group", "Station 3"]);
     expect(scene.then).toBe("rest");
   });
 
@@ -108,7 +108,7 @@ describe("standingsScene", () => {
       justLogged: 4,
     });
     expect(scene.headline).toBe("Mika, 4 strokes");
-    expect(scene.support).toBe("On the card.");
+    expect(scene.support).toBe("On the scoreboard.");
   });
 
   it("says one stroke, not 1 strokes", () => {
@@ -254,7 +254,7 @@ describe("standingsScene headline", () => {
       place: 2,
       fieldSize: 3,
     });
-    expect(scene.headline).toBe("Mika · 2nd of 3");
+    expect(scene.headline).toBe("Mika, 2nd of 3");
   });
 
   it("falls back to the group when the player has no position yet", () => {

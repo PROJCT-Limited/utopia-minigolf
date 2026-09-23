@@ -1,6 +1,7 @@
 "use client";
 
 import { SCENE_MS, type Scene } from "@/lib/scoring/kioskScenes";
+import { Eyebrow } from "./Eyebrow";
 import styles from "./kiosk.module.css";
 
 /**
@@ -29,7 +30,7 @@ export function SceneCard({ scene, onSkip }: { scene: Scene; onSkip: () => void 
       onClick={onSkip}
       aria-live="polite"
     >
-      <span className={styles.sceneEyebrow}>{scene.eyebrow}</span>
+      <Eyebrow parts={scene.eyebrow} />
       <span className={styles.sceneHeadline}>{scene.headline}</span>
       <span className={styles.sceneSupport}>{scene.support}</span>
       <span className={styles.sceneClock} aria-hidden>

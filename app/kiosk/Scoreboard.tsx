@@ -49,7 +49,7 @@ export function Scoreboard({
         >
           <span className={styles.boardPlace}>{row.place ?? "–"}</span>
           <span className={styles.boardName}>{row.name}</span>
-          <span className={styles.boardStation}>{row.atStation ?? "·"}</span>
+          <span className={styles.boardStation}>{row.atStation ?? "–"}</span>
           <span className={styles.boardTotal}>{row.stationsPlayed > 0 ? row.total : "–"}</span>
         </button>
       ))}
@@ -57,8 +57,8 @@ export function Scoreboard({
       <p className={styles.boardFoot}>
         {stationsRemaining.length === 0
           ? "Every station logged — that's the round."
-          : `${STATION_COUNT - stationsRemaining.length} of ${STATION_COUNT} stations logged · still to play ${stationsRemaining.join(", ")}`}
-        {interactive && " · tap a name to log a score"}
+          : `${STATION_COUNT - stationsRemaining.length} of ${STATION_COUNT} stations logged — still to play ${stationsRemaining.join(", ")}`}
+        {interactive && " — tap a name to log a score"}
       </p>
     </div>
   );

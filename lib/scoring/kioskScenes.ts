@@ -87,8 +87,10 @@ export interface Scene {
   headline: string;
   /** The line under the headline. */
   support: string;
-  /** Small mono line above it — station, group, context. */
-  eyebrow: string;
+  /** The small mono line above the headline, as separate parts. Parts
+   *  rather than one string because they're set with space between them
+   *  instead of a separator glyph — the site's own labels never carry one. */
+  eyebrow: string[];
   /** Where the loop goes when this scene's time is up. */
   then: "rest" | "strokes";
   /** "big" is reserved for the end of a whole round — the one moment in the
@@ -126,7 +128,7 @@ export function arrivalScene({
       kind: "arrival",
       stationNumber,
       playerId: null,
-      eyebrow: `Station ${stationNumber}`,
+      eyebrow: [`Station ${stationNumber}`],
       headline: "New ball",
       support: "This one isn't checked in — see the desk to get on the scoreboard.",
       then: "rest",
@@ -139,7 +141,7 @@ export function arrivalScene({
     kind: "arrival",
     stationNumber,
     playerId,
-    eyebrow: `${groupName} · Station ${stationNumber}`,
+    eyebrow: [groupName, `Station ${stationNumber}`],
     headline: playerName,
     support: "You're up.",
     then: "rest",
@@ -180,7 +182,7 @@ export function cheerScene({
     kind: "cheer" as const,
     stationNumber,
     playerId,
-    eyebrow: playerName ? `${playerName} · Station ${stationNumber}` : `Station ${stationNumber}`,
+    eyebrow: playerName ? [playerName, `Station ${stationNumber}`] : [`Station ${stationNumber}`],
   };
 
   if (!playerName) {
@@ -188,7 +190,7 @@ export function cheerScene({
       ...base,
       playerId: null,
       headline: "Ball's in",
-      support: "Not checked in, so there's no card to score it on.",
+      support: "Not checked in, so there's nowhere to score it.",
       then: "rest",
       tone: "normal",
     };
@@ -197,7 +199,7 @@ export function cheerScene({
     return {
       ...base,
       headline: "Round two",
-      support: `Station ${stationNumber} is already on your card — change it if you want.`,
+      support: `Station ${stationNumber} is already on the scoreboard — change it if you want.`,
       then: "strokes",
       tone: "normal",
     };
@@ -206,7 +208,7 @@ export function cheerScene({
     return {
       ...base,
       headline: "That's your round!",
-      support: "One last count and the card is yours.",
+      support: "One last count and you're done.",
       then: "strokes",
       tone: "big",
     };
@@ -306,7 +308,7 @@ export function standingsScene({
   const headline = scored
     ? `${playerName}, ${justLogged} ${justLogged === 1 ? "stroke" : "strokes"}`
     : playerName && place
-      ? `${playerName} · ${ordinal(place)}${fieldSize ? ` of ${fieldSize}` : ""}`
+      ? `${playerName}, ${ordinal(place)}${fieldSize ? ` of ${fieldSize}` : ""}`
       : groupName;
 
   return {
@@ -314,9 +316,9 @@ export function standingsScene({
     kind: "standings",
     stationNumber,
     playerId,
-    eyebrow: `${groupName} · Station ${stationNumber}`,
+    eyebrow: [groupName, `Station ${stationNumber}`],
     headline,
-    support: scored ? "On the card." : "How the group stands.",
+    support: scored ? "On the scoreboard." : "How the group stands.",
     then: "rest",
     tone: "normal",
   };

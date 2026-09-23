@@ -117,10 +117,15 @@
     transform: none;
   }
 }
-.sceneEyebrow {
-  display: block;
+/* The site's monoLabel, verbatim (12px / 0.18em / uppercase) — only the
+   colour changes, since --f-grey is for labels on paper and this ground is
+   ink. Parts are spaced apart rather than separated by a glyph. */
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
   font-family: var(--f-mono);
-  font-size: clamp(12px, 1.3vw, 16px);
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--f-stone);
@@ -129,9 +134,9 @@
   display: block;
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(56px, 11vw, 150px);
-  line-height: 0.92;
-  letter-spacing: -0.04em;
+  font-size: clamp(48px, 9vw, 126px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   margin: 10px 0;
   /* Long names shrink rather than wrap: two lines of 190px type would push
      the support line off a landscape tablet. */
@@ -146,15 +151,16 @@
 }
 .sceneBig .sceneHeadline {
   color: var(--f-cue-start);
-  font-size: clamp(64px, 12.5vw, 172px);
+  font-size: clamp(54px, 10vw, 140px);
 }
 .sceneSupport {
   display: block;
-  font-size: clamp(22px, 2.6vw, 38px);
+  font-size: clamp(18px, 1.9vw, 26px);
   font-weight: 400;
-  line-height: 1.2;
-  max-width: 24ch;
-  color: var(--f-white);
+  line-height: 1.6;
+  max-width: 34ch;
+  margin-top: 6px;
+  color: var(--f-stone);
 }
 .sceneSkip {
   position: absolute;
@@ -215,15 +221,16 @@
 .boardHeadline {
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(36px, 5.4vw, 76px);
-  line-height: 1;
+  font-size: clamp(34px, 3.488vw + 11.7px, 64px);
+  line-height: 1.02;
   letter-spacing: -0.03em;
-  margin: 8px 0 4px;
+  margin: 12px 0 0;
 }
 .boardSupport {
-  font-size: clamp(16px, 1.8vw, 22px);
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--f-stone);
-  margin-bottom: clamp(14px, 2vw, 28px);
+  margin: 8px 0 clamp(18px, 2.4vw, 34px);
 }
 .board {
   width: 100%;
@@ -277,9 +284,10 @@
   color: var(--f-stone);
 }
 .boardName {
-  font-size: clamp(26px, 3.4vw, 46px);
+  font-size: clamp(24px, 2.6vw, 40px);
   font-weight: 500;
-  letter-spacing: -0.02em;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 .boardStation,
 .boardTotal {
@@ -319,10 +327,10 @@
 .strokesHeadline {
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(38px, 6vw, 86px);
-  line-height: 1;
+  font-size: clamp(34px, 3.488vw + 11.7px, 64px);
+  line-height: 1.02;
   letter-spacing: -0.03em;
-  margin: 8px 0 clamp(16px, 3vw, 40px);
+  margin: 12px 0 clamp(20px, 3vw, 44px);
 }
 .counter {
   display: flex;
@@ -365,9 +373,9 @@
 .counterValue {
   font-family: var(--f-archivo);
   font-weight: 700;
-  font-size: clamp(90px, 14vw, 190px);
-  line-height: 1;
-  letter-spacing: -0.05em;
+  font-size: clamp(80px, 11vw, 150px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   min-width: 1.6em;
 }
 
@@ -422,13 +430,14 @@
 .waitingHeadline {
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(42px, 7vw, 96px);
-  line-height: 1;
+  font-size: clamp(34px, 3.488vw + 11.7px, 64px);
+  line-height: 1.02;
   letter-spacing: -0.03em;
 }
 .waitingSupport {
   margin-top: 14px;
-  font-size: clamp(18px, 2vw, 24px);
+  font-size: 16px;
+  line-height: 1.6;
   color: var(--f-stone);
   max-width: 34ch;
 }
@@ -568,7 +577,7 @@
 /* Portrait: the same scenes, less room for the headline. */
 @media (orientation: portrait) {
   .sceneHeadline {
-    font-size: clamp(52px, 12vw, 120px);
+    font-size: clamp(44px, 10vw, 104px);
   }
   .boardHead,
   .boardRow {

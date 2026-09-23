@@ -22,6 +22,7 @@ import {
 } from "@/lib/scoring/scoringActions";
 import { useBallWatch, type BallEvent } from "./useBallWatch";
 import { SceneCard } from "./SceneCard";
+import { Eyebrow } from "./Eyebrow";
 import { Scoreboard } from "./Scoreboard";
 import { DEMO_GROUP_ID, DEMO_ROSTER, demoDetection, demoScores } from "./demoFeed";
 import {
@@ -421,7 +422,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
         <section className={styles.waiting}>
           <h1 className={styles.waitingHeadline}>Who&rsquo;s playing?</h1>
           <p className={styles.waitingSupport}>
-            Nobody was named at the door, so the card is empty. Add the names once.
+            Nobody was named at the door, so the scoreboard is empty. Add the names once.
           </p>
           <div className={styles.nameList}>
             {rosterNames.map((name, i) => (
@@ -438,7 +439,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
             ))}
           </div>
           <button type="button" className={styles.bigBtn} onClick={submitRoster} disabled={loading}>
-            {loading ? "Starting…" : "Start the card"}
+            {loading ? "Starting…" : "Start the scoreboard"}
           </button>
         </section>
       )}
@@ -453,7 +454,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
               onClick={advance}
               style={{ "--scene-ms": `${SCENE_MS.standings}ms` } as React.CSSProperties}
             >
-              <span className={styles.sceneEyebrow}>{scene.eyebrow}</span>
+              <Eyebrow parts={scene.eyebrow} />
               <h1 className={styles.boardHeadline}>{scene.headline}</h1>
               <p className={styles.boardSupport}>{scene.support}</p>
               <Scoreboard
@@ -472,9 +473,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
 
           {!scene && mode === "strokes" && targetPlayer && (
             <section className={styles.strokes}>
-              <span className={styles.sceneEyebrow}>
-                {targetPlayer.name} · Station {target?.station}
-              </span>
+              <Eyebrow parts={[targetPlayer.name, `Station ${target?.station}`]} />
               <h1 className={styles.strokesHeadline}>How many strokes?</h1>
               <div className={styles.counter}>
                 <button
@@ -502,7 +501,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
                 onClick={saveScore}
                 disabled={pendingStrokes < 1}
               >
-                Put it on the card
+                Add to the scoreboard
               </button>
               <button type="button" className={styles.quietBtn} onClick={leaveStrokes}>
                 Not you? Go back
@@ -513,10 +512,13 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
 
           {!scene && mode === "rest" && (
             <section className={styles.boardScene}>
-              <span className={styles.sceneEyebrow}>
-                {group.displayName} · {remaining.length === 0 ? "round complete" : `station ${remaining[0]} next`}
-              </span>
-              <h1 className={styles.boardHeadline}>The card</h1>
+              <Eyebrow
+                parts={[
+                  group.displayName,
+                  remaining.length === 0 ? "Round complete" : `Station ${remaining[0]} next`,
+                ]}
+              />
+              <h1 className={styles.boardHeadline}>Scoreboard</h1>
               <p className={styles.boardSupport}>Roll a ball past a gate and this screen will call it.</p>
               <Scoreboard
                 rows={rows}
@@ -535,9 +537,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
               be able to put a number on the card. */}
           {stationChoice && (
             <div className={styles.sheet}>
-              <span className={styles.sceneEyebrow}>
-                {roster.find((p) => p.id === stationChoice)?.name} · which station?
-              </span>
+              <Eyebrow parts={[roster.find((p) => p.id === stationChoice)?.name ?? "Player", "Which station?"]} />
               <div className={styles.stationPick}>
                 {STATION_NUMBERS.map((n) => (
                   <button
@@ -588,7 +588,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
                 className={styles.demoBtn}
                 onClick={() => fire("start", 3, p as RosterPlayer)}
               >
-                start · {p.name}
+                start {p.name}
               </button>
             ))}
             {DEMO_ROSTER.slice(0, 2).map((p) => (
@@ -598,7 +598,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
                 className={styles.demoBtn}
                 onClick={() => fire("end", 3, p as RosterPlayer)}
               >
-                end · {p.name}
+                end {p.name}
               </button>
             ))}
             <button type="button" className={styles.demoBtn} onClick={() => fire("start", 2, undefined)}>
