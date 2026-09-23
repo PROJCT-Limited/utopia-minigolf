@@ -31,11 +31,11 @@ import { Eyebrow } from "./Eyebrow";
 import { Scoreboard } from "./Scoreboard";
 import { DEMO_GROUP_ID, DEMO_ROSTER, demoDetection, demoScores } from "./demoFeed";
 import {
-  mutedServerSnapshot,
-  mutedSnapshot,
+  audioReadyServerSnapshot,
+  audioReadySnapshot,
+  installUnlockListeners,
   playCueSound,
-  setMuted,
-  subscribeMuted,
+  subscribeAudioReady,
   unlockCueSounds,
 } from "./cueSounds";
 import styles from "./kiosk.module.css";
@@ -74,7 +74,12 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
   // column for a group that started anywhere else.
   const [lastStation, setLastStation] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const muted = useSyncExternalStore(subscribeMuted, mutedSnapshot, mutedServerSnapshot);
+  // Sound is always on. This is only whether the browser has let it start
+  // yet — it needs one gesture on the page, which a mounted tablet might not
+  // get for an hour, so the screen asks for it rather than staying quiet for
+  // no visible reason.
+  const audioReady = useSyncExternalStore(subscribeAudioReady, audioReadySnapshot, audioReadyServerSnapshot);
+  useEffect(() => installUnlockListeners(), []);
 
   const isDemo = group?.id === DEMO_GROUP_ID;
   const scene = queue[0] ?? null;
@@ -416,27 +421,12 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
   // ---------------------------------------------------------------------
   return (
     <div className={`${styles.stage} ${isDemo ? styles.stageDemo : ""}`} onPointerDown={unlockCueSounds}>
-      <header className={styles.bar}>
-        <span className={styles.barBrand}>
-          FOUND
-          {isDemo && <span className={styles.demoChip}>demo</span>}
-        </span>
-        <span className={styles.barRight}>
-          {/* Demo mode has no feed by design — warning about it there would
-              be the screen complaining about a thing nobody asked for. */}
-          {watch.feedDown && !isDemo && <span className={styles.feedDown}>No antenna feed</span>}
-          {group && <span className={styles.barGroup}>{group.displayName}</span>}
-          <button
-            type="button"
-            className={styles.muteBtn}
-            onClick={() => setMuted(!muted)}
-            aria-pressed={muted}
-            aria-label={muted ? "Turn sound on" : "Turn sound off"}
-          >
-            {muted ? "♪ off" : "♪ on"}
-          </button>
-        </span>
-      </header>
+      {/* Two things can appear over a scene, and neither is chrome: a note
+          that audio is waiting for its first touch, and a warning that the
+          antennas have gone quiet. Both disappear the moment they're no
+          longer true. */}
+      {!audioReady && <span className={styles.soundNote}>Tap anywhere for sound</span>}
+      {watch.feedDown && !isDemo && <span className={styles.feedDown}>No antenna feed</span>}
 
       {/* No group yet: either nothing is on the course, or the floor can't
           say which of several it is. Both are waiting states, not menus. */}
@@ -644,6 +634,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
 
       {isDemo && (
         <footer className={styles.demoBar}>
+          <span className={styles.demoChip}>demo — nothing is saved</span>
           <button
             type="button"
             className={styles.demoPlay}

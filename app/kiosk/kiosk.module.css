@@ -29,69 +29,33 @@
   font-family: var(--f-archivo);
   display: flex;
   flex-direction: column;
-  padding: 20px clamp(20px, 3vw, 44px) 24px;
+  padding: clamp(24px, 4vw, 56px) clamp(20px, 3vw, 44px) 24px;
   overflow: hidden;
 }
 
-/* ---------- the one persistent strip ---------- */
-/* Everything that isn't the moment lives here, small, at the top: who the
-   card belongs to, whether the antennas are alive, and the sound toggle. */
-.bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--f-ink);
-  flex-shrink: 0;
-}
-.barBrand,
-.barGroup {
-  font-family: var(--f-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.barBrand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.barGroup {
-  color: var(--f-grey);
-}
-.barRight {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.demoChip {
-  font-family: var(--f-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  background: var(--f-cue-start);
-  color: var(--f-ink);
-  padding: 3px 7px;
-}
+/* ---------- the only two things that ever sit over a scene ---------- */
+/* Both are states of something being wrong or waiting, not furniture: no
+   branding, no group name, no controls. The screen is the show. */
+.soundNote,
 .feedDown {
-  font-family: var(--f-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--f-white);
-  background: #b23b2f;
-  padding: 4px 8px;
-}
-.muteBtn {
-  min-height: 44px;
-  padding: 8px 14px;
-  background: none;
-  border: 1px solid var(--f-ink);
-  color: var(--f-ink);
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 8;
   font-family: var(--f-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
-  cursor: pointer;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+}
+.soundNote {
+  background: var(--f-cue-start);
+  color: var(--f-ink);
+}
+.feedDown {
+  top: 52px;
+  background: #b23b2f;
+  color: var(--f-white);
 }
 
 /* ---------- scenes ---------- */
@@ -617,6 +581,15 @@
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
+}
+.demoChip {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--f-cue-start);
+  color: var(--f-ink);
+  padding: 5px 9px;
 }
 .demoHint {
   flex: 1;
