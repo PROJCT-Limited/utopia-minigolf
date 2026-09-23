@@ -65,7 +65,20 @@ export const SCENE_MS = {
   arrival: 4000,
   cheer: 3600,
   standings: 5200,
+  /** Three counts and a beat. */
+  countdown: 3800,
+  /** Per player revealed, plus a hold on the full board. */
+  revealPerRow: 900,
+  revealHold: 2200,
+  /** The payoff. Longest thing on the screen all day, on purpose. */
+  winner: 8000,
 } as const;
+
+export const COUNTDOWN_FROM = 3;
+
+export function revealMs(rowCount: number): number {
+  return SCENE_MS.revealPerRow * Math.max(1, rowCount) + SCENE_MS.revealHold;
+}
 
 /** How long the entrance animation of a scene runs. Kept well under the
  *  scene's own hold so the thing is still and readable for most of its life. */
@@ -75,7 +88,7 @@ export const SCENE_IN_MS = 520;
 // Scenes
 // -----------------------------------------------------------------------------
 
-export type SceneKind = "arrival" | "cheer" | "standings";
+export type SceneKind = "arrival" | "cheer" | "standings" | "countdown" | "reveal" | "winner";
 
 export interface Scene {
   /** Fresh per queued scene, so re-queueing the same beat restarts it. */
@@ -96,6 +109,10 @@ export interface Scene {
   /** "big" is reserved for the end of a whole round — the one moment in the
    *  loop that isn't going to happen again for this group. */
   tone: "normal" | "big";
+  /** How long this scene holds, in ms. On the scene itself rather than in a
+   *  lookup because the reveal's length depends on how many players there
+   *  are to reveal. */
+  holdMs: number;
 }
 
 let sceneSeq = 0;
@@ -133,6 +150,7 @@ export function arrivalScene({
       support: "This one isn't checked in — see the desk to get on the scoreboard.",
       then: "rest",
       tone: "normal",
+      holdMs: SCENE_MS.arrival,
     };
   }
 
@@ -146,6 +164,7 @@ export function arrivalScene({
     support: "You're up.",
     then: "rest",
     tone: "normal",
+    holdMs: SCENE_MS.arrival,
   };
 }
 
@@ -193,6 +212,7 @@ export function cheerScene({
       support: "Not checked in, so there's nowhere to score it.",
       then: "rest",
       tone: "normal",
+      holdMs: SCENE_MS.cheer,
     };
   }
   if (context.alreadyLogged) {
@@ -202,6 +222,7 @@ export function cheerScene({
       support: `Station ${stationNumber} is already on the scoreboard — change it if you want.`,
       then: "strokes",
       tone: "normal",
+      holdMs: SCENE_MS.cheer,
     };
   }
   if (context.roundFinishes) {
@@ -211,6 +232,7 @@ export function cheerScene({
       support: "One last count and you're done.",
       then: "strokes",
       tone: "big",
+      holdMs: SCENE_MS.cheer,
     };
   }
   if (context.lastThrough) {
@@ -220,6 +242,7 @@ export function cheerScene({
       support: "The group's waiting — let's count those strokes.",
       then: "strokes",
       tone: "normal",
+      holdMs: SCENE_MS.cheer,
     };
   }
   if (context.firstThrough) {
@@ -229,6 +252,7 @@ export function cheerScene({
       support: "Now let's count your strokes.",
       then: "strokes",
       tone: "normal",
+      holdMs: SCENE_MS.cheer,
     };
   }
   return {
@@ -237,6 +261,7 @@ export function cheerScene({
     support: "Now let's count your strokes.",
     then: "strokes",
     tone: "normal",
+    holdMs: SCENE_MS.cheer,
   };
 }
 
@@ -321,6 +346,7 @@ export function standingsScene({
     support: scored ? "On the scoreboard." : "How the group stands.",
     then: "rest",
     tone: "normal",
+    holdMs: SCENE_MS.standings,
   };
 }
 
@@ -389,4 +415,135 @@ export function stationsLeft(
   return STATION_NUMBERS.filter((n) =>
     roster.some((player) => scoresByPlayer[player.id]?.[n] === undefined)
   );
+}
+
+// -----------------------------------------------------------------------------
+// The finale
+// -----------------------------------------------------------------------------
+// When the last player logs the last station, the screen stops being a
+// scoreboard and becomes an announcement: a countdown, the places revealed
+// from the back, and then the winner held long enough for someone to take a
+// photograph of it.
+//
+// Every number in it is arithmetic on strokes already typed by the players.
+// Nothing here is measured, inferred, or generous.
+
+export interface WinnerStats {
+  playerId: string;
+  name: string;
+  total: number;
+  /** Stations they finished in a single stroke. */
+  aces: number;
+  /** Stations nobody in the group beat them on (shared bests count). */
+  stationsWon: number;
+  /** Their best single station. */
+  best: number;
+}
+
+export function playerStats(
+  playerId: string,
+  name: string,
+  roster: { id: string }[],
+  scoresByPlayer: Record<string, Record<number, number>>
+): WinnerStats {
+  const own = scoresByPlayer[playerId] ?? {};
+  const played = STATION_NUMBERS.filter((n) => own[n] !== undefined);
+
+  return {
+    playerId,
+    name,
+    total: played.reduce((sum, n) => sum + own[n], 0),
+    aces: played.filter((n) => own[n] === 1).length,
+    stationsWon: played.filter((n) =>
+      roster.every((other) => {
+        const theirs = scoresByPlayer[other.id]?.[n];
+        return theirs === undefined || own[n] <= theirs;
+      })
+    ).length,
+    best: played.length > 0 ? Math.min(...played.map((n) => own[n])) : 0,
+  };
+}
+
+/** Everyone tied for first. Usually one person; a tie is a real outcome and
+ *  gets said out loud rather than broken by a coin. */
+export function champions(rows: StandingRow[]): StandingRow[] {
+  return rows.filter((row) => row.place === 1);
+}
+
+export function countdownScene(groupName: string): Scene {
+  return {
+    id: sceneId("countdown"),
+    kind: "countdown",
+    stationNumber: 0,
+    playerId: null,
+    eyebrow: [groupName, "Round complete"],
+    headline: "",
+    support: "Counting it up",
+    then: "rest",
+    tone: "big",
+    holdMs: SCENE_MS.countdown,
+  };
+}
+
+export function revealScene(groupName: string, rowCount: number): Scene {
+  return {
+    id: sceneId("reveal"),
+    kind: "reveal",
+    stationNumber: 0,
+    playerId: null,
+    eyebrow: [groupName, "Final scoreboard"],
+    headline: "The results",
+    support: "",
+    then: "rest",
+    tone: "big",
+    holdMs: revealMs(rowCount),
+  };
+}
+
+export function winnerScene(winners: StandingRow[], groupName: string): Scene {
+  const tie = winners.length > 1;
+  const names = winners.map((w) => w.name);
+  const spoken = tie ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+  const strokes = winners[0]?.total ?? 0;
+
+  return {
+    id: sceneId("winner"),
+    kind: "winner",
+    stationNumber: 0,
+    playerId: tie ? null : (winners[0]?.playerId ?? null),
+    eyebrow: [groupName, tie ? "Joint winners" : "Winner"],
+    headline: tie ? "It's a tie!" : `${spoken} wins`,
+    support: tie
+      ? `${spoken} — ${strokes} strokes each`
+      : `${strokes} ${strokes === 1 ? "stroke" : "strokes"} round the course`,
+    then: "rest",
+    tone: "big",
+    holdMs: SCENE_MS.winner,
+  };
+}
+
+/**
+ * The whole closing sequence, in order. Empty when nobody has a score to
+ * announce — a group that walks off without logging anything gets no finale
+ * rather than a winner with nothing on their card.
+ */
+export function finaleScenes(
+  roster: { id: string; name: string }[],
+  scoresByPlayer: Record<string, Record<number, number>>,
+  groupName: string
+): Scene[] {
+  const rows = standings(roster, scoresByPlayer, STATION_NUMBERS[0]);
+  const winners = champions(rows);
+  if (winners.length === 0) return [];
+
+  return [countdownScene(groupName), revealScene(groupName, rows.length), winnerScene(winners, groupName)];
+}
+
+/** Has every player logged every station? The trigger for the finale, and
+ *  the one moment the screen is allowed to take over completely. */
+export function roundIsComplete(
+  roster: { id: string }[],
+  scoresByPlayer: Record<string, Record<number, number>>
+): boolean {
+  return roster.length > 0 && stationsLeft(roster, scoresByPlayer).length === 0;
 }

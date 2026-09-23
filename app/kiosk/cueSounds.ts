@@ -25,7 +25,7 @@ type Note = { hz: number; at: number; ms: number };
 
 /** The four moments that make a sound. Named after the moment, not the
  *  shape, so a retune can't drift out of step with what's on screen. */
-export type CueSound = "arrival" | "cheer" | "cheerRound" | "logged";
+export type CueSound = "arrival" | "cheer" | "cheerRound" | "logged" | "tick" | "fanfare";
 
 // All four are major intervals and all four rise, because every one of them
 // is good news: the floor saw you, your ball's in, your round's done, your
@@ -67,6 +67,26 @@ const VOICES: Record<CueSound, { notes: Note[]; gain: number }> = {
     notes: [
       { hz: 523, at: 0, ms: 80 },
       { hz: 784, at: 0.07, ms: 170 },
+    ],
+  },
+  // One blunt count. Deliberately the least musical thing here — a clock,
+  // not a tune, so the ear reads it as "something is about to happen".
+  tick: {
+    gain: 0.15,
+    notes: [{ hz: 440, at: 0, ms: 70 }],
+  },
+  // The only sound in the building that gets to be long: the winner. A rising
+  // major arpeggio with the octave held at the top, under a second and a
+  // half all in.
+  fanfare: {
+    gain: 0.24,
+    notes: [
+      { hz: 523, at: 0, ms: 120 },
+      { hz: 659, at: 0.1, ms: 120 },
+      { hz: 784, at: 0.2, ms: 120 },
+      { hz: 1047, at: 0.3, ms: 200 },
+      { hz: 784, at: 0.5, ms: 140 },
+      { hz: 1047, at: 0.62, ms: 620 },
     ],
   },
 };

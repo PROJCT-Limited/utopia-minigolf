@@ -55,10 +55,7 @@ export function Scoreboard({
       ))}
 
       <p className={styles.boardFoot}>
-        {stationsRemaining.length === 0
-          ? "Every station logged — that's the round."
-          : `${STATION_COUNT - stationsRemaining.length} of ${STATION_COUNT} stations logged — still to play ${stationsRemaining.join(", ")}`}
-        {interactive && " — tap a name to log a score"}
+        Stations {STATION_COUNT - stationsRemaining.length} / {STATION_COUNT}
       </p>
     </div>
   );

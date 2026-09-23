@@ -12,6 +12,12 @@ import {
   SCENE_IN_MS,
   detectionKey,
   gateFromGameState,
+  playerStats,
+  champions,
+  winnerScene,
+  finaleScenes,
+  roundIsComplete,
+  revealMs,
 } from "./kioskScenes";
 
 const ROSTER = [
@@ -164,12 +170,176 @@ describe("stationsLeft", () => {
 });
 
 describe("scene timings", () => {
+  // Built scenes, not the constants bag — some of those entries are
+  // ingredients of a duration (per-row, hold) rather than durations.
+  const everyKind = () => {
+    const roster = [
+      { id: "p1", name: "Mika" },
+      { id: "p2", name: "Ravi" },
+    ];
+    const full = { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 };
+    return [
+      arrivalScene({ stationNumber: 1, playerId: "p1", playerName: "Mika", groupName: "G" }),
+      cheerScene({ stationNumber: 1, playerId: "p1", playerName: "Mika", context: CONTEXT }),
+      standingsScene({ stationNumber: 1, playerId: "p1", playerName: "Mika", groupName: "G" }),
+      ...finaleScenes(roster, { p1: full, p2: { ...full, 5: 4 } }, "G"),
+    ];
+  };
+
   it("holds every scene long enough to be read from a couple of metres", () => {
-    for (const ms of Object.values(SCENE_MS)) expect(ms).toBeGreaterThanOrEqual(3000);
+    for (const scene of everyKind()) expect(scene.holdMs).toBeGreaterThanOrEqual(3000);
   });
 
   it("finishes animating well before the scene's time is up", () => {
-    for (const ms of Object.values(SCENE_MS)) expect(SCENE_IN_MS).toBeLessThan(ms / 3);
+    for (const scene of everyKind()) expect(SCENE_IN_MS).toBeLessThan(scene.holdMs / 3);
+  });
+
+  it("gives the winner the longest hold of the day", () => {
+    const holds = everyKind().map((s) => s.holdMs);
+    const winner = everyKind().find((s) => s.kind === "winner")!.holdMs;
+    expect(winner).toBe(Math.max(...holds));
+  });
+});
+
+describe("detectionKey", () => {
+  it("separates the two gates of one visit", () => {
+    const row = { epc: "E1", detectedAt: "2026-10-10T09:00:00.000Z" };
+    expect(detectionKey({ ...row, role: "start" as const })).not.toBe(
+      detectionKey({ ...row, role: "end" as const })
+    );
+  });
+
+  it("is stable, so a read is never announced twice", () => {
+    const row = { epc: "E1", role: "start" as const, detectedAt: "2026-10-10T09:00:00.000Z" };
+    expect(detectionKey(row)).toBe(detectionKey({ ...row }));
+  });
+});
+
+describe("gateFromGameState", () => {
+  it("maps the field the backend is adding onto the same two gates", () => {
+    expect(gateFromGameState("playing_station_4")).toBe("start");
+    expect(gateFromGameState("completed")).toBe("end");
+  });
+
+  it("ignores a state it doesn't recognise rather than guessing", () => {
+    expect(gateFromGameState("idle")).toBeNull();
+  });
+});
+
+describe("playerStats", () => {
+  const roster = [
+    { id: "p1", name: "Mika" },
+    { id: "p2", name: "Ravi" },
+  ];
+  const scores = {
+    p1: { 1: 1, 2: 3, 3: 2, 4: 4, 5: 1 }, // 11, two aces
+    p2: { 1: 2, 2: 3, 3: 5, 4: 2, 5: 3 }, // 15
+  };
+
+  it("counts holes in one", () => {
+    expect(playerStats("p1", "Mika", roster, scores).aces).toBe(2);
+    expect(playerStats("p2", "Ravi", roster, scores).aces).toBe(0);
+  });
+
+  it("counts stations nobody beat them on, ties included", () => {
+    // Mika: 1 (beats 2), 2 (ties 3), 3 (beats 5), 5 (beats 3) = 4;
+    // station 4 she lost.
+    expect(playerStats("p1", "Mika", roster, scores).stationsWon).toBe(4);
+    // Ravi only holds station 4 outright, plus the tie at station 2.
+    expect(playerStats("p2", "Ravi", roster, scores).stationsWon).toBe(2);
+  });
+
+  it("reports their best single station and their total", () => {
+    expect(playerStats("p1", "Mika", roster, scores)).toMatchObject({ best: 1, total: 11 });
+  });
+
+  it("has nothing to say about an empty card", () => {
+    expect(playerStats("p3", "Jo", roster, scores)).toMatchObject({ total: 0, aces: 0, best: 0 });
+  });
+});
+
+describe("champions", () => {
+  it("is everyone tied at the top, not the first row", () => {
+    const rows = standings(
+      [
+        { id: "p1", name: "Mika" },
+        { id: "p2", name: "Ravi" },
+        { id: "p3", name: "Jo" },
+      ],
+      { p1: { 1: 3 }, p2: { 1: 3 }, p3: { 1: 5 } },
+      1
+    );
+    expect(champions(rows).map((r) => r.name)).toEqual(["Mika", "Ravi"]);
+  });
+});
+
+describe("winnerScene", () => {
+  const rows = (names: string[], total: number) =>
+    names.map((name, i) => ({
+      playerId: `p${i}`,
+      name,
+      total,
+      stationsPlayed: 5,
+      atStation: 2,
+      place: 1,
+    }));
+
+  it("names the winner and what it took", () => {
+    const scene = winnerScene(rows(["Mika"], 14), "Mika's group");
+    expect(scene.headline).toBe("Mika wins");
+    expect(scene.support).toBe("14 strokes round the course");
+    expect(scene.eyebrow).toEqual(["Mika's group", "Winner"]);
+  });
+
+  it("says a tie out loud instead of breaking it", () => {
+    const scene = winnerScene(rows(["Mika", "Ravi"], 14), "Mika's group");
+    expect(scene.headline).toBe("It's a tie!");
+    expect(scene.support).toBe("Mika and Ravi — 14 strokes each");
+    expect(scene.playerId).toBeNull();
+  });
+
+  it("lists three the way a person would", () => {
+    const scene = winnerScene(rows(["Mika", "Ravi", "Jo"], 14), "G");
+    expect(scene.support).toBe("Mika, Ravi and Jo — 14 strokes each");
+  });
+});
+
+describe("roundIsComplete", () => {
+  const roster = [{ id: "p1" }, { id: "p2" }];
+  const full = { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 };
+
+  it("waits for the last player's last station", () => {
+    expect(roundIsComplete(roster, { p1: full, p2: { 1: 2, 2: 2, 3: 2, 4: 2 } })).toBe(false);
+    expect(roundIsComplete(roster, { p1: full, p2: full })).toBe(true);
+  });
+
+  it("is never complete with nobody playing", () => {
+    expect(roundIsComplete([], {})).toBe(false);
+  });
+});
+
+describe("finaleScenes", () => {
+  const roster = [
+    { id: "p1", name: "Mika" },
+    { id: "p2", name: "Ravi" },
+  ];
+  const full = { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2 };
+
+  it("counts down, reveals, then announces", () => {
+    const scenes = finaleScenes(roster, { p1: full, p2: { ...full, 5: 4 } }, "Mika's group");
+    expect(scenes.map((s) => s.kind)).toEqual(["countdown", "reveal", "winner"]);
+    expect(scenes.at(-1)?.headline).toBe("Mika wins");
+  });
+
+  it("gives a group with nothing logged no finale at all", () => {
+    expect(finaleScenes(roster, {}, "Mika's group")).toEqual([]);
+  });
+
+  it("holds the reveal long enough for every row to land", () => {
+    const scenes = finaleScenes(roster, { p1: full, p2: full }, "G");
+    const reveal = scenes.find((s) => s.kind === "reveal");
+    expect(reveal?.holdMs).toBe(revealMs(2));
+    expect(reveal?.holdMs).toBeGreaterThan(SCENE_MS.revealPerRow * 2);
   });
 });
 
@@ -186,14 +356,11 @@ describe("cheerContext", () => {
   });
 
   it("calls the last one last, and only when everyone else is in", () => {
-    const nearlyDone = cheerContext(ROSTER, stations({ p2: [2], p3: [2] }), "p1", 2);
-    expect(nearlyDone.lastThrough).toBe(true);
-    const halfway = cheerContext(ROSTER, stations({ p2: [2] }), "p1", 2);
-    expect(halfway.lastThrough).toBe(false);
+    expect(cheerContext(ROSTER, stations({ p2: [2], p3: [2] }), "p1", 2).lastThrough).toBe(true);
+    expect(cheerContext(ROSTER, stations({ p2: [2] }), "p1", 2).lastThrough).toBe(false);
   });
 
   it("never calls a solo player the last one through", () => {
-    // With nobody else on the card there's no group to hold up.
     const solo = [{ id: "p1", name: "Mika" }];
     expect(cheerContext(solo, stations({}), "p1", 2).lastThrough).toBe(false);
   });
@@ -279,30 +446,5 @@ describe("standingsScene headline", () => {
       fieldSize: 3,
     });
     expect(scene.headline).toBe("Mika, 4 strokes");
-  });
-});
-
-describe("detectionKey", () => {
-  it("separates the two gates of one visit", () => {
-    const row = { epc: "E1", detectedAt: "2026-10-10T09:00:00.000Z" };
-    expect(detectionKey({ ...row, role: "start" as const })).not.toBe(
-      detectionKey({ ...row, role: "end" as const })
-    );
-  });
-
-  it("is stable, so a read is never announced twice", () => {
-    const row = { epc: "E1", role: "start" as const, detectedAt: "2026-10-10T09:00:00.000Z" };
-    expect(detectionKey(row)).toBe(detectionKey({ ...row }));
-  });
-});
-
-describe("gateFromGameState", () => {
-  it("maps the field the backend is adding onto the same two gates", () => {
-    expect(gateFromGameState("playing_station_4")).toBe("start");
-    expect(gateFromGameState("completed")).toBe("end");
-  });
-
-  it("ignores a state it doesn't recognise rather than guessing", () => {
-    expect(gateFromGameState("idle")).toBeNull();
   });
 });

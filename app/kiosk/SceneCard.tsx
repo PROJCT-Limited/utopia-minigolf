@@ -1,6 +1,6 @@
 "use client";
 
-import { SCENE_MS, type Scene } from "@/lib/scoring/kioskScenes";
+import type { Scene } from "@/lib/scoring/kioskScenes";
 import { Eyebrow } from "./Eyebrow";
 import styles from "./kiosk.module.css";
 
@@ -20,13 +20,14 @@ export function SceneCard({ scene, onSkip }: { scene: Scene; onSkip: () => void 
       className={[
         styles.scene,
         scene.kind === "cheer" ? styles.sceneCheer : styles.sceneArrival,
+        styles.sceneFull,
         scene.tone === "big" ? styles.sceneBig : "",
       ]
         .filter(Boolean)
         .join(" ")}
       // The bar's fill is driven by the scene's own hold time, so the two can
       // never drift apart the way a hardcoded animation duration would.
-      style={{ "--scene-ms": `${SCENE_MS[scene.kind]}ms` } as React.CSSProperties}
+      style={{ "--scene-ms": `${scene.holdMs}ms` } as React.CSSProperties}
       onClick={onSkip}
       aria-live="polite"
     >

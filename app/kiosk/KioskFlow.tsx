@@ -6,8 +6,11 @@ import { STATION_NUMBERS } from "@/lib/scoring/stations";
 import {
   SCENE_MS,
   arrivalScene,
+  champions,
   cheerContext,
   cheerScene,
+  finaleScenes,
+  roundIsComplete,
   standings,
   standingsScene,
   stationsLeft,
@@ -22,6 +25,8 @@ import {
 } from "@/lib/scoring/scoringActions";
 import { useBallWatch, type BallEvent } from "./useBallWatch";
 import { SceneCard } from "./SceneCard";
+import { Countdown } from "./Countdown";
+import { RevealScene, WinnerScene } from "./FinaleScenes";
 import { Eyebrow } from "./Eyebrow";
 import { Scoreboard } from "./Scoreboard";
 import { DEMO_GROUP_ID, DEMO_ROSTER, demoDetection, demoScores } from "./demoFeed";
@@ -156,12 +161,20 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
   }, []);
 
   const sceneId = scene?.id ?? null;
+  const sceneHold = scene?.holdMs ?? 0;
   const sceneKind = scene?.kind ?? null;
+
+  // The fanfare belongs to the winner scene itself rather than to the save
+  // that triggered the finale — the countdown and the reveal happen in
+  // between, and a cheer landing three seconds early gives the result away.
   useEffect(() => {
-    if (!sceneId || !sceneKind) return;
-    const timer = window.setTimeout(advance, SCENE_MS[sceneKind]);
+    if (sceneKind === "winner") playCueSound("fanfare");
+  }, [sceneId, sceneKind]);
+  useEffect(() => {
+    if (!sceneId) return;
+    const timer = window.setTimeout(advance, sceneHold);
     return () => window.clearTimeout(timer);
-  }, [sceneId, sceneKind, advance]);
+  }, [sceneId, sceneHold, advance]);
 
   // ---------------------------------------------------------------------
   // Group + roster
@@ -255,8 +268,21 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
     setMode("rest");
     setTarget(null);
     playCueSound("logged");
-    // Straight back to the card, with their number on it — the last beat of
-    // the loop, and the same scene the arrival beat ends on.
+
+    const nextScores = {
+      ...live.current.scoresByPlayer,
+      [player.id]: { ...live.current.scoresByPlayer[player.id], [target.station]: saved },
+    };
+
+    // Was that the last score in the round? Then the screen stops being a
+    // scoreboard and becomes an announcement.
+    if (roundIsComplete(roster, nextScores)) {
+      setQueue(finaleScenes(roster, nextScores, group.displayName));
+      return;
+    }
+
+    // Otherwise: straight back to the scoreboard with their number on it —
+    // the last beat of the loop, and the same scene the arrival beat ends on.
     push(
       standingsScene({
         stationNumber: target.station,
@@ -342,10 +368,31 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
       await sleep(600);
     }
 
-    const [mika, ravi] = DEMO_ROSTER as RosterPlayer[];
+    /** Jo checked in without a ball, so Jo goes on by hand — which is also
+     *  the path that has to keep working when a gate misses. */
+    async function playByHand(player: RosterPlayer, strokes: number) {
+      setStationChoice(player.id);
+      await sleep(1300);
+      setStationChoice(null);
+      setTarget({ playerId: player.id, station: 3 });
+      setPendingStrokes(0);
+      setMode("strokes");
+      await sleep(1100);
+      setPendingStrokes(strokes);
+      await sleep(1500);
+      await saveRef.current();
+    }
+
+    const [mika, ravi, jo] = DEMO_ROSTER as RosterPlayer[];
     await playThrough(mika, 3);
     if (!run.cancelled) await playThrough(ravi, 5);
-    if (!run.cancelled) setDemoPlaying(false);
+    // Jo's is the last score in the round, so this is what triggers the
+    // countdown and the reveal.
+    if (!run.cancelled) await playByHand(jo, 2);
+    if (!run.cancelled) {
+      await until(() => live.current.queued === 0, 40_000);
+      setDemoPlaying(false);
+    }
   }
 
   function stopDemo() {
@@ -368,7 +415,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
 
   // ---------------------------------------------------------------------
   return (
-    <div className={styles.stage} onPointerDown={unlockCueSounds}>
+    <div className={`${styles.stage} ${isDemo ? styles.stageDemo : ""}`} onPointerDown={unlockCueSounds}>
       <header className={styles.bar}>
         <span className={styles.barBrand}>
           FOUND
@@ -446,7 +493,34 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
 
       {group && !rosterNames && (
         <>
-          {scene && scene.kind !== "standings" && <SceneCard scene={scene} onSkip={advance} />}
+          {scene && (scene.kind === "arrival" || scene.kind === "cheer") && (
+            <SceneCard scene={scene} onSkip={advance} />
+          )}
+
+          {scene?.kind === "countdown" && (
+            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+              <Eyebrow parts={scene.eyebrow} />
+              <Countdown />
+              <span className={styles.sceneSupport}>{scene.support}</span>
+            </section>
+          )}
+
+          {scene?.kind === "reveal" && (
+            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+              <RevealScene scene={scene} rows={rows} />
+            </section>
+          )}
+
+          {scene?.kind === "winner" && (
+            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+              <WinnerScene
+                scene={scene}
+                winners={champions(rows)}
+                roster={roster}
+                scoresByPlayer={scoresByPlayer}
+              />
+            </section>
+          )}
 
           {scene?.kind === "standings" && (
             <section
@@ -519,7 +593,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
                 ]}
               />
               <h1 className={styles.boardHeadline}>Scoreboard</h1>
-              <p className={styles.boardSupport}>Roll a ball past a gate and this screen will call it.</p>
+              <p className={styles.boardSupport}>Roll a ball past a gate, or tap a name to score by hand.</p>
               <Scoreboard
                 rows={rows}
                 stationNumber={stationNumber}
