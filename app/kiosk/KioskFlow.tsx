@@ -488,7 +488,10 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
           )}
 
           {scene?.kind === "countdown" && (
-            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+            <section
+              className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig} ${styles.sceneCentred}`}
+              onClick={advance}
+            >
               <Eyebrow parts={scene.eyebrow} />
               <Countdown />
               <span className={styles.sceneSupport}>{scene.support}</span>
@@ -496,13 +499,19 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
           )}
 
           {scene?.kind === "reveal" && (
-            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+            <section
+              className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig} ${styles.sceneCentred}`}
+              onClick={advance}
+            >
               <RevealScene scene={scene} rows={rows} />
             </section>
           )}
 
           {scene?.kind === "winner" && (
-            <section className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig}`} onClick={advance}>
+            <section
+              className={`${styles.scene} ${styles.sceneFull} ${styles.sceneBig} ${styles.sceneCentred}`}
+              onClick={advance}
+            >
               <WinnerScene
                 scene={scene}
                 winners={champions(rows)}

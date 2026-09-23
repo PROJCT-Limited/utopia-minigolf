@@ -77,6 +77,19 @@
   cursor: pointer;
   animation: sceneIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 1;
 }
+/* The finale is centred where the rest of the loop is left-aligned. The
+   in-play beats are editorial — a name, a line, read at a glance on the way
+   past. The countdown, the results and the winner are a title card: everyone
+   in the group is standing still looking at them, and a centred block is
+   what that moment wants. */
+.sceneCentred {
+  align-items: center;
+  text-align: center;
+}
+.sceneCentred .eyebrow {
+  justify-content: center;
+}
+
 /* A scene owns the screen while it plays: no chrome, nothing else to look
    at. It's the difference between a page that updates and a thing that
    happens. */
@@ -681,6 +694,7 @@
 }
 .finaleHeadline {
   font-size: clamp(34px, 3.488vw + 11.7px, 64px);
+  margin-bottom: clamp(14px, 2vw, 26px);
 }
 .winnerHeadline {
   font-size: clamp(54px, 10vw, 140px);
@@ -693,18 +707,31 @@
   color: var(--f-stone);
   margin-bottom: clamp(24px, 3.4vw, 48px);
 }
+.sceneCentred .winnerSupport,
+.sceneCentred .finaleHeadline,
+.sceneCentred .winnerHeadline {
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* ---------- the reveal ---------- */
 .revealList {
   width: 100%;
   max-width: 900px;
+  /* Centred as a block, but the columns inside keep their own alignment —
+     centring the figures too would leave the totals ragged, which is the one
+     column people are reading down. */
+  margin: 0 auto;
+  text-align: left;
 }
 .revealRow {
   display: grid;
-  grid-template-columns: 90px 1fr auto;
+  grid-template-columns: 72px 1fr auto;
   align-items: baseline;
   gap: 20px;
-  padding: clamp(12px, 1.6vw, 20px) 0;
+  /* Sized so a full group of five fits between the headline and the bottom
+     of a landscape tablet without the last row sliding off. */
+  padding: clamp(8px, 1.1vw, 15px) 0;
   border-bottom: 1px solid rgba(247, 247, 247, 0.16);
   /* Each row waits its turn — the delay is set per row in FinaleScenes.tsx,
      counting from the bottom of the table up, so the winner lands last. */
@@ -729,20 +756,20 @@
 }
 .revealPlace {
   font-family: var(--f-mono);
-  font-size: clamp(20px, 2.4vw, 34px);
+  font-size: clamp(18px, 2vw, 28px);
   color: var(--f-stone);
 }
 .revealName {
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(30px, 4.4vw, 68px);
+  font-size: clamp(26px, 3.4vw, 52px);
   line-height: 1.02;
   letter-spacing: -0.03em;
   color: var(--f-white);
 }
 .revealTotal {
   font-family: var(--f-mono);
-  font-size: clamp(24px, 3vw, 44px);
+  font-size: clamp(22px, 2.6vw, 40px);
   color: var(--f-white);
 }
 
@@ -753,6 +780,7 @@
 .statRow {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: clamp(28px, 5vw, 72px);
   border-top: 1px solid rgba(247, 247, 247, 0.22);
   padding-top: clamp(18px, 2.4vw, 30px);
@@ -760,6 +788,7 @@
 .stat {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 .statValue {
