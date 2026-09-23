@@ -7,6 +7,10 @@
 export const STATION_NUMBERS = [1, 2, 3, 4, 5] as const;
 export type StationNumber = (typeof STATION_NUMBERS)[number];
 
+/** Five. Derived rather than written twice — KioskFlow used to keep its own
+ *  copy of this constant. */
+export const STATION_COUNT = STATION_NUMBERS.length;
+
 export function stationLabel(stationNumber: number): string {
   return `Station ${stationNumber}`;
 }
