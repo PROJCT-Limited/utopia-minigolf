@@ -101,6 +101,24 @@ function ensureContext(): AudioContext | null {
   }
 }
 
+/**
+ * Safari's rule is stricter than Chrome's: resuming a context inside a
+ * gesture isn't always enough — something has to actually be *played* during
+ * that gesture before the context is considered unlocked. One sample of
+ * silence satisfies it, costs nothing, and is inaudible everywhere else.
+ */
+function playSilence(ctx: AudioContext): void {
+  try {
+    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  } catch {
+    /* nothing to do — the real cue will try again on its own */
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Whether audio can play at all
 // ---------------------------------------------------------------------------
@@ -136,13 +154,21 @@ export function audioReadyServerSnapshot(): boolean {
 export function unlockCueSounds(): void {
   const ctx = ensureContext();
   if (!ctx) return;
+
+  // Both halves, every time, because which one matters depends on the
+  // browser: Chrome wants the resume, Safari wants something played.
+  playSilence(ctx);
+
   if (ctx.state === "running") {
     announceReady();
     return;
   }
   void ctx
     .resume()
-    .then(announceReady)
+    .then(() => {
+      playSilence(ctx);
+      announceReady();
+    })
     .catch(() => {
       /* still no gesture the browser is willing to count */
     });
@@ -155,14 +181,38 @@ export function unlockCueSounds(): void {
  */
 export function installUnlockListeners(): () => void {
   if (typeof window === "undefined") return () => {};
-  const events: (keyof DocumentEventMap)[] = ["pointerdown", "touchstart", "keydown", "click"];
+  // Every kind of first contact a kiosk can get. `pointerup` as well as
+  // `pointerdown`: Safari counts the end of a tap, not the start.
+  const events: (keyof DocumentEventMap)[] = [
+    "pointerdown",
+    "pointerup",
+    "touchstart",
+    "touchend",
+    "keydown",
+    "click",
+  ];
   const onAny = () => unlockCueSounds();
   for (const name of events) document.addEventListener(name, onAny, { passive: true });
-  unlockCueSounds(); // some contexts start running already; no reason to wait
+
+  // Nothing is created before the first gesture on purpose. A context built
+  // at page load starts suspended, and on some browsers stays that way no
+  // matter what happens afterwards — building it inside the gesture avoids
+  // the whole question.
 
   return () => {
     for (const name of events) document.removeEventListener(name, onAny);
   };
+}
+
+/** Plays a cue and reports what happened, for checking the tablet's own
+ *  speakers without waiting for a ball to cross a gate. */
+export function testCueSound(): string {
+  const ctx = ensureContext();
+  if (!ctx) return "This browser has no Web Audio at all.";
+  playCueSound("cheer");
+  return ctx.state === "running"
+    ? "Played — if you heard nothing, it's the volume or the output device."
+    : `Audio is ${ctx.state}. Tap the screen once, then try again.`;
 }
 
 export function playCueSound(kind: CueSound): void {

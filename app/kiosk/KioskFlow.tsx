@@ -36,6 +36,7 @@ import {
   installUnlockListeners,
   playCueSound,
   subscribeAudioReady,
+  testCueSound,
   unlockCueSounds,
 } from "./cueSounds";
 import styles from "./kiosk.module.css";
@@ -73,6 +74,7 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
   // Falling back to station 1 made the resting card quietly show the wrong
   // column for a group that started anywhere else.
   const [lastStation, setLastStation] = useState<number | null>(null);
+  const [soundCheck, setSoundCheck] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Sound is always on. This is only whether the browser has let it start
   // yet — it needs one gesture on the page, which a mounted tablet might not
@@ -646,6 +648,17 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
       {isDemo && (
         <footer className={styles.demoBar}>
           <span className={styles.demoChip}>demo — nothing is saved</span>
+          <button
+            type="button"
+            className={styles.demoBtn}
+            onClick={() => {
+              unlockCueSounds();
+              setSoundCheck(testCueSound());
+            }}
+          >
+            ♪ test sound
+          </button>
+          {soundCheck && <span className={styles.demoHint}>{soundCheck}</span>}
           <button
             type="button"
             className={styles.demoPlay}
