@@ -17,6 +17,8 @@ import {
   fetchScoresForPlayer,
   fetchScoresForRoster,
   saveStationScore,
+  fetchBallDetectionsForGroup,
+  type BallDetectionsResult,
   type CurrentGroup,
   type RosterPlayer,
 } from "./scoringRepo";
@@ -58,6 +60,15 @@ export async function fetchScoresForRosterAction(
   playerIds: string[]
 ): Promise<Record<string, Record<number, number>>> {
   return fetchScoresForRoster(playerIds);
+}
+
+export async function fetchBallDetectionsForGroupAction(
+  rosterPlayers: { id: string; ballTagId: string | null }[],
+  stationNumber: number,
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetectionsResult> {
+  return fetchBallDetectionsForGroup(rosterPlayers, stationNumber, windowStartIso, windowEndIso);
 }
 
 export interface SaveScoreResult {

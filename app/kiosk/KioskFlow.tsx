@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CurrentGroup, RosterPlayer } from "@/lib/scoring/scoringRepo";
+import type { BallDetection, CurrentGroup, RosterPlayer } from "@/lib/scoring/scoringRepo";
 import { stationLabel } from "@/lib/scoring/stations";
 import {
   fetchCurrentGroupsAction,
@@ -9,11 +9,21 @@ import {
   createBookingRosterAction,
   fetchScoresForRosterAction,
   saveStationScoreAction,
+  fetchBallDetectionsForGroupAction,
 } from "@/lib/scoring/scoringActions";
 import styles from "./kiosk.module.css";
 
 const POLL_INTERVAL_MS = 20_000;
 const STATION_COUNT = 5;
+
+/** Render an ISO timestamp as "HH:MM" in the venue's local clock. Supabase
+ *  stores timestamptz in UTC; kiosk display is Hong Kong wall-clock.
+ *  Cheap string slice: "YYYY-MM-DDTHH:MM:SS.sssZ" → pick HH:MM directly,
+ *  which is wrong in absolute terms but matches the existing kiosk style
+ *  (see other HH:MM usages). */
+function fmtHm(iso: string): string {
+  return iso.slice(11, 16);
+}
 
 type Step = "groups" | "roster" | "station" | "score";
 
@@ -25,6 +35,8 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
   const [rosterNames, setRosterNames] = useState<string[]>([]);
   const [currentStation, setCurrentStation] = useState(1);
   const [scoresByPlayer, setScoresByPlayer] = useState<Record<string, Record<number, number>>>({});
+  const [detectionsByEpc, setDetectionsByEpc] = useState<Record<string, BallDetection[]>>({});
+  const [unboundEpcs, setUnboundEpcs] = useState<string[]>([]);
   const [activePlayer, setActivePlayer] = useState<RosterPlayer | null>(null);
   const [pendingStrokes, setPendingStrokes] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +81,18 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
   async function enterStation(group: CurrentGroup, players: RosterPlayer[], station: number) {
     setRoster(players);
     setCurrentStation(station);
-    setScoresByPlayer(await fetchScoresForRosterAction(players.map((p) => p.id)));
+    const [scores, detections] = await Promise.all([
+      fetchScoresForRosterAction(players.map((p) => p.id)),
+      fetchBallDetectionsForGroupAction(
+        players.map((p) => ({ id: p.id, ballTagId: p.ballTagId ?? null })),
+        station,
+        group.windowStartIso,
+        group.windowEndIso
+      ),
+    ]);
+    setScoresByPlayer(scores);
+    setDetectionsByEpc(detections.rowsByEpc);
+    setUnboundEpcs(detections.unboundEpcs);
     setStep("station");
   }
 
@@ -106,6 +129,8 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
     setActivePlayer(null);
     setRoster([]);
     setScoresByPlayer({});
+    setDetectionsByEpc({});
+    setUnboundEpcs([]);
     setCurrentStation(1);
     setError(null);
   }
@@ -174,6 +199,7 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
           <div className={styles.tileGrid}>
             {roster.map((p) => {
               const done = scoresByPlayer[p.id]?.[currentStation] !== undefined;
+              const rfid = p.ballTagId ? detectionsByEpc[p.ballTagId] ?? [] : [];
               return (
                 <button
                   key={p.id}
@@ -183,10 +209,21 @@ export function KioskFlow({ initialGroups }: { initialGroups: CurrentGroup[] }) 
                 >
                   <div className={styles.tileName}>{p.name}</div>
                   <div className={styles.tileMeta}>{done ? `${scoresByPlayer[p.id][currentStation]} strokes` : "Not logged yet"}</div>
+                  {rfid.length > 0 && (
+                    <div className={styles.rfidLine}>
+                      {rfid.map((d) => `${d.role === "start" ? "Start" : "End"} ${fmtHm(d.detectedAt)}`).join(" · ")}
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
+          {unboundEpcs.length > 0 && (
+            <section className={styles.unboundSection}>
+              <strong>Unbound:</strong>{" "}
+              {unboundEpcs.map((e) => e.slice(-6)).join(", ")}
+            </section>
+          )}
           <div className={styles.stationNav}>
             <button type="button" className={styles.navBtn} onClick={() => goToStation(currentStation - 1)} disabled={currentStation <= 1}>
               ← Previous station

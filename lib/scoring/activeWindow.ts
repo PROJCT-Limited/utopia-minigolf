@@ -36,6 +36,22 @@ export function isCurrentlyActive(
   return now >= windowStart && now <= windowEnd;
 }
 
+/** Sibling of isCurrentlyActive — returns the actual start/end instants so
+ *  callers (e.g. the kiosk RFID feed) can scope Supabase queries to this
+ *  wave's window without re-deriving the constants. */
+export function waveActiveWindow(
+  date: string,
+  startTime: string,
+  ticketType: TicketType
+): { start: Date; end: Date } {
+  const start = waveStartInstant(date, startTime);
+  const durationMs = ROUND_DURATION_MINUTES[ticketType] * 60_000;
+  return {
+    start: new Date(start.getTime() - CHECK_IN_BUFFER_MINUTES * 60_000),
+    end: new Date(start.getTime() + durationMs + WRAP_UP_BUFFER_MINUTES * 60_000),
+  };
+}
+
 /** "YYYY-MM-DD" for the current date at the venue (Hong Kong, UTC+8). */
 export function todayInHongKong(now: Date = new Date()): string {
   const hkMs = now.getTime() + 8 * 60 * 60_000;

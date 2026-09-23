@@ -140,6 +140,34 @@
   color: var(--f-white);
   opacity: 0.75;
 }
+/* RFID arrivals observed at this station's antennas for the player's ball.
+   Smaller and greyer than tileMeta — informational, not the primary content
+   of the tile (which is the stroke count or "not logged yet"). */
+.rfidLine {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--f-grey);
+  margin-top: 4px;
+}
+.tileDone .rfidLine {
+  color: var(--f-white);
+  opacity: 0.6;
+}
+
+/* EPCs seen at this station in this window that aren't linked to any
+   roster player — surfaced as a single panel below the tile grid so staff
+   can spot balls that weren't checked out. Tinted with the system's
+   stone tone (no green / red — the palette doesn't have them). */
+.unboundSection {
+  margin-top: 24px;
+  padding: 14px 18px;
+  border: 1px solid var(--f-ink);
+  background: var(--f-stone);
+  font-size: 14px;
+  font-family: var(--f-mono);
+  letter-spacing: 0.04em;
+}
 
 /* ---------- player-name entry ---------- */
 .nameList {
