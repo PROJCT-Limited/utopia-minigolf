@@ -158,6 +158,31 @@
   height: 10px;
   background: var(--f-cue-start);
 }
+/* A name gets the biggest type anywhere in FOUND — bigger than the homepage
+   hero — because it's one word, read from across a station, by someone who
+   wasn't looking at the screen a second ago. The size is picked from the
+   name's length in SceneCard so that a long one still lands on one line:
+   "Konstantinos" at the size that suits "Jo" would wrap and lose exactly the
+   impact it was reaching for. */
+.nameshort .sceneHeadline {
+  font-size: clamp(96px, 21vw, 300px);
+}
+.namemedium .sceneHeadline {
+  font-size: clamp(72px, 13vw, 190px);
+}
+.namelong .sceneHeadline {
+  font-size: clamp(56px, 9vw, 130px);
+}
+.nameshort .sceneHeadline::before,
+.namemedium .sceneHeadline::before {
+  width: 200px;
+  height: 14px;
+}
+/* The line under the name comes up with it. */
+.sceneArrival .sceneSupport {
+  font-size: clamp(22px, 2.6vw, 40px);
+  color: var(--f-ink);
+}
 /* A ball is in: the pre-booking band, full screen. */
 .sceneCheer {
   background: var(--f-cue-start);

@@ -343,7 +343,10 @@ export function standingsScene({
     playerId,
     eyebrow: [groupName, `Station ${stationNumber}`],
     headline,
-    support: scored ? "On the scoreboard." : "How the group stands.",
+    // Nothing under the headline when it's just the board: the table says
+    // what it is, and a line telling people they're looking at standings is
+    // words for the sake of words.
+    support: scored ? "On the scoreboard." : "",
     then: "rest",
     tone: "normal",
     holdMs: SCENE_MS.standings,

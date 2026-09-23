@@ -592,7 +592,9 @@ export function KioskFlow({ initialGroups, demo = false }: { initialGroups: Curr
                 ]}
               />
               <h1 className={styles.boardHeadline}>Scoreboard</h1>
-              <p className={styles.boardSupport}>Roll a ball past a gate, or tap a name to score by hand.</p>
+              <p className={styles.boardSupport}>
+                Finish a station and your name comes up here. Or tap a name to add a score.
+              </p>
               <Scoreboard
                 rows={rows}
                 stationNumber={stationNumber}

@@ -5,6 +5,21 @@ import { Eyebrow } from "./Eyebrow";
 import styles from "./kiosk.module.css";
 
 /**
+ * How big a name can be set before it stops fitting on one line.
+ *
+ * The arrival scene is usually one short first name, and it should be the
+ * loudest thing the screen ever shows — but "Christopher" at the size that
+ * suits "Jo" would wrap into two lines and lose the impact it was reaching
+ * for. Three buckets, picked from the length, so a short name gets the full
+ * treatment and a long one still lands on one line.
+ */
+function sizeBucket(headline: string): "short" | "medium" | "long" {
+  if (headline.length <= 6) return "short";
+  if (headline.length <= 11) return "medium";
+  return "long";
+}
+
+/**
  * A scene, full bleed: one line to read, at the size you can read it from
  * across a station. The arrival and cheer beats both use this — same frame,
  * different accent — because to the player they're the same kind of moment:
@@ -21,6 +36,7 @@ export function SceneCard({ scene, onSkip }: { scene: Scene; onSkip: () => void 
         styles.scene,
         scene.kind === "cheer" ? styles.sceneCheer : styles.sceneArrival,
         styles.sceneFull,
+        scene.kind === "arrival" ? styles[`name${sizeBucket(scene.headline)}`] : "",
         scene.tone === "big" ? styles.sceneBig : "",
       ]
         .filter(Boolean)

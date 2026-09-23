@@ -448,3 +448,17 @@ describe("standingsScene headline", () => {
     expect(scene.headline).toBe("Mika, 4 strokes");
   });
 });
+
+describe("standings support line", () => {
+  it("says nothing when it's just the board", () => {
+    const scene = standingsScene({
+      stationNumber: 3,
+      playerId: "p1",
+      playerName: "Mika",
+      groupName: "Mika's group",
+      place: 2,
+      fieldSize: 3,
+    });
+    expect(scene.support).toBe("");
+  });
+});
