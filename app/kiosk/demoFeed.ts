@@ -14,11 +14,15 @@
 // written to the database, and no score is ever entered on a player's
 // behalf.
 //
-// Reached with /kiosk?demo=1. It changes nothing when the flag is absent.
+// Reached with /kiosk?demo=1, which also unlocks "Play the whole thing" —
+// the full loop (arrival, card, cheer, stroke count, card again) for two
+// players, at the speed a player lives it.
+//
+// It changes nothing when the flag is absent.
 // -----------------------------------------------------------------------------
 
 import type { BallDetection } from "@/lib/scoring/scoringRepo";
-import type { RosterEntry } from "@/lib/scoring/ballFeedback";
+import type { RosterEntry } from "@/lib/scoring/kioskScenes";
 
 export const DEMO_QUERY_FLAG = "demo";
 

@@ -18,6 +18,8 @@ import {
   fetchScoresForRoster,
   saveStationScore,
   fetchBallDetectionsForGroup,
+  fetchDetectionsInWindow,
+  type BallDetection,
   type BallDetectionsResult,
   type CurrentGroup,
   type RosterPlayer,
@@ -69,6 +71,15 @@ export async function fetchBallDetectionsForGroupAction(
   windowEndIso: string
 ): Promise<BallDetectionsResult> {
   return fetchBallDetectionsForGroup(rosterPlayers, stationNumber, windowStartIso, windowEndIso);
+}
+
+/** Every gate read in this wave's window, any station — the kiosk follows
+ *  the ball with this rather than being parked on one station. */
+export async function fetchDetectionsInWindowAction(
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetection[]> {
+  return fetchDetectionsInWindow(windowStartIso, windowEndIso);
 }
 
 export interface SaveScoreResult {

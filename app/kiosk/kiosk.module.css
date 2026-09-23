@@ -1,779 +1,594 @@
 /* =============================================================================
-   FOUND — scoring kiosk (app/kiosk/).
+   FOUND — the scoring screen (app/kiosk/).
 
-   Same design system as the rest of the site (the --f-* tokens in
-   app/globals.css) and the same tablet scale as the door check-in screen
-   (app/checkin/checkin.module.css): paper ground, ink rules, Archivo for
-   anything a person reads, Input Mono for labels and numbers.
+   This is a screen in a room, not a page in a browser. It's read standing up,
+   from two metres, by someone holding a putter, with four other people
+   talking. So: one thing at a time, full bleed, dark ground, type at a size
+   that survives the distance — and an interface that spends most of its life
+   playing rather than waiting to be operated.
 
-   This one is handled by guests, not staff — mid-round, standing at a
-   station, often holding a putter — so the targets are bigger again than the
-   door's, and a tap is never smaller than a whole ruled row.
+   Dark, where the rest of the site is paper: a display in a dim venue that
+   holds the room's attention, the same way the homepage's own ink sections
+   do. The palette is unchanged — ink ground, acid yellow for the moment the
+   floor notices you, safety orange for the moment that's worth a cheer, green
+   marble reserved for the end of a round.
 
-   State is carried by ink, not colour: an outlined tile is waiting, a filled
-   one is done. The palette has no green to spend on "complete", and a paper
-   screen full of black rules reads faster in a dim room than one full of
-   badges.
+   Landscape on a mounted tablet is the design target; portrait stacks.
    ============================================================================= */
 
-.page {
+.stage {
   min-height: 100vh;
-  background: var(--f-paper);
-  color: var(--f-ink);
+  background: var(--f-ink);
+  color: var(--f-white);
   font-family: var(--f-archivo);
   display: flex;
-  justify-content: center;
-  padding: 24px;
+  flex-direction: column;
+  padding: 20px clamp(20px, 3vw, 44px) 24px;
+  overflow: hidden;
 }
 
-.panel {
-  width: 100%;
-  /* Wide enough for the station screen's two columns on an 11" iPad in
-     landscape (1180pt), which is the orientation this kiosk is mounted in. */
-  max-width: 1180px;
-  padding-bottom: 64px;
-}
-
-/* ---------- top bar ---------- */
-.topBar {
+/* ---------- the one persistent strip ---------- */
+/* Everything that isn't the moment lives here, small, at the top: who the
+   card belongs to, whether the antennas are alive, and the sound toggle. */
+.bar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--f-ink);
-  margin-bottom: 28px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(247, 247, 247, 0.18);
+  flex-shrink: 0;
 }
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
+.barBrand,
+.barGroup {
   font-family: var(--f-mono);
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
-/* Sound can be silenced from the tablet: this is a bar with music in it, and
-   an 8-hour shift of chimes is a thing staff need a way out of. */
-.muteBtn {
-  background: none;
-  border: 1px solid var(--f-ink);
-  padding: 8px 14px;
-  min-height: 44px;
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--f-ink);
-  cursor: pointer;
+.barBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.barGroup {
+  color: var(--f-stone);
+}
+.barRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .demoChip {
   font-family: var(--f-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   background: var(--f-cue-start);
   color: var(--f-ink);
+  padding: 3px 7px;
+}
+.feedDown {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+  background: var(--f-cue-end);
   padding: 4px 8px;
 }
-.backLink {
-  display: inline-block;
-  background: none;
-  border: none;
-  padding: 12px 0;
+.muteBtn {
   min-height: 44px;
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--f-ink);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-  margin-bottom: 12px;
-}
-
-/* ---------- type ---------- */
-.heading {
-  font-family: var(--f-archivo);
-  font-weight: 500;
-  font-size: clamp(34px, 5vw, 50px);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-  margin-bottom: 14px;
-}
-.hint {
-  font-size: 17px;
-  line-height: 1.6;
-  color: var(--f-grey);
-  margin-bottom: 32px;
-  max-width: 46ch;
-}
-.stationProgress {
-  display: block;
+  padding: 8px 14px;
+  background: none;
+  border: 1px solid rgba(247, 247, 247, 0.35);
+  color: var(--f-white);
   font-family: var(--f-mono);
   font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--f-grey);
-  margin-bottom: 8px;
-}
-.error {
-  font-size: 16px;
-  color: #b23b2f;
-  margin-top: 16px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
 }
 
-/* ---------- group / player tiles ---------- */
-.tileGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-}
-.tile {
-  border: 1px solid var(--f-ink);
-  background: transparent;
-  color: var(--f-ink);
-  padding: 24px 22px;
-  min-height: 132px;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
+/* ---------- scenes ---------- */
+.scene {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
-  transition: background 0.12s, color 0.12s;
-}
-.tile:active {
-  background: var(--f-ink);
-  color: var(--f-white);
-}
-.tileTime {
-  font-family: var(--f-mono);
-  font-size: 20px;
-  letter-spacing: 0.04em;
-}
-.tileName {
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-.tileMeta {
-  font-size: 15px;
-  color: var(--f-grey);
-}
-/* Logged. Filled rather than tinted — the one state that has to be legible
-   from a step back, without introducing a colour the system doesn't have. */
-.tileDone {
-  background: var(--f-ink);
-  color: var(--f-white);
-}
-.tileDone .tileMeta,
-.tileDone .tileTime {
-  color: var(--f-white);
-  opacity: 0.75;
-}
-/* RFID arrivals observed at this station's antennas for the player's ball.
-   Smaller and greyer than tileMeta — informational, not the primary content
-   of the tile (which is the stroke count or "not logged yet"). */
-.rfidLine {
-  font-family: var(--f-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--f-grey);
-  margin-top: 4px;
-}
-.tileDone .rfidLine {
-  color: var(--f-white);
-  opacity: 0.6;
-}
-
-/* EPCs seen at this station in this window that aren't linked to any
-   roster player — surfaced as a single panel below the tile grid so staff
-   can spot balls that weren't checked out. Tinted with the system's
-   stone tone (no green / red — the palette doesn't have them). */
-.unboundSection {
-  margin-top: 24px;
-  padding: 14px 18px;
-  border: 1px solid var(--f-ink);
-  background: var(--f-stone);
-  font-size: 14px;
-  font-family: var(--f-mono);
-  letter-spacing: 0.04em;
-}
-
-/* ---------- player-name entry ---------- */
-.nameList {
-  margin-bottom: 12px;
-}
-.nameInput {
-  display: block;
+  align-items: flex-start;
+  gap: 4px;
   width: 100%;
-  min-height: 64px;
-  border: none;
-  border-bottom: 1px solid var(--f-ink);
-  border-radius: 0;
-  background: transparent;
-  padding: 18px 0;
-  font-family: var(--f-archivo);
-  font-size: 22px;
-  color: var(--f-ink);
-  -webkit-appearance: none;
-}
-.nameInput::placeholder {
-  color: var(--f-stone);
-}
-.nameInput:focus {
-  outline: none;
-  border-bottom-width: 2px;
-}
-
-/* ---------- station nav ---------- */
-.stationNav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-top: 36px;
-}
-.navBtn {
-  background: none;
-  border: none;
-  padding: 12px 0;
-  min-height: 44px;
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--f-ink);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-.navBtn:disabled {
-  opacity: 0.35;
-  cursor: default;
-  text-decoration: none;
-}
-.stationNav .primaryBtn {
-  flex: 1;
-  min-width: 220px;
-  margin-top: 0;
-}
-
-/* ---------- stroke entry ---------- */
-.bigStepper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  margin: 48px 0;
-}
-.bigStepper button {
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  border: 1px solid var(--f-ink);
-  background: transparent;
-  color: var(--f-ink);
-  font-family: var(--f-archivo);
-  font-size: 40px;
-  line-height: 1;
-  cursor: pointer;
-}
-.bigStepper button:active:not(:disabled) {
-  background: var(--f-ink);
-  color: var(--f-white);
-}
-.bigStepper button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-.bigStepperValue {
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 72px;
-  letter-spacing: -0.03em;
-  min-width: 100px;
-  text-align: center;
-}
-
-/* ---------- buttons ---------- */
-.primaryBtn {
-  display: block;
-  width: 100%;
-  min-height: 68px;
-  margin-top: 28px;
-  padding: 20px 28px;
-  border: none;
-  border-radius: 100px;
-  background: var(--f-ink);
-  color: var(--f-white);
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 18px;
-  cursor: pointer;
-}
-.primaryBtn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-@media (min-width: 820px) {
-  .page {
-    padding: 40px;
-  }
-}
-
-@media (max-width: 560px) {
-  .tileGrid {
-    grid-template-columns: 1fr;
-  }
-  .bigStepper {
-    gap: 24px;
-  }
-  .bigStepper button {
-    width: 84px;
-    height: 84px;
-    font-size: 34px;
-  }
-}
-
-/* =============================================================================
-   RFID VISUAL FEEDBACK
-   -----------------------------------------------------------------------------
-   One gesture, two directions. A ball arriving at a station sweeps acid
-   yellow left-to-right across the identity card; a ball finishing one sweeps
-   safety orange right-to-left across the banner. Start and end read as the
-   two ends of the same movement across the station rather than as two
-   unrelated effects — and the end of a whole round swaps the orange for the
-   deeper green marble, so it lands as an ending and not as another station.
-
-   Ambient detection feedback (any read, either gate, bound ball or not) is
-   deliberately quieter: a ring on the player's tile and a flash on the
-   station strip, both gone in under three seconds, with nothing to dismiss.
-
-   Nothing in here submits anything. Strokes are typed by the player, always.
-   ============================================================================= */
-
-/* ---------- landscape station screen ---------- */
-.stationLayout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-}
-.stationMain {
-  min-width: 0;
-}
-
-/* ---------- Feature 1/2: the finish banner ---------- */
-.banner {
   position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 0 0 24px;
-  padding: 20px 24px;
-  background: var(--f-cue-end);
-  color: var(--f-ink);
-  border: 1px solid var(--f-ink);
-}
-.bannerRound {
-  background: var(--f-cue-round);
-  color: var(--f-white);
-}
-.bannerSweep {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(247, 247, 247, 0.55) 50%, transparent 100%);
-  /* Right-to-left: the mirror of the arrival card's sweep. */
-  animation: sweepFromRight 0.6s ease-out 1;
-  pointer-events: none;
-}
-@keyframes sweepFromRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(-100%);
-  }
-}
-.bannerText {
-  flex: 1;
-  min-width: 0;
-}
-.bannerTitle {
-  display: block;
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: clamp(22px, 2.6vw, 30px);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-.bannerSub {
-  display: block;
-  font-family: var(--f-mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-top: 6px;
-}
-.bannerAct {
-  flex-shrink: 0;
-  min-height: 56px;
-  padding: 16px 24px;
+  padding: clamp(24px, 4vw, 56px) 0;
   border: none;
-  border-radius: 100px;
-  background: var(--f-ink);
-  color: var(--f-white);
-  font-family: var(--f-archivo);
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-}
-.bannerRound .bannerAct {
-  background: var(--f-white);
-  color: var(--f-ink);
-}
-.bannerClose {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
   background: none;
-  border: none;
-  font-size: 18px;
   color: inherit;
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-/* ---------- Feature 4/5: the arrival identity card ---------- */
-/* Sits over the tile grid rather than beside it: the one thing the player
-   should read on approach is who the kiosk thinks has arrived. */
-.arrivalCard {
-  position: relative;
-  overflow: hidden;
-  display: block;
-  width: 100%;
-  margin: 0 0 24px;
-  padding: 36px 32px;
-  text-align: left;
-  background: var(--f-cue-start);
-  color: var(--f-ink);
-  border: 1px solid var(--f-ink);
   font-family: inherit;
+  text-align: left;
   cursor: pointer;
-  animation: cardIn 0.28s ease-out 1;
+  animation: sceneIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 1;
 }
-/* Transform only, never opacity. An entrance that starts from opacity 0 is
-   invisible for as long as the animation fails to run — a throttled tab, a
-   compositor that isn't advancing, a browser that ignores the keyframes —
-   and the one thing this card exists to do is tell a group the kiosk has
-   seen them. It may arrive without its slide; it may not arrive unreadable. */
-@keyframes cardIn {
+/* Transform and nothing else — a scene that animates its own opacity is a
+   scene that isn't there at all if the animation never runs. */
+@keyframes sceneIn {
   from {
-    transform: translateY(10px);
+    transform: translateY(26px);
   }
   to {
     transform: none;
   }
 }
-.arrivalSweep {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(19, 18, 16, 0.14) 50%, transparent 100%);
-  animation: sweepFromLeft 0.6s ease-out 1;
-  pointer-events: none;
-}
-@keyframes sweepFromLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
-  }
-}
-.arrivalLabel {
+.sceneEyebrow {
   display: block;
   font-family: var(--f-mono);
-  font-size: 11px;
+  font-size: clamp(12px, 1.3vw, 16px);
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: var(--f-stone);
 }
-/* Group first, then the player — the brief's order, and the thing a crowd of
-   five standing at a station actually needs to confirm. */
-.arrivalGroup {
+.sceneHeadline {
   display: block;
   font-family: var(--f-archivo);
   font-weight: 500;
-  font-size: clamp(30px, 4vw, 46px);
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  margin: 8px 0 6px;
+  font-size: clamp(56px, 11vw, 150px);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  margin: 10px 0;
+  /* Long names shrink rather than wrap: two lines of 190px type would push
+     the support line off a landscape tablet. */
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
-.arrivalPlayer {
-  display: block;
-  font-size: 20px;
-  font-weight: 500;
+.sceneArrival .sceneHeadline {
+  color: var(--f-cue-start);
 }
-.arrivalHint {
+.sceneCheer .sceneHeadline {
+  color: var(--f-cue-end);
+}
+.sceneBig .sceneHeadline {
+  color: var(--f-cue-start);
+  font-size: clamp(64px, 12.5vw, 172px);
+}
+.sceneSupport {
   display: block;
+  font-size: clamp(22px, 2.6vw, 38px);
+  font-weight: 400;
+  line-height: 1.2;
+  max-width: 24ch;
+  color: var(--f-white);
+}
+.sceneSkip {
+  position: absolute;
+  right: 0;
+  bottom: 26px;
   font-family: var(--f-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-top: 16px;
-  opacity: 0.75;
+  color: var(--f-stone);
 }
-/* While the card is up the tiles are inert — a sequencing beat, not a lock:
-   it clears itself in a couple of seconds, or on a tap. */
-.tileGridHeld {
-  opacity: 0.25;
-  pointer-events: none;
+/* The scene's own clock, so nobody wonders whether the screen has frozen. */
+.sceneClock {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  width: 100%;
+  background: rgba(247, 247, 247, 0.16);
+}
+.sceneClockFill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--f-cue-start);
+  transform-origin: left;
+  animation: sceneClock var(--scene-ms, 4000ms) linear 1 forwards;
+}
+.sceneCheer .sceneClockFill {
+  background: var(--f-cue-end);
+}
+/* A round ending is yellow all the way through, bar included. */
+.sceneBig .sceneClockFill {
+  background: var(--f-cue-start);
+}
+@keyframes sceneClock {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
-/* ---------- Feature 3: ambient detection cues ---------- */
-.tilePulse {
-  animation: tileRing 1.3s ease-out 2;
+/* ---------- the card (standings) ---------- */
+.boardScene {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(18px, 3vw, 40px) 0;
+  animation: sceneIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 1;
 }
-@keyframes tileRing {
-  0% {
-    box-shadow: inset 0 0 0 0 var(--f-cue-start);
-  }
-  35% {
-    box-shadow: inset 0 0 0 6px var(--f-cue-start);
-  }
-  100% {
-    box-shadow: inset 0 0 0 0 var(--f-cue-start);
-  }
+.boardSceneTimed {
+  cursor: pointer;
 }
-/* The player a banner is about: a standing ring, not a pulse, so it reads as
-   "this is the one waiting for a number" the whole time the prompt is up. */
-.tileCued {
-  box-shadow: inset 0 0 0 4px var(--f-cue-end);
+.boardHeadline {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: clamp(36px, 5.4vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: 8px 0 4px;
 }
-.primaryBtnCued {
-  animation: saveRing 1.6s ease-in-out infinite;
+.boardSupport {
+  font-size: clamp(16px, 1.8vw, 22px);
+  color: var(--f-stone);
+  margin-bottom: clamp(14px, 2vw, 28px);
 }
-/* The cue arrives at the stepper before it arrives at Save: a player sent
-   here by a banner has no count entered yet, so Save is still disabled and
-   the "+" is the only thing worth pointing at. Once there's a number in, the
-   ring moves to Save. */
-.bigStepper button.stepperCued {
-  animation: saveRing 1.6s ease-in-out infinite;
-  border-color: var(--f-cue-end);
+.board {
+  width: 100%;
 }
-/* Breathes between 4px and 10px rather than 0 and 8px: a ring that collapses
-   to nothing is invisible for half its cycle, which is exactly the half
-   someone glancing up from their ball will catch. */
-@keyframes saveRing {
+.boardHead {
+  display: grid;
+  grid-template-columns: 56px 1fr 90px 110px;
+  gap: 12px;
+  padding: 0 8px 8px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--f-stone);
+  border-bottom: 1px solid rgba(247, 247, 247, 0.18);
+}
+.boardHead .boardCol {
+  grid-column: 2;
+}
+.boardColNum {
+  text-align: right;
+}
+.boardRow {
+  display: grid;
+  grid-template-columns: 56px 1fr 90px 110px;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  min-height: 76px;
+  padding: 14px 8px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(247, 247, 247, 0.12);
+  color: var(--f-white);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.boardRow:disabled {
+  cursor: default;
+}
+/* The player this scene is about. A left edge and a lift, not a fill: the
+   row still has to read as one of the group, not as a different component. */
+.boardRowLit {
+  box-shadow: inset 4px 0 0 var(--f-cue-start);
+  background: rgba(235, 242, 27, 0.08);
+}
+.boardPlace {
+  font-family: var(--f-mono);
+  font-size: clamp(18px, 2vw, 26px);
+  color: var(--f-stone);
+}
+.boardName {
+  font-size: clamp(26px, 3.4vw, 46px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.boardStation,
+.boardTotal {
+  font-family: var(--f-mono);
+  text-align: right;
+}
+.boardStation {
+  font-size: clamp(18px, 2vw, 26px);
+  color: var(--f-stone);
+}
+.boardTotal {
+  font-size: clamp(24px, 3vw, 40px);
+}
+.boardRowLit .boardStation {
+  color: var(--f-cue-start);
+}
+.boardFoot {
+  margin-top: 16px;
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 1.2vw, 13px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--f-stone);
+}
+
+/* ---------- the one screen you touch ---------- */
+.strokes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  animation: sceneIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 1;
+}
+.strokesHeadline {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: clamp(38px, 6vw, 86px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: 8px 0 clamp(16px, 3vw, 40px);
+}
+.counter {
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 5vw, 64px);
+  margin-bottom: clamp(20px, 3vw, 40px);
+}
+.counterBtn {
+  width: clamp(96px, 11vw, 132px);
+  height: clamp(96px, 11vw, 132px);
+  border-radius: 50%;
+  border: 1px solid rgba(247, 247, 247, 0.5);
+  background: none;
+  color: var(--f-white);
+  font-family: var(--f-archivo);
+  font-size: clamp(38px, 4.4vw, 54px);
+  line-height: 1;
+  cursor: pointer;
+}
+.counterBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+/* Before there's a number, "+" is the only thing worth pointing at; once
+   there is one, the cue moves to the button that commits it. */
+.counterBtnCued {
+  border-color: var(--f-cue-start);
+  color: var(--f-cue-start);
+  animation: cuedRing 1.7s ease-in-out infinite;
+}
+@keyframes cuedRing {
   0%,
   100% {
-    box-shadow: 0 0 0 4px var(--f-cue-end);
+    box-shadow: 0 0 0 3px var(--f-cue-start);
   }
   50% {
-    box-shadow: 0 0 0 10px var(--f-cue-end);
+    box-shadow: 0 0 0 10px rgba(235, 242, 27, 0.35);
   }
 }
-.tileDemo {
-  border-style: dashed;
+.counterValue {
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: clamp(90px, 14vw, 190px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  min-width: 1.6em;
 }
 
-/* ---------- station strip ---------- */
-.strip {
-  display: flex;
-  gap: 8px;
-  margin: 10px 0 28px;
-}
-.stripCell {
-  flex: 1;
-  min-height: 72px;
-  padding: 10px 6px;
-  border: 1px solid var(--f-ink);
-  background: transparent;
+/* ---------- buttons ---------- */
+.bigBtn {
+  min-height: 76px;
+  padding: 20px 44px;
+  border: none;
+  border-radius: 100px;
+  background: var(--f-white);
   color: var(--f-ink);
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 24px);
+  cursor: pointer;
+}
+.bigBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.bigBtnCued {
+  background: var(--f-cue-start);
+  animation: cuedRing 1.7s ease-in-out infinite;
+}
+.quietBtn {
+  margin-top: 18px;
+  padding: 14px 8px;
+  min-height: 48px;
+  background: none;
+  border: none;
+  color: var(--f-stone);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.error {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--f-cue-end);
+}
+
+/* ---------- waiting / setup ---------- */
+.waiting {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 900px;
+}
+.waitingHeadline {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: clamp(42px, 7vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.waitingSupport {
+  margin-top: 14px;
+  font-size: clamp(18px, 2vw, 24px);
+  color: var(--f-stone);
+  max-width: 34ch;
+}
+.groupPick,
+.stationPick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
+}
+.groupBtn {
+  min-height: 108px;
+  padding: 20px 28px;
+  border: 1px solid rgba(247, 247, 247, 0.4);
+  background: none;
+  color: var(--f-white);
   font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.groupBtnTime {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 15px;
+  color: var(--f-stone);
+}
+.groupBtnName {
+  display: block;
+  font-size: 26px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+.nameList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 28px 0;
+  max-width: 560px;
+}
+.nameInput {
+  width: 100%;
+  min-height: 68px;
+  border: none;
+  border-bottom: 1px solid rgba(247, 247, 247, 0.4);
+  background: none;
+  color: var(--f-white);
+  font-family: var(--f-archivo);
+  font-size: 26px;
+  padding: 12px 0;
+  -webkit-appearance: none;
+}
+.nameInput::placeholder {
+  color: rgba(161, 157, 148, 0.7);
+}
+.nameInput:focus {
+  outline: none;
+  border-bottom-color: var(--f-cue-start);
+}
+
+/* ---------- manual station picker ---------- */
+/* A sheet over the card: rare, deliberate, and never in the way of the show. */
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  padding: 28px clamp(20px, 3vw, 44px) 36px;
+  background: #1d1b18;
+  border-top: 1px solid rgba(247, 247, 247, 0.25);
+}
+.stationBtn {
+  width: 118px;
+  min-height: 108px;
+  border: 1px solid rgba(247, 247, 247, 0.4);
+  background: none;
+  color: var(--f-white);
+  font-family: var(--f-mono);
+  font-size: 34px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
 }
-.stripCellPlayed {
-  background: var(--f-ink);
-  color: var(--f-white);
-}
-.stripCellCurrent {
-  outline: 3px solid var(--f-ink);
-  outline-offset: 2px;
-}
-.stripCellPulse {
-  /* Ink for the whole flash, not just at the keyframe's peak: a played cell
-     is white-on-ink, and white on acid yellow is unreadable for exactly as
-     long as the flash lasts. */
-  color: var(--f-ink);
-  animation: stripFlash 1.3s ease-out 2;
-}
-@keyframes stripFlash {
-  0%,
-  100% {
-    background: transparent;
-  }
-  30% {
-    background: var(--f-cue-start);
-    color: var(--f-ink);
-  }
-}
-.stripNumber {
-  font-family: var(--f-mono);
-  font-size: 20px;
-}
-.stripState {
-  font-family: var(--f-mono);
-  font-size: 9px;
+.stationBtnState {
+  font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: var(--f-stone);
 }
 
-/* ---------- live feed panel ---------- */
-.feedPanel {
-  border-top: 1px solid var(--f-ink);
-  padding-top: 18px;
-}
-.feedLabel {
-  display: block;
-  font-family: var(--f-mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--f-grey);
-  margin-bottom: 4px;
-}
-.feedList {
-  list-style: none;
-  margin: 8px 0 20px;
-  padding: 0;
-}
-.feedItem {
+/* ---------- demo ---------- */
+.demoBar {
+  flex-shrink: 0;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(247, 247, 247, 0.3);
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(19, 18, 16, 0.12);
-  font-size: 14px;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.feedItem:first-child {
-  /* Newest read, marked with the arrival accent down its edge. */
-  box-shadow: inset 3px 0 0 var(--f-cue-start);
-  padding-left: 10px;
+.demoPlay {
+  min-height: 52px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 100px;
+  background: var(--f-cue-start);
+  color: var(--f-ink);
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
 }
-.feedTime,
-.feedWhat {
-  font-family: var(--f-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--f-grey);
-}
-.feedWho {
+.demoHint {
   flex: 1;
-  font-weight: 500;
-}
-.feedIdle,
-.feedDown,
-.feedUnbound {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--f-grey);
-  margin: 8px 0 20px;
-}
-.feedDown {
-  color: var(--f-ink);
-  border-left: 3px solid var(--f-cue-end);
-  padding-left: 12px;
-}
-.feedUnbound {
-  color: var(--f-ink);
-  border-left: 3px solid var(--f-stone);
-  padding-left: 12px;
-}
-
-/* ---------- demo controls ---------- */
-.demoPanel {
-  border: 1px dashed var(--f-ink);
-  padding: 16px 18px;
-}
-.demoNote {
+  min-width: 240px;
   font-size: 13px;
-  line-height: 1.5;
-  color: var(--f-grey);
-  margin: 6px 0 12px;
-  max-width: 64ch;
+  color: var(--f-stone);
 }
 .demoButtons {
   display: flex;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 10px;
 }
 .demoBtn {
   min-height: 48px;
-  padding: 12px 16px;
-  border: 1px solid var(--f-ink);
-  background: transparent;
-  color: var(--f-ink);
+  padding: 10px 14px;
+  border: 1px solid rgba(247, 247, 247, 0.35);
+  background: none;
+  color: var(--f-white);
   font-family: var(--f-mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
   cursor: pointer;
 }
 
-/* The stroke stepper is a single centred control — it shouldn't stretch to
-   the full width of a landscape tablet just because the room is there. */
-.scoreLayout {
-  max-width: 720px;
-}
-
-/* ---------- landscape: the orientation this is mounted in ---------- */
-@media (min-width: 900px) {
-  .stationLayout {
-    grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
+/* Portrait: the same scenes, less room for the headline. */
+@media (orientation: portrait) {
+  .sceneHeadline {
+    font-size: clamp(52px, 12vw, 120px);
   }
-  .feedPanel {
-    border-top: none;
-    border-left: 1px solid var(--f-ink);
-    padding: 0 0 0 28px;
-  }
-  .demoPanel {
-    grid-column: 1 / -1;
+  .boardHead,
+  .boardRow {
+    grid-template-columns: 42px 1fr 64px 78px;
   }
 }
 
-/* Motion is decoration here — every cue also carries colour, position and
-   copy, so switching the movement off loses nothing but the movement. */
+/* Motion is the seasoning, never the meal: every scene reads standing still,
+   and the clock bar becomes a full bar rather than a growing one. */
 @media (prefers-reduced-motion: reduce) {
-  .bannerSweep,
-  .arrivalSweep {
-    display: none;
-  }
-  .arrivalCard,
-  .tilePulse,
-  .stripCellPulse,
-  .primaryBtnCued,
-  .bigStepper button.stepperCued {
+  .scene,
+  .boardScene,
+  .strokes,
+  .sceneClockFill,
+  .counterBtnCued,
+  .bigBtnCued {
     animation: none;
   }
-  .tilePulse {
-    box-shadow: inset 0 0 0 6px var(--f-cue-start);
-  }
-  .stripCellPulse {
-    background: var(--f-cue-start);
-    color: var(--f-ink);
-  }
-  .primaryBtnCued,
-  .bigStepper button.stepperCued {
-    box-shadow: 0 0 0 6px var(--f-cue-end);
+  .counterBtnCued,
+  .bigBtnCued {
+    box-shadow: 0 0 0 4px var(--f-cue-start);
   }
 }

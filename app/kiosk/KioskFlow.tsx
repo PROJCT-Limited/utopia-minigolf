@@ -1,15 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { BallDetection, CurrentGroup, RosterPlayer } from "@/lib/scoring/scoringRepo";
-import { stationLabel, STATION_COUNT } from "@/lib/scoring/stations";
+import { STATION_NUMBERS } from "@/lib/scoring/stations";
 import {
-  ARRIVAL_HOLD_MS,
-  BANNER_DISMISS_MS,
-  CUE_GLOW_MS,
-  stationsOutstanding,
-  type DetectionCue,
-} from "@/lib/scoring/ballFeedback";
+  SCENE_MS,
+  arrivalScene,
+  cheerContext,
+  cheerScene,
+  standings,
+  standingsScene,
+  stationsLeft,
+  type Scene,
+} from "@/lib/scoring/kioskScenes";
 import {
   fetchCurrentGroupsAction,
   fetchRosterForGroupAction,
@@ -17,10 +20,9 @@ import {
   fetchScoresForRosterAction,
   saveStationScoreAction,
 } from "@/lib/scoring/scoringActions";
-import { useDetectionFeed } from "./useDetectionFeed";
-import { ArrivalCard } from "./ArrivalCard";
-import { FinishBanner } from "./FinishBanner";
-import { LiveFeedPanel } from "./LiveFeedPanel";
+import { useBallWatch, type BallEvent } from "./useBallWatch";
+import { SceneCard } from "./SceneCard";
+import { Scoreboard } from "./Scoreboard";
 import { DEMO_GROUP_ID, DEMO_ROSTER, demoDetection, demoScores } from "./demoFeed";
 import {
   mutedServerSnapshot,
@@ -32,20 +34,582 @@ import {
 } from "./cueSounds";
 import styles from "./kiosk.module.css";
 
-const POLL_INTERVAL_MS = 20_000;
-/** How many antenna reports the live panel keeps on screen. */
-const FEED_HISTORY = 5;
+/** Who's on the course changes every few minutes; this screen idles all day. */
+const GROUPS_POLL_MS = 20_000;
+/** Scenes are a queue, not a stack, but a queue that can grow without bound
+ *  would leave the screen minutes behind the floor. Four is two players'
+ *  worth of beats — anything older than that has been overtaken by events. */
+const MAX_QUEUE = 4;
 
-/** Render an ISO timestamp as "HH:MM" in the venue's local clock. Supabase
- *  stores timestamptz in UTC; kiosk display is Hong Kong wall-clock.
- *  Cheap string slice: "YYYY-MM-DDTHH:MM:SS.sssZ" → pick HH:MM directly,
- *  which is wrong in absolute terms but matches the existing kiosk style
- *  (see other HH:MM usages). */
-function fmtHm(iso: string): string {
-  return iso.slice(11, 16);
+type Mode = "rest" | "strokes";
+
+export function KioskFlow({ initialGroups, demo = false }: { initialGroups: CurrentGroup[]; demo?: boolean }) {
+  const [groups, setGroups] = useState(initialGroups);
+  // One group on the course means no question to ask: the kiosk opens on it.
+  // Picking by hand only exists for the case the floor can't disambiguate yet
+  // — see the note on groupChoice below.
+  const [group, setGroup] = useState<CurrentGroup | null>(() => {
+    if (demo) return DEMO_GROUP;
+    return initialGroups.length === 1 ? initialGroups[0] : null;
+  });
+  const [roster, setRoster] = useState<RosterPlayer[]>([]);
+  const [rosterNames, setRosterNames] = useState<string[] | null>(null);
+  const [scoresByPlayer, setScoresByPlayer] = useState<Record<string, Record<number, number>>>({});
+  const [loading, setLoading] = useState(false);
+
+  const [queue, setQueue] = useState<Scene[]>([]);
+  const [mode, setMode] = useState<Mode>("rest");
+  const [target, setTarget] = useState<{ playerId: string; station: number } | null>(null);
+  const [pendingStrokes, setPendingStrokes] = useState(0);
+  const [stationChoice, setStationChoice] = useState<string | null>(null);
+  // Which station's column the card shows when nothing is playing: the last
+  // one the floor reported, because that's where the group actually is.
+  // Falling back to station 1 made the resting card quietly show the wrong
+  // column for a group that started anywhere else.
+  const [lastStation, setLastStation] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const muted = useSyncExternalStore(subscribeMuted, mutedSnapshot, mutedServerSnapshot);
+
+  const isDemo = group?.id === DEMO_GROUP_ID;
+  const scene = queue[0] ?? null;
+  const live = useRef({ roster, scoresByPlayer, group, mode, target, queued: queue.length });
+  useEffect(() => {
+    live.current = { roster, scoresByPlayer, group, mode, target, queued: queue.length };
+  });
+
+  const push = useCallback((...scenes: Scene[]) => {
+    setQueue((current) => [...current, ...scenes].slice(-MAX_QUEUE));
+  }, []);
+
+  // ---------------------------------------------------------------------
+  // Gate reads become scenes
+  // ---------------------------------------------------------------------
+  const handleEvents = useCallback(
+    (events: BallEvent[]) => {
+      const { roster: currentRoster, scoresByPlayer: scores, group: currentGroup } = live.current;
+      const groupName = currentGroup?.displayName ?? "This group";
+
+      for (const event of events) {
+        setLastStation(event.stationNumber);
+        if (event.role === "start") {
+          // Name first, then where that name sits in the group — the order
+          // someone walking up actually wants them in.
+          const board = standings(currentRoster, scores, event.stationNumber);
+          const row = board.find((r) => r.playerId === event.playerId);
+          push(
+            arrivalScene({
+              stationNumber: event.stationNumber,
+              playerId: event.playerId,
+              playerName: event.playerName,
+              groupName,
+            }),
+            standingsScene({
+              stationNumber: event.stationNumber,
+              playerId: event.playerId,
+              playerName: event.playerName,
+              groupName,
+              place: row?.place ?? null,
+              fieldSize: board.filter((r) => r.place !== null).length,
+            })
+          );
+          playCueSound("arrival");
+          continue;
+        }
+
+        const context = cheerContext(currentRoster, scores, event.playerId, event.stationNumber);
+        push(
+          cheerScene({
+            stationNumber: event.stationNumber,
+            playerId: event.playerId,
+            playerName: event.playerName,
+            context,
+          })
+        );
+        playCueSound(context.roundFinishes ? "cheerRound" : "cheer");
+      }
+    },
+    [push]
+  );
+
+  const watch = useBallWatch({
+    group,
+    roster,
+    enabled: group !== null && rosterNames === null,
+    live: !isDemo,
+    onEvents: handleEvents,
+  });
+
+  // ---------------------------------------------------------------------
+  // The scene clock
+  // ---------------------------------------------------------------------
+  const advance = useCallback(() => {
+    setQueue((current) => {
+      const [done, ...rest] = current;
+      if (done?.then === "strokes" && done.playerId) {
+        setTarget({ playerId: done.playerId, station: done.stationNumber });
+        setPendingStrokes(live.current.scoresByPlayer[done.playerId]?.[done.stationNumber] ?? 0);
+        setMode("strokes");
+      }
+      return rest;
+    });
+  }, []);
+
+  const sceneId = scene?.id ?? null;
+  const sceneKind = scene?.kind ?? null;
+  useEffect(() => {
+    if (!sceneId || !sceneKind) return;
+    const timer = window.setTimeout(advance, SCENE_MS[sceneKind]);
+    return () => window.clearTimeout(timer);
+  }, [sceneId, sceneKind, advance]);
+
+  // ---------------------------------------------------------------------
+  // Group + roster
+  // ---------------------------------------------------------------------
+  useEffect(() => {
+    if (group || demo) return;
+    const interval = setInterval(async () => {
+      const fresh = await fetchCurrentGroupsAction();
+      setGroups(fresh);
+      if (fresh.length === 1) setGroup(fresh[0]);
+    }, GROUPS_POLL_MS);
+    return () => clearInterval(interval);
+  }, [group, demo]);
+
+  const groupId = group?.id ?? null;
+  useEffect(() => {
+    if (!groupId) return;
+    const id = groupId;
+    let cancelled = false;
+
+    async function load() {
+      if (id === DEMO_GROUP_ID) {
+        setRoster(DEMO_ROSTER);
+        setScoresByPlayer(demoScores());
+        setRosterNames(null);
+        return;
+      }
+      setLoading(true);
+      const players = await fetchRosterForGroupAction(id);
+      if (cancelled) return;
+      if (players.length === 0) {
+        // Nobody was named at the door — the kiosk still has to be able to
+        // open a card, so it asks once and then never again for this group.
+        setRosterNames(Array(live.current.group?.playerCount ?? 1).fill(""));
+        setLoading(false);
+        return;
+      }
+      setRoster(players);
+      setScoresByPlayer(await fetchScoresForRosterAction(players.map((p) => p.id)));
+      setRosterNames(null);
+      setLoading(false);
+    }
+
+    void load().catch(() => {
+      if (!cancelled) {
+        setError("Couldn't load that group.");
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId]);
+
+  async function submitRoster() {
+    if (!group || !rosterNames) return;
+    setLoading(true);
+    const result = await createBookingRosterAction(group.id, rosterNames);
+    setLoading(false);
+    if (!result.ok || !result.players) {
+      setError(result.error ?? "Something went wrong.");
+      return;
+    }
+    setRoster(result.players);
+    setScoresByPlayer(await fetchScoresForRosterAction(result.players.map((p) => p.id)));
+    setRosterNames(null);
+  }
+
+  // ---------------------------------------------------------------------
+  // Scores
+  // ---------------------------------------------------------------------
+  async function saveScore() {
+    if (!target || !group) return;
+    const player = roster.find((p) => p.id === target.playerId);
+    if (!player) return;
+
+    if (!isDemo) {
+      const result = await saveStationScoreAction(player.id, target.station, pendingStrokes);
+      if (!result.ok) {
+        setError(result.error ?? "Couldn't save that score.");
+        return;
+      }
+    }
+
+    const saved = pendingStrokes;
+    setScoresByPlayer((current) => ({
+      ...current,
+      [player.id]: { ...current[player.id], [target.station]: saved },
+    }));
+    setError(null);
+    setMode("rest");
+    setTarget(null);
+    playCueSound("logged");
+    // Straight back to the card, with their number on it — the last beat of
+    // the loop, and the same scene the arrival beat ends on.
+    push(
+      standingsScene({
+        stationNumber: target.station,
+        playerId: player.id,
+        playerName: player.name,
+        groupName: group.displayName,
+        justLogged: saved,
+      })
+    );
+  }
+
+  function leaveStrokes() {
+    setMode("rest");
+    setTarget(null);
+    setError(null);
+  }
+
+  // ---------------------------------------------------------------------
+  // Demo
+  // ---------------------------------------------------------------------
+  const demoRun = useRef<{ cancelled: boolean } | null>(null);
+  const [demoPlaying, setDemoPlaying] = useState(false);
+  // The script runs across many renders, so it can't call the saveScore it
+  // closed over when it started — that one still thinks no player is being
+  // scored. It calls whichever one is current instead.
+  const saveRef = useRef(saveScore);
+  useEffect(() => {
+    saveRef.current = saveScore;
+  });
+
+  function fire(role: "start" | "end", station: number, player?: RosterPlayer) {
+    unlockCueSounds();
+    const row: BallDetection = demoDetection({
+      role,
+      station,
+      player: player ? { id: player.id, name: player.name, ballTagId: player.ballTagId } : undefined,
+    });
+    watch.inject([row]);
+  }
+
+  async function playDemo() {
+    if (demoRun.current) demoRun.current.cancelled = true; // stop a run already in flight
+    const run = { cancelled: false };
+    demoRun.current = run;
+    setDemoPlaying(true);
+    unlockCueSounds();
+
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    /** Waits on what the screen is actually doing rather than on how long it
+     *  was expected to take. The first version of this slept for the scene
+     *  durations and raced them — the scene clock reset the stroke counter
+     *  after the script had set it, and a player went on the card with a
+     *  zero. */
+    const until = async (ready: () => boolean, timeoutMs = 25_000) => {
+      const startedAt = Date.now();
+      while (!ready()) {
+        if (run.cancelled || Date.now() - startedAt > timeoutMs) return false;
+        await sleep(120);
+      }
+      return !run.cancelled;
+    };
+    const scenesDone = () => live.current.queued === 0;
+
+    async function playThrough(player: RosterPlayer, strokes: number) {
+      // Walk up: the floor sees the ball and says who it belongs to, then
+      // shows them where they stand.
+      fire("start", 3, player);
+      if (!(await until(() => live.current.queued > 0))) return;
+      if (!(await until(scenesDone))) return;
+      await sleep(600);
+
+      // Hole out: the cheer, then the one screen anybody touches.
+      fire("end", 3, player);
+      if (!(await until(() => live.current.mode === "strokes" && live.current.target?.playerId === player.id)))
+        return;
+      await sleep(800);
+      setPendingStrokes(strokes);
+      await sleep(1500); // long enough to see the number land before it's saved
+      await saveRef.current();
+
+      // Back to the card with their score on it.
+      if (!(await until(scenesDone))) return;
+      await sleep(600);
+    }
+
+    const [mika, ravi] = DEMO_ROSTER as RosterPlayer[];
+    await playThrough(mika, 3);
+    if (!run.cancelled) await playThrough(ravi, 5);
+    if (!run.cancelled) setDemoPlaying(false);
+  }
+
+  function stopDemo() {
+    if (demoRun.current) demoRun.current.cancelled = true;
+    setDemoPlaying(false);
+    setQueue([]);
+    setMode("rest");
+    setTarget(null);
+    setScoresByPlayer(demoScores());
+  }
+
+  // ---------------------------------------------------------------------
+  // Derived
+  // ---------------------------------------------------------------------
+  const remainingForDefault = stationsLeft(roster, scoresByPlayer);
+  const stationNumber = target?.station ?? scene?.stationNumber ?? lastStation ?? remainingForDefault[0] ?? 1;
+  const rows = useMemo(() => standings(roster, scoresByPlayer, stationNumber), [roster, scoresByPlayer, stationNumber]);
+  const remaining = remainingForDefault;
+  const targetPlayer = roster.find((p) => p.id === target?.playerId) ?? null;
+
+  // ---------------------------------------------------------------------
+  return (
+    <div className={styles.stage} onPointerDown={unlockCueSounds}>
+      <header className={styles.bar}>
+        <span className={styles.barBrand}>
+          FOUND
+          {isDemo && <span className={styles.demoChip}>demo</span>}
+        </span>
+        <span className={styles.barRight}>
+          {/* Demo mode has no feed by design — warning about it there would
+              be the screen complaining about a thing nobody asked for. */}
+          {watch.feedDown && !isDemo && <span className={styles.feedDown}>No antenna feed</span>}
+          {group && <span className={styles.barGroup}>{group.displayName}</span>}
+          <button
+            type="button"
+            className={styles.muteBtn}
+            onClick={() => setMuted(!muted)}
+            aria-pressed={muted}
+            aria-label={muted ? "Turn sound on" : "Turn sound off"}
+          >
+            {muted ? "♪ off" : "♪ on"}
+          </button>
+        </span>
+      </header>
+
+      {/* No group yet: either nothing is on the course, or the floor can't
+          say which of several it is. Both are waiting states, not menus. */}
+      {!group && (
+        <section className={styles.waiting}>
+          <h1 className={styles.waitingHeadline}>
+            {groups.length === 0 ? "Nobody on the course" : "Which group?"}
+          </h1>
+          {groups.length === 0 ? (
+            <p className={styles.waitingSupport}>This screen wakes up when a round starts.</p>
+          ) : (
+            <>
+              <p className={styles.waitingSupport}>
+                More than one round is running, so tap the one at this station.
+              </p>
+              <div className={styles.groupPick}>
+                {groups.map((g) => (
+                  <button key={g.id} type="button" className={styles.groupBtn} onClick={() => setGroup(g)}>
+                    <span className={styles.groupBtnTime}>{g.timeLabel}</span>
+                    <span className={styles.groupBtnName}>{g.displayName}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      {group && rosterNames && (
+        <section className={styles.waiting}>
+          <h1 className={styles.waitingHeadline}>Who&rsquo;s playing?</h1>
+          <p className={styles.waitingSupport}>
+            Nobody was named at the door, so the card is empty. Add the names once.
+          </p>
+          <div className={styles.nameList}>
+            {rosterNames.map((name, i) => (
+              <input
+                key={i}
+                type="text"
+                className={styles.nameInput}
+                placeholder={`Player ${i + 1}`}
+                value={name}
+                onChange={(e) =>
+                  setRosterNames((names) => (names ?? []).map((n, idx) => (idx === i ? e.target.value : n)))
+                }
+              />
+            ))}
+          </div>
+          <button type="button" className={styles.bigBtn} onClick={submitRoster} disabled={loading}>
+            {loading ? "Starting…" : "Start the card"}
+          </button>
+        </section>
+      )}
+
+      {group && !rosterNames && (
+        <>
+          {scene && scene.kind !== "standings" && <SceneCard scene={scene} onSkip={advance} />}
+
+          {scene?.kind === "standings" && (
+            <section
+              className={`${styles.boardScene} ${styles.boardSceneTimed}`}
+              onClick={advance}
+              style={{ "--scene-ms": `${SCENE_MS.standings}ms` } as React.CSSProperties}
+            >
+              <span className={styles.sceneEyebrow}>{scene.eyebrow}</span>
+              <h1 className={styles.boardHeadline}>{scene.headline}</h1>
+              <p className={styles.boardSupport}>{scene.support}</p>
+              <Scoreboard
+                rows={rows}
+                stationNumber={scene.stationNumber}
+                stationsRemaining={remaining}
+                highlightPlayerId={scene.playerId}
+                interactive={false}
+                onPick={() => {}}
+              />
+              <span className={styles.sceneClock} aria-hidden>
+                <span className={styles.sceneClockFill} />
+              </span>
+            </section>
+          )}
+
+          {!scene && mode === "strokes" && targetPlayer && (
+            <section className={styles.strokes}>
+              <span className={styles.sceneEyebrow}>
+                {targetPlayer.name} · Station {target?.station}
+              </span>
+              <h1 className={styles.strokesHeadline}>How many strokes?</h1>
+              <div className={styles.counter}>
+                <button
+                  type="button"
+                  className={styles.counterBtn}
+                  onClick={() => setPendingStrokes((n) => Math.max(1, n - 1))}
+                  disabled={pendingStrokes <= 1}
+                  aria-label="Fewer strokes"
+                >
+                  −
+                </button>
+                <span className={styles.counterValue}>{pendingStrokes || "–"}</span>
+                <button
+                  type="button"
+                  className={`${styles.counterBtn} ${pendingStrokes < 1 ? styles.counterBtnCued : ""}`}
+                  onClick={() => setPendingStrokes((n) => Math.min(20, n + 1))}
+                  aria-label="More strokes"
+                >
+                  +
+                </button>
+              </div>
+              <button
+                type="button"
+                className={`${styles.bigBtn} ${pendingStrokes >= 1 ? styles.bigBtnCued : ""}`}
+                onClick={saveScore}
+                disabled={pendingStrokes < 1}
+              >
+                Put it on the card
+              </button>
+              <button type="button" className={styles.quietBtn} onClick={leaveStrokes}>
+                Not you? Go back
+              </button>
+              {error && <p className={styles.error}>{error}</p>}
+            </section>
+          )}
+
+          {!scene && mode === "rest" && (
+            <section className={styles.boardScene}>
+              <span className={styles.sceneEyebrow}>
+                {group.displayName} · {remaining.length === 0 ? "round complete" : `station ${remaining[0]} next`}
+              </span>
+              <h1 className={styles.boardHeadline}>The card</h1>
+              <p className={styles.boardSupport}>Roll a ball past a gate and this screen will call it.</p>
+              <Scoreboard
+                rows={rows}
+                stationNumber={stationNumber}
+                stationsRemaining={remaining}
+                highlightPlayerId={null}
+                interactive
+                onPick={(playerId) => setStationChoice(playerId)}
+              />
+              {error && <p className={styles.error}>{error}</p>}
+            </section>
+          )}
+
+          {/* Manual path. The antennas are not allowed to be the only way a
+              score can be entered — if a gate misses, a person still has to
+              be able to put a number on the card. */}
+          {stationChoice && (
+            <div className={styles.sheet}>
+              <span className={styles.sceneEyebrow}>
+                {roster.find((p) => p.id === stationChoice)?.name} · which station?
+              </span>
+              <div className={styles.stationPick}>
+                {STATION_NUMBERS.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={styles.stationBtn}
+                    onClick={() => {
+                      setTarget({ playerId: stationChoice, station: n });
+                      setPendingStrokes(scoresByPlayer[stationChoice]?.[n] ?? 0);
+                      setMode("strokes");
+                      setStationChoice(null);
+                    }}
+                  >
+                    {n}
+                    <span className={styles.stationBtnState}>
+                      {scoresByPlayer[stationChoice]?.[n] !== undefined
+                        ? `${scoresByPlayer[stationChoice][n]} in`
+                        : "open"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className={styles.quietBtn} onClick={() => setStationChoice(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {isDemo && (
+        <footer className={styles.demoBar}>
+          <button
+            type="button"
+            className={styles.demoPlay}
+            onClick={demoPlaying ? stopDemo : playDemo}
+          >
+            {demoPlaying ? "■ Stop" : "▶ Play the whole thing"}
+          </button>
+          <span className={styles.demoHint}>
+            or fire one read at a time — station 3 is this group&rsquo;s last, so an end gate there ends the round
+          </span>
+          <div className={styles.demoButtons}>
+            {DEMO_ROSTER.slice(0, 2).map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={styles.demoBtn}
+                onClick={() => fire("start", 3, p as RosterPlayer)}
+              >
+                start · {p.name}
+              </button>
+            ))}
+            {DEMO_ROSTER.slice(0, 2).map((p) => (
+              <button
+                key={`${p.id}-end`}
+                type="button"
+                className={styles.demoBtn}
+                onClick={() => fire("end", 3, p as RosterPlayer)}
+              >
+                end · {p.name}
+              </button>
+            ))}
+            <button type="button" className={styles.demoBtn} onClick={() => fire("start", 2, undefined)}>
+              unknown ball
+            </button>
+          </div>
+        </footer>
+      )}
+    </div>
+  );
 }
-
-type Step = "groups" | "roster" | "station" | "score";
 
 const DEMO_GROUP: CurrentGroup = {
   id: DEMO_GROUP_ID,
@@ -56,481 +620,3 @@ const DEMO_GROUP: CurrentGroup = {
   windowStartIso: new Date(0).toISOString(),
   windowEndIso: new Date(0).toISOString(),
 };
-
-export function KioskFlow({ initialGroups, demo = false }: { initialGroups: CurrentGroup[]; demo?: boolean }) {
-  const [groups, setGroups] = useState(initialGroups);
-  const [step, setStep] = useState<Step>("groups");
-  const [selectedGroup, setSelectedGroup] = useState<CurrentGroup | null>(null);
-  const [roster, setRoster] = useState<RosterPlayer[]>([]);
-  const [rosterNames, setRosterNames] = useState<string[]>([]);
-  const [currentStation, setCurrentStation] = useState(1);
-  const [scoresByPlayer, setScoresByPlayer] = useState<Record<string, Record<number, number>>>({});
-  const [activePlayer, setActivePlayer] = useState<RosterPlayer | null>(null);
-  const [pendingStrokes, setPendingStrokes] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // ---- RFID visual feedback -------------------------------------------------
-  const [arrivalCue, setArrivalCue] = useState<DetectionCue | null>(null);
-  const [bannerCue, setBannerCue] = useState<DetectionCue | null>(null);
-  // Who the last finish cue was about. The banner itself clears the moment
-  // anyone touches anything, but the highlight it hands off — the player's
-  // tile, then the Save button on their score screen — has to outlive it, or
-  // following the prompt makes the prompt's own pointer disappear.
-  const [cuedPlayerId, setCuedPlayerId] = useState<string | null>(null);
-  const [pulses, setPulses] = useState<DetectionCue[]>([]);
-  const [recent, setRecent] = useState<DetectionCue[]>([]);
-  const muted = useSyncExternalStore(subscribeMuted, mutedSnapshot, mutedServerSnapshot);
-
-  const isDemo = selectedGroup?.id === DEMO_GROUP_ID;
-  const watching = step === "station" || step === "score";
-
-  const handleCues = useCallback((cues: DetectionCue[]) => {
-    setRecent((current) => [...cues].reverse().concat(current).slice(0, FEED_HISTORY));
-    setPulses((current) => [...current, ...cues]);
-    for (const cue of cues) {
-      window.setTimeout(() => setPulses((current) => current.filter((p) => p.id !== cue.id)), CUE_GLOW_MS);
-    }
-
-    // If a start-gate and an end-gate read land in the same poll, the end
-    // gate is what needs saying — the brief's priority rule. The arrival
-    // still pulses and still lands in the feed list; it just doesn't take
-    // the screen while a "save your score" prompt is up.
-    const finish = [...cues].reverse().find((c) => c.kind !== "arrival");
-    const arrival = [...cues].reverse().find((c) => c.kind === "arrival");
-
-    if (finish) {
-      setArrivalCue(null);
-      setBannerCue(finish);
-      setCuedPlayerId(finish.playerId);
-      playCueSound(finish.kind);
-      return;
-    }
-    if (arrival) {
-      setArrivalCue((current) => current ?? arrival);
-      playCueSound("arrival");
-    }
-  }, []);
-
-  const feed = useDetectionFeed({
-    group: selectedGroup,
-    roster,
-    station: currentStation,
-    scoresByPlayer,
-    enabled: watching && !isDemo,
-    live: !isDemo,
-    onCues: handleCues,
-  });
-
-  // Both cues clear themselves: the arrival card is an orientation beat, and
-  // a banner nobody answers must not sit on the screen in front of the next
-  // group. Keyed on the cue's id so a fresh detection restarts the clock
-  // rather than inheriting the old one's remaining time.
-  const arrivalId = arrivalCue?.id ?? null;
-  useEffect(() => {
-    if (!arrivalId) return;
-    const timer = window.setTimeout(() => setArrivalCue(null), ARRIVAL_HOLD_MS);
-    return () => window.clearTimeout(timer);
-  }, [arrivalId]);
-
-  const bannerId = bannerCue?.id ?? null;
-  useEffect(() => {
-    if (!bannerId) return;
-    const timer = window.setTimeout(() => setBannerCue(null), BANNER_DISMISS_MS);
-    return () => window.clearTimeout(timer);
-  }, [bannerId]);
-
-  /** Any deliberate touch means the prompt has done its job. */
-  const clearCues = useCallback(() => {
-    setArrivalCue(null);
-    setBannerCue(null);
-  }, []);
-
-  const pulsingStations = useMemo(() => new Set(pulses.map((p) => p.stationNumber)), [pulses]);
-  const pulsingEpcs = useMemo(() => new Set(pulses.map((p) => p.epc)), [pulses]);
-  const outstanding = useMemo(() => stationsOutstanding(scoresByPlayer, roster), [scoresByPlayer, roster]);
-
-  // ---- group / roster / station flow ---------------------------------------
-
-  // This iPad sits on a stand all day — keep the group list fresh while
-  // idling on the picker screen, since who's "currently playing" changes
-  // every few minutes as rounds start and finish.
-  useEffect(() => {
-    if (step !== "groups") return;
-    const interval = setInterval(async () => {
-      setGroups(await fetchCurrentGroupsAction());
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [step]);
-
-  async function selectGroup(group: CurrentGroup) {
-    // First tap of the session: audio can only be unlocked from a gesture,
-    // and every cue after this is fired by an antenna, which isn't one.
-    unlockCueSounds();
-    setSelectedGroup(group);
-    setError(null);
-
-    if (group.id === DEMO_GROUP_ID) {
-      setRoster(DEMO_ROSTER);
-      setScoresByPlayer(demoScores());
-      setCurrentStation(1);
-      setStep("station");
-      return;
-    }
-
-    const players = await fetchRosterForGroupAction(group.id);
-    if (players.length === 0) {
-      setRosterNames(Array(group.playerCount).fill(""));
-      setStep("roster");
-      return;
-    }
-    await enterStation(players, 1);
-  }
-
-  async function submitRoster() {
-    if (!selectedGroup) return;
-    setSubmitting(true);
-    setError(null);
-    const result = await createBookingRosterAction(selectedGroup.id, rosterNames);
-    setSubmitting(false);
-    if (!result.ok || !result.players) {
-      setError(result.error ?? "Something went wrong.");
-      return;
-    }
-    await enterStation(result.players, 1);
-  }
-
-  async function enterStation(players: RosterPlayer[], station: number) {
-    setRoster(players);
-    setCurrentStation(station);
-    setScoresByPlayer(await fetchScoresForRosterAction(players.map((p) => p.id)));
-    setStep("station");
-  }
-
-  function selectPlayerForCurrentStation(player: RosterPlayer) {
-    clearCues();
-    setActivePlayer(player);
-    setPendingStrokes(scoresByPlayer[player.id]?.[currentStation] ?? 0);
-    setError(null);
-    setStep("score");
-  }
-
-  async function saveScore() {
-    if (!selectedGroup || !activePlayer) return;
-    clearCues();
-
-    if (!isDemo) {
-      const result = await saveStationScoreAction(activePlayer.id, currentStation, pendingStrokes);
-      if (!result.ok) {
-        setError(result.error ?? "Couldn't save that score.");
-        return;
-      }
-    }
-
-    setScoresByPlayer((s) => ({
-      ...s,
-      [activePlayer.id]: { ...s[activePlayer.id], [currentStation]: pendingStrokes },
-    }));
-    if (cuedPlayerId === activePlayer.id) setCuedPlayerId(null);
-    setError(null);
-    setStep("station");
-  }
-
-  function goToStation(station: number) {
-    clearCues();
-    setCuedPlayerId(null);
-    setCurrentStation(station);
-    setStep("station");
-  }
-
-  function backToGroups() {
-    clearCues();
-    setStep("groups");
-    setSelectedGroup(null);
-    setActivePlayer(null);
-    setRoster([]);
-    setScoresByPlayer({});
-    setCuedPlayerId(null);
-    setPulses([]);
-    setRecent([]);
-    setCurrentStation(1);
-    setError(null);
-  }
-
-  const doneCount = roster.filter((p) => scoresByPlayer[p.id]?.[currentStation] !== undefined).length;
-  const pickableGroups = demo ? [DEMO_GROUP, ...groups] : groups;
-
-  function injectDemo(role: "start" | "end", player?: RosterPlayer) {
-    unlockCueSounds();
-    const row: BallDetection = demoDetection({
-      role,
-      station: currentStation,
-      player: player ? { id: player.id, name: player.name, ballTagId: player.ballTagId } : undefined,
-    });
-    feed.injectDetections([row]);
-  }
-
-  return (
-    <div className={styles.panel}>
-      <div className={styles.topBar}>
-        <span className={styles.brand}>
-          FOUND Scoring
-          {isDemo && <span className={styles.demoChip}>demo — nothing is saved</span>}
-        </span>
-        <button
-          type="button"
-          className={styles.muteBtn}
-          onClick={() => {
-            unlockCueSounds();
-            setMuted(!muted);
-          }}
-          aria-pressed={muted}
-        >
-          {muted ? "Sound off" : "Sound on"}
-        </button>
-      </div>
-
-      {step !== "groups" && (
-        <button type="button" className={styles.backLink} onClick={backToGroups}>
-          ← Different group
-        </button>
-      )}
-
-      {step === "groups" && (
-        <>
-          <h1 className={styles.heading}>Who&rsquo;s playing?</h1>
-          {pickableGroups.length === 0 ? (
-            <p className={styles.hint}>No groups are currently on the course. Check back closer to your start time.</p>
-          ) : (
-            <div className={styles.tileGrid}>
-              {pickableGroups.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={`${styles.tile} ${g.id === DEMO_GROUP_ID ? styles.tileDemo : ""}`}
-                  onClick={() => selectGroup(g)}
-                >
-                  <div className={styles.tileTime}>{g.timeLabel}</div>
-                  <div className={styles.tileName}>{g.displayName}</div>
-                  <div className={styles.tileMeta}>
-                    {g.playerCount} {g.playerCount === 1 ? "player" : "players"}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {step === "roster" && selectedGroup && (
-        <>
-          <h1 className={styles.heading}>Who&rsquo;s in {selectedGroup.displayName}?</h1>
-          <p className={styles.hint}>Enter each player&rsquo;s name — you&rsquo;ll pick yours from this list at every station.</p>
-          <div className={styles.nameList}>
-            {rosterNames.map((name, i) => (
-              <input
-                key={i}
-                type="text"
-                className={styles.nameInput}
-                placeholder={`Player ${i + 1}`}
-                value={name}
-                onChange={(e) => setRosterNames((names) => names.map((n, idx) => (idx === i ? e.target.value : n)))}
-              />
-            ))}
-          </div>
-          <button type="button" className={styles.primaryBtn} onClick={submitRoster} disabled={submitting}>
-            {submitting ? "Starting…" : "Start"}
-          </button>
-          {error && <p className={styles.error}>{error}</p>}
-        </>
-      )}
-
-      {step === "station" && selectedGroup && (
-        <div className={styles.stationLayout}>
-          <section className={styles.stationMain}>
-            <p className={styles.stationProgress}>
-              Station {currentStation} of {STATION_COUNT}
-            </p>
-            <h1 className={styles.heading}>{stationLabel(currentStation)}</h1>
-            <p className={styles.hint}>
-              {doneCount} of {roster.length} logged — tap your name to register your strokes.
-            </p>
-
-            {bannerCue && (
-              <FinishBanner
-                cue={bannerCue}
-                alreadyLogged={
-                  bannerCue.playerId !== null &&
-                  scoresByPlayer[bannerCue.playerId]?.[currentStation] !== undefined
-                }
-                onAct={() => {
-                  const player = roster.find((p) => p.id === bannerCue.playerId);
-                  if (player) selectPlayerForCurrentStation(player);
-                  else clearCues();
-                }}
-                onDismiss={clearCues}
-              />
-            )}
-
-            {arrivalCue && (
-              <ArrivalCard cue={arrivalCue} groupName={selectedGroup.displayName} onDismiss={clearCues} />
-            )}
-
-            <div className={`${styles.tileGrid} ${arrivalCue ? styles.tileGridHeld : ""}`}>
-              {roster.map((p) => {
-                const done = scoresByPlayer[p.id]?.[currentStation] !== undefined;
-                const rfid = p.ballTagId ? feed.detectionsByEpc[p.ballTagId] ?? [] : [];
-                const cued = cuedPlayerId === p.id;
-                // The standing cue ring outranks the ambient pulse: one tile,
-                // one meaning.
-                const pulsing = !cued && p.ballTagId ? pulsingEpcs.has(p.ballTagId) : false;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={[
-                      styles.tile,
-                      done ? styles.tileDone : "",
-                      pulsing ? styles.tilePulse : "",
-                      cued ? styles.tileCued : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => selectPlayerForCurrentStation(p)}
-                    disabled={arrivalCue !== null}
-                  >
-                    <div className={styles.tileName}>{p.name}</div>
-                    <div className={styles.tileMeta}>
-                      {done ? `${scoresByPlayer[p.id][currentStation]} strokes` : "Not logged yet"}
-                    </div>
-                    {rfid.length > 0 && (
-                      <div className={styles.rfidLine}>
-                        {rfid
-                          .slice(-2)
-                          .map((d) => `${d.role === "start" ? "start" : "end"} ${fmtHm(d.detectedAt)}`)
-                          .join(" · ")}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className={styles.stationNav}>
-              <button
-                type="button"
-                className={styles.navBtn}
-                onClick={() => goToStation(currentStation - 1)}
-                disabled={currentStation <= 1}
-              >
-                ← Previous station
-              </button>
-              {currentStation < STATION_COUNT ? (
-                <button type="button" className={styles.primaryBtn} onClick={() => goToStation(currentStation + 1)}>
-                  Next station →
-                </button>
-              ) : (
-                <button type="button" className={styles.primaryBtn} onClick={backToGroups}>
-                  Finish
-                </button>
-              )}
-            </div>
-          </section>
-
-          <LiveFeedPanel
-            current={currentStation}
-            outstanding={outstanding}
-            pulsingStations={pulsingStations}
-            recent={recent}
-            unboundEpcs={feed.unboundEpcs}
-            feedDown={feed.feedDown}
-            onPickStation={goToStation}
-          />
-
-          {isDemo && (
-            <section className={styles.demoPanel}>
-              <span className={styles.feedLabel}>Demo — fire a detection by hand</span>
-              <p className={styles.demoNote}>
-                No reader on this network, so these push the same rows an antenna would. Station {currentStation}:{" "}
-                {outstanding.length === 1 && outstanding[0] === currentStation
-                  ? "their last outstanding station, so an end-gate read here is the end of their round."
-                  : `end-gate reads here show the station cue. Station ${outstanding[0] ?? 3} is their last — try it there for the round cue.`}
-              </p>
-              <div className={styles.demoButtons}>
-                {roster.slice(0, 2).map((p) => (
-                  <button key={p.id} type="button" className={styles.demoBtn} onClick={() => injectDemo("start", p)}>
-                    Start gate · {p.name}
-                  </button>
-                ))}
-                {roster.slice(0, 2).map((p) => (
-                  <button
-                    key={`${p.id}-end`}
-                    type="button"
-                    className={styles.demoBtn}
-                    onClick={() => injectDemo("end", p)}
-                  >
-                    End gate · {p.name}
-                  </button>
-                ))}
-                <button type="button" className={styles.demoBtn} onClick={() => injectDemo("start")}>
-                  Unlinked ball
-                </button>
-              </div>
-            </section>
-          )}
-        </div>
-      )}
-
-      {step === "score" && selectedGroup && activePlayer && (
-        <div className={styles.scoreLayout}>
-          <p className={styles.stationProgress}>
-            {stationLabel(currentStation)} · {activePlayer.name}
-          </p>
-          <h1 className={styles.heading}>How many strokes?</h1>
-          <p className={styles.hint}>
-            Your own count — the antennas only know your ball passed, never how many shots it took.
-          </p>
-          <div className={styles.bigStepper}>
-            <button
-              type="button"
-              onClick={() => {
-                clearCues();
-                setPendingStrokes((n) => Math.max(1, n - 1));
-              }}
-              disabled={pendingStrokes <= 1}
-              aria-label="Fewer strokes"
-            >
-              −
-            </button>
-            <span className={styles.bigStepperValue}>{pendingStrokes || "–"}</span>
-            <button
-              type="button"
-              className={cuedPlayerId === activePlayer.id && pendingStrokes < 1 ? styles.stepperCued : ""}
-              onClick={() => {
-                clearCues();
-                setPendingStrokes((n) => Math.min(20, n + 1));
-              }}
-              aria-label="More strokes"
-            >
-              +
-            </button>
-          </div>
-          <button
-            type="button"
-            className={`${styles.primaryBtn} ${
-              cuedPlayerId === activePlayer.id && pendingStrokes >= 1 ? styles.primaryBtnCued : ""
-            }`}
-            onClick={saveScore}
-            disabled={pendingStrokes < 1}
-          >
-            Save
-          </button>
-          <button type="button" className={styles.backLink} style={{ marginTop: 16 }} onClick={() => setStep("station")}>
-            ← Back without saving
-          </button>
-          {error && <p className={styles.error}>{error}</p>}
-        </div>
-      )}
-    </div>
-  );
-}

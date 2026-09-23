@@ -21,31 +21,52 @@
 // gate is what makes a short tone sound like a beep from a microwave.
 // -----------------------------------------------------------------------------
 
-import type { CueKind } from "@/lib/scoring/ballFeedback";
-
 type Note = { hz: number; at: number; ms: number };
 
-const VOICES: Record<CueKind, { notes: Note[]; gain: number }> = {
+/** The four moments that make a sound. Named after the moment, not the
+ *  shape, so a retune can't drift out of step with what's on screen. */
+export type CueSound = "arrival" | "cheer" | "cheerRound" | "logged";
+
+// All four are major intervals and all four rise, because every one of them
+// is good news: the floor saw you, your ball's in, your round's done, your
+// score is on the card. The differences are length and weight, which is what
+// makes them tellable apart across a noisy room.
+const VOICES: Record<CueSound, { notes: Note[]; gain: number }> = {
+  // Two quick rising notes — a nudge, not an announcement.
   arrival: {
     gain: 0.16,
     notes: [
       { hz: 660, at: 0, ms: 90 },
-      { hz: 990, at: 0.075, ms: 130 },
+      { hz: 990, at: 0.075, ms: 140 },
     ],
   },
-  "station-finish": {
+  // A major triad taken at a run: the cheerful one.
+  cheer: {
     gain: 0.2,
     notes: [
-      { hz: 880, at: 0, ms: 130 },
-      { hz: 587, at: 0.11, ms: 300 },
+      { hz: 659, at: 0, ms: 110 },
+      { hz: 831, at: 0.085, ms: 110 },
+      { hz: 988, at: 0.17, ms: 260 },
     ],
   },
-  "round-finish": {
+  // The same triad with the octave on top — the end of a whole round earns
+  // one more note than the end of a station.
+  cheerRound: {
     gain: 0.22,
     notes: [
-      { hz: 660, at: 0, ms: 130 },
-      { hz: 880, at: 0.12, ms: 130 },
-      { hz: 1320, at: 0.24, ms: 380 },
+      { hz: 659, at: 0, ms: 110 },
+      { hz: 831, at: 0.085, ms: 110 },
+      { hz: 988, at: 0.17, ms: 110 },
+      { hz: 1319, at: 0.27, ms: 420 },
+    ],
+  },
+  // Quiet and low: a receipt, not a fanfare. It fires on every stroke count
+  // saved, which is the most frequent sound in the building.
+  logged: {
+    gain: 0.13,
+    notes: [
+      { hz: 523, at: 0, ms: 80 },
+      { hz: 784, at: 0.07, ms: 170 },
     ],
   },
 };
@@ -119,7 +140,7 @@ export function setMuted(muted: boolean): void {
   for (const listener of mutedListeners) listener();
 }
 
-export function playCueSound(kind: CueKind): void {
+export function playCueSound(kind: CueSound): void {
   if (isMuted()) return;
   const ctx = ensureContext();
   if (!ctx || ctx.state !== "running") return;

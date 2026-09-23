@@ -256,3 +256,42 @@ export async function fetchBallDetectionsForGroup(
   const unboundEpcs = Array.from(new Set((unboundRows ?? []).map((r) => r.epc)));
   return { rowsByEpc, unboundEpcs };
 }
+
+/**
+ * Every detection in a wave's window, at any station.
+ *
+ * The station-scoped query above answers "what happened at station 3"; this
+ * answers "where is this group right now", which is what lets the kiosk
+ * follow a ball instead of being parked on a station somebody had to choose
+ * by hand. One query rather than the two that version needs: the roster's
+ * tags are matched in JS, so a ball nobody checked in still comes back with
+ * its timestamp and station and can be announced as an unknown ball rather
+ * than silently dropped.
+ *
+ * Legacy rows (written by the relay before `role` was emitted) carry
+ * role=NULL and are skipped — with no gate there's nothing to say about them.
+ */
+export async function fetchDetectionsInWindow(
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetection[]> {
+  const { data, error } = await supabaseAdmin
+    .from("ball_detections")
+    .select("epc, station_number, role, detected_at")
+    .gte("detected_at", windowStartIso)
+    .lte("detected_at", windowEndIso)
+    .not("role", "is", null)
+    .order("detected_at", { ascending: true });
+
+  if (error) {
+    console.error("fetchDetectionsInWindow: query failed:", error.message);
+    throw new Error(error.message); // the kiosk shows a dead feed rather than an idle course
+  }
+
+  return (data ?? []).map((row) => ({
+    epc: row.epc,
+    stationNumber: row.station_number,
+    role: row.role,
+    detectedAt: row.detected_at,
+  }));
+}
