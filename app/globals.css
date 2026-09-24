@@ -40,6 +40,28 @@
      so the band needs no second treatment for text. */
   --f-highlight: #ebf21b;
 
+  /* ---------------------------------------------------------------------
+     Kiosk cue accents — the RFID visual-feedback layer (app/kiosk/).
+     Layered ON the installation's material palette (concrete, stone,
+     terracotta, green marble, brushed brass) rather than replacing it:
+     the screen's ground stays paper-and-ink, and these three are the only
+     saturated things on it, each owning exactly one moment.
+
+       --f-cue-start  the acid yellow above, reused: a ball has arrived at a
+                      station. Loud, instant, gone in two seconds.
+       --f-cue-end    safety orange, the precedent the physical build already
+                      uses for a functional accent: a station is finished and
+                      a score is waiting to be typed.
+       --f-cue-round  green marble, deeper and calmer: the round itself is
+                      done. Reads as settled rather than urgent, which is the
+                      difference between "another station" and "that's it".
+
+     Ink on start/end runs 13:1 and 6.9:1; round carries white at 9:1.
+     --------------------------------------------------------------------- */
+  --f-cue-start: #ebf21b;
+  --f-cue-end: #ff5a1f;
+  --f-cue-round: #24463a;
+
   --font-body: var(--font-manrope), sans-serif;
   /* Futura Book, self-hosted via next/font/local — see the provenance note
      on `futuraBook` in app/layout.tsx (unverified/likely-unlicensed source,

@@ -17,6 +17,10 @@ import {
   fetchScoresForPlayer,
   fetchScoresForRoster,
   saveStationScore,
+  fetchBallDetectionsForGroup,
+  fetchDetectionsInWindow,
+  type BallDetection,
+  type BallDetectionsResult,
   type CurrentGroup,
   type RosterPlayer,
 } from "./scoringRepo";
@@ -58,6 +62,24 @@ export async function fetchScoresForRosterAction(
   playerIds: string[]
 ): Promise<Record<string, Record<number, number>>> {
   return fetchScoresForRoster(playerIds);
+}
+
+export async function fetchBallDetectionsForGroupAction(
+  rosterPlayers: { id: string; ballTagId: string | null }[],
+  stationNumber: number,
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetectionsResult> {
+  return fetchBallDetectionsForGroup(rosterPlayers, stationNumber, windowStartIso, windowEndIso);
+}
+
+/** Every gate read in this wave's window, any station — the kiosk follows
+ *  the ball with this rather than being parked on one station. */
+export async function fetchDetectionsInWindowAction(
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetection[]> {
+  return fetchDetectionsInWindow(windowStartIso, windowEndIso);
 }
 
 export interface SaveScoreResult {

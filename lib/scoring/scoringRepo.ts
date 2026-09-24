@@ -9,7 +9,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { TicketType } from "@/lib/booking/pricing";
-import { isCurrentlyActive, todayInHongKong } from "./activeWindow";
+import { isCurrentlyActive, todayInHongKong, waveActiveWindow } from "./activeWindow";
 
 export interface CurrentGroup {
   id: string;
@@ -17,6 +17,10 @@ export interface CurrentGroup {
   ticketType: TicketType;
   displayName: string;
   playerCount: number;
+  /** ISO timestamps bracketing this wave's "active" window — kiosk scopes
+   *  its RFID feed queries to [windowStartIso, windowEndIso]. */
+  windowStartIso: string;
+  windowEndIso: string;
 }
 
 interface WaveTiming {
@@ -52,6 +56,7 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
   for (const b of bookingRows ?? []) {
     const wave = waveTimings.get(b.wave_id);
     if (!wave || !isCurrentlyActive(wave, b.ticket_type, now)) continue;
+    const { start, end } = waveActiveWindow(wave.date, wave.startTime, b.ticket_type);
     groups.push({
       id: b.id,
       timeLabel: wave.startTime.slice(0, 5),
@@ -60,6 +65,8 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
       // What the door confirmed beats what was sold: a booking for four whose
       // fourth didn't show asks for three names here, not four.
       playerCount: b.present_headcount ?? b.headcount,
+      windowStartIso: start.toISOString(),
+      windowEndIso: end.toISOString(),
     });
   }
 
@@ -69,31 +76,35 @@ export async function fetchCurrentGroups(): Promise<CurrentGroup[]> {
 export interface RosterPlayer {
   id: string;
   name: string;
+  /** EPC currently linked to this player via check-in, or null if not
+   *  checked in / already released. Set during app/checkin/ (see
+   *  migrations/018_checkin.sql). */
+  ballTagId: string | null;
 }
 
 export async function fetchRosterForGroup(bookingId: string): Promise<RosterPlayer[]> {
   const { data, error } = await supabaseAdmin
     .from("booking_players")
-    .select("id, name")
+    .select("id, name, ball_tag_id")
     .eq("booking_id", bookingId)
     .order("created_at", { ascending: true });
   if (error) {
     console.error("fetchRosterForGroup: booking_players query failed:", error.message);
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((r) => ({ id: r.id, name: r.name, ballTagId: r.ball_tag_id }));
 }
 
 export async function createBookingRoster(bookingId: string, names: string[]): Promise<RosterPlayer[]> {
   const rows = names.map((name) => ({ booking_id: bookingId, name: name.trim() })).filter((r) => r.name.length > 0);
   if (rows.length === 0) return [];
 
-  const { data, error } = await supabaseAdmin.from("booking_players").insert(rows).select("id, name");
+  const { data, error } = await supabaseAdmin.from("booking_players").insert(rows).select("id, name, ball_tag_id");
   if (error) {
     console.error("createBookingRoster: insert failed:", error.message);
     return [];
   }
-  return data ?? [];
+  return (data ?? []).map((r) => ({ id: r.id, name: r.name, ballTagId: r.ball_tag_id }));
 }
 
 export async function fetchScoresForPlayer(playerId: string): Promise<Record<number, number>> {
@@ -162,4 +173,125 @@ export async function saveStationScore(
     return { ok: false, error: "Couldn't save that score. Please try again." };
   }
   return { ok: true };
+}
+
+// -----------------------------------------------------------------------------
+// RFID feed (raw ball_detections rows written by relay/rfid_to_supabase.py).
+// The relay stays dumb — it only writes antenna-port metadata; player
+// resolution happens here at read time via booking_players.ball_tag_id.
+// -----------------------------------------------------------------------------
+
+export interface BallDetection {
+  epc: string;
+  stationNumber: number;
+  role: "start" | "end";
+  detectedAt: string;
+}
+
+export interface BallDetectionsResult {
+  /** Detections grouped by epc. Only epcs that belong to a roster player
+   *  appear here. */
+  rowsByEpc: Record<string, BallDetection[]>;
+  /** EPCs seen at this station in this window that don't belong to any
+   *  roster player (no active booking_players.ball_tag_id match). */
+  unboundEpcs: string[];
+}
+
+/** Fetch the RFID timeline for a group's roster at one station within the
+ *  wave's active window. Two flat queries — matches scoringRepo.ts style;
+ *  embedded joins (used in leaderboardRepo.ts) join INTO booking_players,
+ *  which isn't the shape we need here.
+ *  Returns empty result on error; never throws (consistent with the rest
+ *  of this module). */
+export async function fetchBallDetectionsForGroup(
+  rosterPlayers: { id: string; ballTagId: string | null }[],
+  stationNumber: number,
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetectionsResult> {
+  const empty: BallDetectionsResult = { rowsByEpc: {}, unboundEpcs: [] };
+  const epcs = rosterPlayers.map((p) => p.ballTagId).filter((e): e is string => !!e);
+
+  // 1) Bound detections — epcs belong to the roster.
+  let boundRows: Array<{ epc: string; station_number: number; role: "start" | "end"; detected_at: string }> = [];
+  if (epcs.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from("ball_detections")
+      .select("epc, station_number, role, detected_at")
+      .eq("station_number", stationNumber)
+      .in("epc", epcs)
+      .gte("detected_at", windowStartIso)
+      .lte("detected_at", windowEndIso)
+      .order("detected_at", { ascending: true });
+    if (error) {
+      console.error("fetchBallDetectionsForGroup: bound:", error.message);
+      return empty;
+    }
+    boundRows = data ?? [];
+  }
+
+  // 2) Unbound detections — anything at this station in this window with a
+  // role, minus the bound set. Legacy rows have role=NULL and are skipped.
+  const unboundQuery = supabaseAdmin
+    .from("ball_detections")
+    .select("epc")
+    .eq("station_number", stationNumber)
+    .gte("detected_at", windowStartIso)
+    .lte("detected_at", windowEndIso)
+    .not("role", "is", null);
+  const { data: unboundRows, error: unboundErr } = epcs.length === 0
+    ? await unboundQuery
+    : await unboundQuery.not("epc", "in", `(${epcs.map((e) => `"${e}"`).join(",")})`);
+  if (unboundErr) console.error("fetchBallDetectionsForGroup: unbound:", unboundErr.message);
+
+  const rowsByEpc: Record<string, BallDetection[]> = {};
+  for (const r of boundRows) {
+    (rowsByEpc[r.epc] ??= []).push({
+      epc: r.epc,
+      stationNumber: r.station_number,
+      role: r.role,
+      detectedAt: r.detected_at,
+    });
+  }
+  const unboundEpcs = Array.from(new Set((unboundRows ?? []).map((r) => r.epc)));
+  return { rowsByEpc, unboundEpcs };
+}
+
+/**
+ * Every detection in a wave's window, at any station.
+ *
+ * The station-scoped query above answers "what happened at station 3"; this
+ * answers "where is this group right now", which is what lets the kiosk
+ * follow a ball instead of being parked on a station somebody had to choose
+ * by hand. One query rather than the two that version needs: the roster's
+ * tags are matched in JS, so a ball nobody checked in still comes back with
+ * its timestamp and station and can be announced as an unknown ball rather
+ * than silently dropped.
+ *
+ * Legacy rows (written by the relay before `role` was emitted) carry
+ * role=NULL and are skipped — with no gate there's nothing to say about them.
+ */
+export async function fetchDetectionsInWindow(
+  windowStartIso: string,
+  windowEndIso: string
+): Promise<BallDetection[]> {
+  const { data, error } = await supabaseAdmin
+    .from("ball_detections")
+    .select("epc, station_number, role, detected_at")
+    .gte("detected_at", windowStartIso)
+    .lte("detected_at", windowEndIso)
+    .not("role", "is", null)
+    .order("detected_at", { ascending: true });
+
+  if (error) {
+    console.error("fetchDetectionsInWindow: query failed:", error.message);
+    throw new Error(error.message); // the kiosk shows a dead feed rather than an idle course
+  }
+
+  return (data ?? []).map((row) => ({
+    epc: row.epc,
+    stationNumber: row.station_number,
+    role: row.role,
+    detectedAt: row.detected_at,
+  }));
 }
