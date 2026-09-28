@@ -25,7 +25,7 @@ export const revalidate = 60;
 // what a birthday is; what they don't know is whether their group fits, which
 // is what the line underneath answers — in range terms rather than mechanics,
 // since a 30-person social is arranged with us rather than self-served (a
-// booking holds 5, a start time holds 15).
+// booking holds 5, a start time holds 10).
 const COMMUNITY_OCCASIONS = [
   "Birthdays",
   "Social nights",

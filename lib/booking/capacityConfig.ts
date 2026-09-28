@@ -9,12 +9,12 @@
 //
 // SERVER ONLY. PEOPLE_PER_START_TIME reads a non-NEXT_PUBLIC env var, which
 // is `undefined` in the browser — importing this from a client component
-// would silently swap the configured value for the 15 below. Client code
+// would silently swap the configured value for the 10 below. Client code
 // reads the per-wave numbers off WaveView instead (lib/booking/waves.ts),
 // which the server has already resolved.
 // -----------------------------------------------------------------------------
 
-const DEFAULT_PEOPLE_PER_START_TIME = 15;
+const DEFAULT_PEOPLE_PER_START_TIME = 10;
 
 function readCap(): number {
   const raw = process.env.PEOPLE_PER_START_TIME;
