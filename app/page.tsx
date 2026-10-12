@@ -12,6 +12,8 @@ import {
   PUBLIC_LAUNCH_LABEL,
   SOFT_OPENING_LABEL,
   SOFT_OPENING_PRICE_PER_PERSON_CENTS,
+  SOFT_OPENING_FIRST_DATE,
+  ticketTypesForDate,
   VENUE_TIME_ZONE,
   isPrebookingActive,
   isSoftOpeningOn,
@@ -368,7 +370,8 @@ export default async function HomePage() {
                   <span className={styles.tierGroupNote}>{SOFT_OPENING_LABEL}, 6–9pm</span>
                 </div>
                 <div className={styles.tierRule} />
-                {TIERS.map((tier) => (
+                {/* One round only during the soft opening. */}
+                {TIERS.filter((tier) => ticketTypesForDate(SOFT_OPENING_FIRST_DATE).includes(tier.type)).map((tier) => (
                   <TierRow
                     key={`soft-${tier.name}`}
                     tier={tier}

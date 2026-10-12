@@ -51,6 +51,9 @@ export const PREBOOKING_DEADLINE_LABEL = "7 October";
 // Unlike the pre-booking price this goes by the date you PLAY, not the date
 // you buy — booking a November evening today costs the door price, and
 // turning up on the 15th without a booking costs the soft-opening one.
+// Only one round is sold during the soft opening (see isTicketTypeOnSale) — an
+// hour of play is a lot to ask while the scoring is still being tuned. The
+// Unlimited figure keeps the table whole and is never charged.
 export const SOFT_OPENING_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
   standard: 100_00,
   unlimited: 150_00,
@@ -63,6 +66,15 @@ export const PUBLIC_LAUNCH_LABEL = "23 Oct";
 /** Is this play date ("YYYY-MM-DD") part of the soft opening? */
 export function isSoftOpeningDate(date: string): boolean {
   return date >= SOFT_OPENING_FIRST_DATE && date <= SOFT_OPENING_LAST_DATE;
+}
+
+/** Which tickets can be bought for a play date: just Standard during the soft opening. */
+export function ticketTypesForDate(date: string): readonly TicketType[] {
+  return isSoftOpeningDate(date) ? ["standard"] : TICKET_TYPES;
+}
+
+export function isTicketTypeOnSale(ticketType: TicketType, date: string): boolean {
+  return ticketTypesForDate(date).includes(ticketType);
 }
 
 /** Is the soft opening still running at the venue, i.e. are its prices still on sale? */

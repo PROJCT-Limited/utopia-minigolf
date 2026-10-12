@@ -5,6 +5,7 @@ import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import {
   computeDisplayTotalCents,
   isSoftOpeningDate,
+  isTicketTypeOnSale,
   TICKET_TYPE_LABELS,
   MIN_HEADCOUNT,
   MAX_HEADCOUNT,
@@ -84,7 +85,10 @@ export function BookingWizard({
       const savedWave = saved.selectedWaveId
         ? (waves.find((w) => w.id === saved.selectedWaveId) ?? null)
         : null;
-      const waveUsable = savedWave !== null && hasRoomFor(savedWave, saved.headcount);
+      const waveUsable =
+        savedWave !== null &&
+        hasRoomFor(savedWave, saved.headcount) &&
+        (saved.ticketType === null || isTicketTypeOnSale(saved.ticketType, savedWave.date));
 
       setTicketType(saved.ticketType);
       setHeadcount(saved.headcount);
@@ -104,7 +108,11 @@ export function BookingWizard({
     saveWizardState({ step, ticketType, headcount, selectedWaveId, partySettled, leadName, leadEmail, payment });
   }, [restored, lockedWave, step, ticketType, headcount, selectedWaveId, partySettled, leadName, leadEmail, payment]);
 
-  const selectedWave = waves.find((w) => w.id === selectedWaveId) ?? null;
+  // Only Standard is sold for soft-opening evenings, so a guest who picked
+  // Unlimited is shown the dates from the public launch on. A slot chosen
+  // before switching to Unlimited drops out of the selection the same way.
+  const offeredWaves = ticketType ? waves.filter((w) => isTicketTypeOnSale(ticketType, w.date)) : waves;
+  const selectedWave = offeredWaves.find((w) => w.id === selectedWaveId) ?? null;
   // Whether the soft-opening price is on offer at all, and whether it's the only
   // price on offer (a private link to a soft-opening evening).
   const softOpening: SoftOpeningOffer = !waves.some((w) => isSoftOpeningDate(w.date))
@@ -248,7 +256,7 @@ export function BookingWizard({
                 partySettled && (
                   <div className={styles.slotPicker}>
                     <WavePicker
-                      waves={waves}
+                      waves={offeredWaves}
                       headcount={headcount}
                       selectedWaveId={selectedWaveId}
                       onSelect={setSelectedWaveId}

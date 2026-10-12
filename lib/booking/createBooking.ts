@@ -15,6 +15,7 @@ import {
   derivePartyTypeFromHeadcount,
   isValidHeadcount,
   isValidTicketType,
+  isTicketTypeOnSale,
   CURRENCY,
   TICKET_TYPE_LABELS,
   type TicketType,
@@ -62,6 +63,9 @@ export async function createBookingWithPaymentIntent(
 
   const wave = await fetchWaveById(waveId);
   if (!wave) return { ok: false, error: "That start time no longer exists." };
+  if (!isTicketTypeOnSale(ticketType, wave.date)) {
+    return { ok: false, error: "Only one round (Standard) is on sale for soft-opening evenings, 8–22 Oct." };
+  }
   // Capacity is people: a group of four needs four spaces, and the picker's
   // view of this start time may be seconds stale, so re-check server-side.
   if (!hasRoomForGroup(wave, headcount)) {

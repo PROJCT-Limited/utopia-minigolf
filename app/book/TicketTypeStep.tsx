@@ -1,8 +1,11 @@
 import {
   LIST_PRICE_PER_PERSON_CENTS,
+  PUBLIC_LAUNCH_LABEL,
   SOFT_OPENING_LABEL,
   SOFT_OPENING_PRICE_PER_PERSON_CENTS,
   priceTableFor,
+  ticketTypesForDate,
+  SOFT_OPENING_FIRST_DATE,
   type TicketType,
 } from "@/lib/booking/pricing";
 import styles from "./book.module.css";
@@ -42,10 +45,16 @@ export function TicketTypeStep({
   softOpening: SoftOpeningOffer;
 }) {
   const prices = softOpening === "only" ? SOFT_OPENING_PRICE_PER_PERSON_CENTS : priceTableFor(prebooking);
+  // Only one round is sold during the soft opening: a private link to a
+  // soft-opening evening offers nothing else, and in the public calendar
+  // Unlimited is still offered but only for dates from the launch on.
+  const softTypes = ticketTypesForDate(SOFT_OPENING_FIRST_DATE);
+  const options =
+    softOpening === "only" ? TICKET_OPTIONS.filter((o) => softTypes.includes(o.type)) : TICKET_OPTIONS;
 
   return (
     <div className={styles.tierRows}>
-      {TICKET_OPTIONS.map((option) => {
+      {options.map((option) => {
         const on = selected === option.type;
         return (
           <button
@@ -84,7 +93,9 @@ export function TicketTypeStep({
                     at step 4 is worked out from the evening actually chosen. */}
                 {softOpening === "some" && (
                   <span className={styles.tierAfter}>
-                    {formatMoney(SOFT_OPENING_PRICE_PER_PERSON_CENTS[option.type])} for soft opening, {SOFT_OPENING_LABEL}
+                    {softTypes.includes(option.type)
+                      ? `${formatMoney(SOFT_OPENING_PRICE_PER_PERSON_CENTS[option.type])} for soft opening, ${SOFT_OPENING_LABEL}`
+                      : `From ${PUBLIC_LAUNCH_LABEL}`}
                   </span>
                 )}
               </div>

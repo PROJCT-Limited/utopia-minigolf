@@ -25,4 +25,4 @@ export const PREBOOKING_NOTICE = `These are pre-booking prices — they go up af
 // Why the soft-opening evenings are short and cheap, said once for the home
 // page's price list.
 export const SOFT_OPENING_NOTICE =
-  "During the soft opening we're still tuning the automated scoring, so tickets are limited, evenings run 6–9pm, and prices are lower. Every station is open to play.";
+  "During the soft opening we're still tuning the automated scoring, so tickets are limited to one round, evenings run 6–9pm, and prices are lower. Every station is open to play.";

@@ -6,6 +6,7 @@ import {
   computeWalkInTotalCents,
   isSoftOpeningDate,
   isSoftOpeningOn,
+  isTicketTypeOnSale,
   isValidHeadcount,
   isValidTicketType,
   isPrebookingActive,
@@ -175,5 +176,18 @@ describe("soft opening", () => {
   it("stays on sale through the 22nd, Hong Kong time", () => {
     expect(isSoftOpeningOn(new Date("2026-10-22T23:59:00+08:00"))).toBe(true);
     expect(isSoftOpeningOn(new Date("2026-10-23T00:01:00+08:00"))).toBe(false);
+  });
+});
+
+describe("tickets on sale", () => {
+  it("sells only Standard for soft-opening evenings", () => {
+    expect(isTicketTypeOnSale("standard", SOFT)).toBe(true);
+    expect(isTicketTypeOnSale("unlimited", SOFT)).toBe(false);
+  });
+
+  it("sells both from the public launch", () => {
+    expect(isTicketTypeOnSale("standard", SEASON)).toBe(true);
+    expect(isTicketTypeOnSale("unlimited", SEASON)).toBe(true);
+    expect(isTicketTypeOnSale("unlimited", "2026-10-23")).toBe(true);
   });
 });

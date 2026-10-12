@@ -13,6 +13,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   computeWalkInTotalCents,
+  isTicketTypeOnSale,
   derivePartyTypeFromHeadcount,
   CURRENCY,
   type TicketType,
@@ -513,6 +514,9 @@ export async function createWalkIn(
 ): Promise<{ ok: true; bookingId: string } | { ok: false; error: string }> {
   const wave = await fetchWalkInWave();
   if (!wave) return { ok: false, error: "No start time is open right now — add one in the admin panel first." };
+  if (!isTicketTypeOnSale(input.ticketType, wave.date)) {
+    return { ok: false, error: "Only Standard is sold during the soft opening." };
+  }
   if (wave.peopleLeft < input.headcount) {
     return {
       ok: false,

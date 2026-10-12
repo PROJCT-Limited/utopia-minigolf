@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import {
   MAX_HEADCOUNT,
   MIN_HEADCOUNT,
-  TICKET_TYPES,
   TICKET_TYPE_LABELS,
   walkInPriceTable,
+  ticketTypesForDate,
   type TicketType,
 } from "@/lib/booking/pricing";
 import { todayInHongKong } from "@/lib/scoring/activeWindow";
@@ -45,8 +45,12 @@ export function WalkInScreen({
 
   // Door price for tonight (the soft-opening price during 8–22 Oct). Never the
   // pre-booking price: that was for booking a venue that wasn't built yet.
-  const prices = walkInPriceTable(slot?.date ?? todayInHongKong());
-  const total = (prices[ticketType] * headcount) / 100;
+  const tonight = slot?.date ?? todayInHongKong();
+  const prices = walkInPriceTable(tonight);
+  // Just Standard during the soft opening.
+  const ticketTypes = ticketTypesForDate(tonight);
+  const sold = ticketTypes.includes(ticketType) ? ticketType : ticketTypes[0];
+  const total = (prices[sold] * headcount) / 100;
   const tooMany = slot !== null && headcount > slot.peopleLeft;
 
   return (
@@ -77,11 +81,11 @@ export function WalkInScreen({
       <div className={styles.field}>
         <label>Ticket</label>
         <div className={styles.choiceRow}>
-          {TICKET_TYPES.map((type) => (
+          {ticketTypes.map((type) => (
             <button
               key={type}
               type="button"
-              className={`${styles.choiceBtn} ${ticketType === type ? styles.choiceBtnOn : ""}`}
+              className={`${styles.choiceBtn} ${sold === type ? styles.choiceBtnOn : ""}`}
               onClick={() => setTicketType(type)}
             >
               {TICKET_TYPE_LABELS[type]}
@@ -130,7 +134,7 @@ export function WalkInScreen({
       <button
         type="button"
         className={styles.primaryBtn}
-        onClick={() => onCreate({ leadName, ticketType, headcount })}
+        onClick={() => onCreate({ leadName, ticketType: sold, headcount })}
         disabled={busy || !isValidPlayerName(leadName) || slot === null || tooMany}
       >
         {busy ? "Starting…" : "Start check-in"}
