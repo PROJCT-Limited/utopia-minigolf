@@ -189,7 +189,7 @@ export default async function HomePage() {
           </nav>
 
           <div className={styles.heroContent}>
-            <p className={styles.heroDates}>8 Oct &mdash; 11 Nov 2026</p>
+            <p className={styles.heroDates}>22 Oct &mdash; 22 Nov 2026</p>
             <Link href="/book" className={styles.heroCta}>
               Reserve your place
               <span className={styles.heroCtaArrow} aria-hidden>
