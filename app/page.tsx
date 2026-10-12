@@ -4,7 +4,7 @@ import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
 import { PrebookingCountdown } from "./components/found/PrebookingCountdown";
-import { PREBOOKING_NOTICE } from "@/lib/booking/copy";
+import { PREBOOKING_NOTICE, RESCHEDULE_CUTOFF_DAYS } from "@/lib/booking/copy";
 import {
   PREBOOKING_DEADLINE_LABEL,
   PREBOOKING_ENDS_AT,
@@ -49,6 +49,51 @@ const TIERS: { type: TicketType; label: string; name: string; body: string }[] =
     body: "Keep playing + free flow drinks",
   },
 ];
+
+// Prices and the reschedule cutoff come from the same config the booking flow
+// charges and enforces, so an answer can't drift from what actually happens.
+function faqs(prices: Record<TicketType, number>): { q: string; a: string }[] {
+  return [
+    {
+      q: "I've never played minigolf. Is that okay?",
+      a: "Yes. You get a putter and a ball, and the aim is to get the ball in with as few shots as you can.",
+    },
+    {
+      q: "How does it work?",
+      a: "Book a slot online. Check in at the door, where we take everyone's names and give each player a ball linked to them. Play the five stations, enter your shots on the tablet after each one, and see your score on the leaderboard.",
+    },
+    { q: "How long does it take?", a: "Standard is a 30 minute run through all five stations." },
+    {
+      q: "What's the difference between Standard and Unlimited?",
+      a: `Standard (HKD ${priceFigure(prices.standard)}) is one 30 minute run plus a drink. Unlimited (HKD ${priceFigure(prices.unlimited)}) is the full hour, with free flow drinks.`,
+    },
+    {
+      q: "How many people can come, and can I come alone?",
+      a: "Yes, you can come alone. Solo players and small groups may share a start time with other groups. Groups are up to 5 players, and each start time holds up to 10 people, so for a bigger group, book two groups at the same time.",
+    },
+    {
+      q: "When should I arrive, and what if I'm late?",
+      a: "Arrive 10 minutes before your slot so we can check you in and hand out balls. Your slot is when your group starts playing, and groups head out every 15 minutes. If you're late, we'll try to fit you into the next available start time, but we can't guarantee a spot and your play time may be shortened.",
+    },
+    {
+      q: "How is my score counted?",
+      a: "After each station you enter your shots on the tablet, and your score goes on the leaderboard.",
+    },
+    {
+      q: "Can I change or cancel my booking?",
+      a: `You can reschedule once, up to ${RESCHEDULE_CUTOFF_DAYS} days before your date, using the link in your confirmation email. Bookings cancelled at least 3 days before your date can be refunded: reply to your confirmation email or write to hi@projct.co.`,
+    },
+    {
+      q: "What's included with the drinks, and can kids play?",
+      a: "Standard comes with one drink. Unlimited's free flow includes alcohol and soft drinks. Kids are welcome: players under 14 need to come with a parent, and we don't serve alcohol to anyone under 18.",
+    },
+    { q: "Where is it?", a: "PROJCT, GF, 189 Queen's Road West, Sai Ying Pun." },
+    {
+      q: "Can we hire it for a birthday or team night?",
+      a: "Yes. Email hi@projct.co with the date, group size and what you have in mind.",
+    },
+  ];
+}
 
 function priceFigure(cents: number): string {
   return (cents / 100).toFixed(0);
@@ -138,6 +183,7 @@ export default async function HomePage() {
             <div className={styles.navLinks}>
               <a href="#leaderboard">Leaderboard</a>
               <a href="#pricing">Pricing</a>
+              <a href="#faq">FAQ</a>
               <Link href="/book">Reserve</Link>
             </div>
           </nav>
@@ -300,6 +346,29 @@ export default async function HomePage() {
               />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* QUESTIONS — same rule-separated rows as Build for community; each
+          question opens in place, so the list stays scannable. */}
+      <section className={styles.twoCol} id="faq">
+        <div>
+          <h2 className={styles.h48}>Questions</h2>
+        </div>
+        <div>
+          <div className={styles.communityRule} />
+          {faqs(prices).map(({ q, a }) => (
+            <div key={q}>
+              <details className={styles.faqItem}>
+                <summary className={styles.faqQuestion}>
+                  <h3 className={styles.communityTitle}>{q}</h3>
+                  <span className={styles.faqToggle} aria-hidden />
+                </summary>
+                <p className={styles.faqAnswer}>{a}</p>
+              </details>
+              <div className={styles.communityRule} />
+            </div>
+          ))}
         </div>
       </section>
 

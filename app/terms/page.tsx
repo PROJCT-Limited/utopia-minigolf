@@ -56,15 +56,17 @@ export default function TermsPage() {
             <div className={styles.section}>
               <h2>Cancellations</h2>
               <p>
-                To cancel a booking, reply to your confirmation email with your request. We&rsquo;ll confirm the
-                outcome directly with you.
+                Bookings cancelled at least 3 days before the booked date can be refunded. To cancel, reply to
+                your confirmation email or write to hi@projct.co, and we&rsquo;ll confirm the outcome directly
+                with you.
               </p>
             </div>
             <div className={styles.rule} />
             <div className={styles.section}>
               <h2>At the venue</h2>
               <p>
-                Please arrive on time for your start time, late arrival may shorten your play time. FOUND reserves the
+                Please arrive on time for your start time, late arrival may shorten your play time. Players under 14 must be accompanied by a parent, and
+                alcohol is not served to anyone under 18. FOUND reserves the
                 right to refuse entry to anyone who is intoxicated, disruptive, or a safety risk to staff or other
                 guests.
               </p>
