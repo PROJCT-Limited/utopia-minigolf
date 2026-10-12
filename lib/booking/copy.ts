@@ -21,3 +21,8 @@ export const RESCHEDULE_NOTICE = `Your date is confirmed — you can reschedule 
 // the countdown strip carries the deadline, so this says plainly that the
 // prices shown are the reduced ones and won't last.
 export const PREBOOKING_NOTICE = `These are pre-booking prices — they go up after ${PREBOOKING_DEADLINE_LABEL}, Hong Kong time.`;
+
+// Why the soft-opening evenings are short and cheap, said once for the home
+// page's price list.
+export const SOFT_OPENING_NOTICE =
+  "During the soft opening we're still tuning the automated scoring, so tickets are limited, evenings run 6–9pm, and prices are lower. Every station is open to play.";

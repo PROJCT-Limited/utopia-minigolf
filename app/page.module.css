@@ -180,14 +180,46 @@
    Small and wide-tracked so it never competes with the pill: Input Mono has
    no true small-caps cut, so uppercase at 11px with 0.2em does that job. */
 .heroDates {
+  display: grid;
+  grid-template-columns: max-content auto;
+  justify-content: start;
+  gap: 10px 1.2em;
   margin-bottom: 20px;
   font-family: var(--f-mono);
   font-weight: 400;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.4;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(247, 247, 247, 0.85);
+}
+/* Each line is a phase name and its dates; the grid puts the names in one
+   column so both date ranges start at the same x. */
+.heroDates p {
+  display: contents;
+}
+.heroDatesPhase {
+  color: rgba(247, 247, 247, 0.55);
+}
+/* On a phone the hero copy is bottom-anchored, so every extra line pushes it
+   toward the logo: keep each phase on one line by tightening the tracking. */
+@media (max-width: 560px) {
+  .heroDates {
+    gap: 8px 0.8em;
+    letter-spacing: 0.1em;
+  }
+  /* ...and give the hero the extra line's worth of height it now needs. */
+  .hero {
+    height: 560px;
+  }
+}
+@media (max-width: 360px) {
+  .hero {
+    height: 620px;
+  }
+}
+.nowrap {
+  white-space: nowrap;
 }
 
 /* The hero's single call to action, in the slot the decorative pill used to

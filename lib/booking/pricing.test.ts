@@ -3,7 +3,9 @@ import { describe, it, expect } from "vitest";
 import {
   computeBookingTotalCents,
   computeDisplayTotalCents,
-  computeListTotalCents,
+  computeWalkInTotalCents,
+  isSoftOpeningDate,
+  isSoftOpeningOn,
   isValidHeadcount,
   isValidTicketType,
   isPrebookingActive,
@@ -18,6 +20,9 @@ import {
 // Two instants that straddle the deadline, so no test depends on when it runs.
 const DURING = new Date(PREBOOKING_ENDS_AT.getTime() - 60_000);
 const AFTER = new Date(PREBOOKING_ENDS_AT.getTime() + 60_000);
+// One play date on each side of the soft-opening line.
+const SOFT = "2026-10-15";
+const SEASON = "2026-11-05";
 
 describe("door prices", () => {
   it("is HKD 170 standard, HKD 240 unlimited from opening day", () => {
@@ -70,46 +75,51 @@ describe("pre-booking price", () => {
 
 describe("computeBookingTotalCents", () => {
   it("charges the pre-booking price before the deadline", () => {
-    expect(computeBookingTotalCents("standard", 1, DURING)).toBe(15000);
-    expect(computeBookingTotalCents("standard", 5, DURING)).toBe(75000);
-    expect(computeBookingTotalCents("unlimited", 1, DURING)).toBe(22000);
-    expect(computeBookingTotalCents("unlimited", 5, DURING)).toBe(110000);
+    expect(computeBookingTotalCents("standard", 1, SEASON, DURING)).toBe(15000);
+    expect(computeBookingTotalCents("standard", 5, SEASON, DURING)).toBe(75000);
+    expect(computeBookingTotalCents("unlimited", 1, SEASON, DURING)).toBe(22000);
+    expect(computeBookingTotalCents("unlimited", 5, SEASON, DURING)).toBe(110000);
   });
 
   it("charges the door price after the deadline", () => {
-    expect(computeBookingTotalCents("standard", 1, AFTER)).toBe(17000);
-    expect(computeBookingTotalCents("standard", 2, AFTER)).toBe(34000);
-    expect(computeBookingTotalCents("unlimited", 1, AFTER)).toBe(24000);
-    expect(computeBookingTotalCents("unlimited", 5, AFTER)).toBe(120000);
+    expect(computeBookingTotalCents("standard", 1, SEASON, AFTER)).toBe(17000);
+    expect(computeBookingTotalCents("standard", 2, SEASON, AFTER)).toBe(34000);
+    expect(computeBookingTotalCents("unlimited", 1, SEASON, AFTER)).toBe(24000);
+    expect(computeBookingTotalCents("unlimited", 5, SEASON, AFTER)).toBe(120000);
   });
 
   it("rejects headcounts outside 1-5", () => {
-    expect(() => computeBookingTotalCents("standard", 0, DURING)).toThrow();
-    expect(() => computeBookingTotalCents("standard", 6, DURING)).toThrow();
-    expect(() => computeBookingTotalCents("standard", 1.5, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 0, SEASON, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 6, SEASON, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("standard", 1.5, SEASON, DURING)).toThrow();
   });
 
   it("rejects invalid ticket types", () => {
-    expect(() => computeBookingTotalCents("premium" as never, 2, DURING)).toThrow();
+    expect(() => computeBookingTotalCents("premium" as never, 2, SEASON, DURING)).toThrow();
   });
 });
 
-describe("computeListTotalCents", () => {
+describe("computeWalkInTotalCents", () => {
   it("ignores the pre-booking price entirely — walk-ins pay the door price", () => {
-    expect(computeListTotalCents("standard", 2)).toBe(34000);
-    expect(computeListTotalCents("unlimited", 2)).toBe(48000);
+    expect(computeWalkInTotalCents("standard", 2, SEASON)).toBe(34000);
+    expect(computeWalkInTotalCents("unlimited", 2, SEASON)).toBe(48000);
+  });
+
+  it("charges the soft-opening price at the door on a soft-opening evening", () => {
+    expect(computeWalkInTotalCents("standard", 2, SOFT)).toBe(20000);
+    expect(computeWalkInTotalCents("unlimited", 2, SOFT)).toBe(30000);
   });
 
   it("still validates its inputs", () => {
-    expect(() => computeListTotalCents("standard", 9)).toThrow();
-    expect(() => computeListTotalCents("premium" as never, 1)).toThrow();
+    expect(() => computeWalkInTotalCents("standard", 9, SEASON)).toThrow();
+    expect(() => computeWalkInTotalCents("premium" as never, 1, SEASON)).toThrow();
   });
 });
 
 describe("computeDisplayTotalCents", () => {
   it("follows the flag it is given, not any clock", () => {
-    expect(computeDisplayTotalCents("standard", 3, true)).toBe(45000);
-    expect(computeDisplayTotalCents("standard", 3, false)).toBe(51000);
+    expect(computeDisplayTotalCents("standard", 3, true, SEASON)).toBe(45000);
+    expect(computeDisplayTotalCents("standard", 3, false, SEASON)).toBe(51000);
   });
 });
 
@@ -144,5 +154,26 @@ describe("derivePartyTypeFromHeadcount", () => {
     expect(derivePartyTypeFromHeadcount(2)).toBe("pair");
     expect(derivePartyTypeFromHeadcount(3)).toBe("group");
     expect(derivePartyTypeFromHeadcount(5)).toBe("group");
+  });
+});
+
+describe("soft opening", () => {
+  it("covers 8–22 Oct inclusive, by play date", () => {
+    expect(isSoftOpeningDate("2026-10-07")).toBe(false);
+    expect(isSoftOpeningDate("2026-10-08")).toBe(true);
+    expect(isSoftOpeningDate("2026-10-22")).toBe(true);
+    expect(isSoftOpeningDate("2026-10-23")).toBe(false);
+  });
+
+  it("charges the soft-opening price for a soft-opening evening, whenever it's bought", () => {
+    expect(computeBookingTotalCents("standard", 2, SOFT, AFTER)).toBe(20000);
+    expect(computeBookingTotalCents("unlimited", 3, SOFT, AFTER)).toBe(45000);
+    expect(computeBookingTotalCents("standard", 1, SOFT, DURING)).toBe(10000);
+    expect(computeDisplayTotalCents("unlimited", 1, false, SOFT)).toBe(15000);
+  });
+
+  it("stays on sale through the 22nd, Hong Kong time", () => {
+    expect(isSoftOpeningOn(new Date("2026-10-22T23:59:00+08:00"))).toBe(true);
+    expect(isSoftOpeningOn(new Date("2026-10-23T00:01:00+08:00"))).toBe(false);
   });
 });

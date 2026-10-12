@@ -12,7 +12,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
-  computeListTotalCents,
+  computeWalkInTotalCents,
   derivePartyTypeFromHeadcount,
   CURRENCY,
   type TicketType,
@@ -467,7 +467,7 @@ export async function completeCheckIn(bookingId: string): Promise<{ ok: boolean;
 // -----------------------------------------------------------------------------
 
 /** The start time a walk-in would be put against right now, if any. */
-export async function fetchWalkInWave(): Promise<{ id: string; startTime: string; peopleLeft: number } | null> {
+export async function fetchWalkInWave(): Promise<{ id: string; date: string; startTime: string; peopleLeft: number } | null> {
   const today = todayInHongKong();
   const { data, error } = await supabaseAdmin
     .from("waves")
@@ -486,6 +486,7 @@ export async function fetchWalkInWave(): Promise<{ id: string; startTime: string
 
   return {
     id: picked.id,
+    date: picked.date,
     startTime: picked.startTime.slice(0, 5),
     peopleLeft: Math.max(0, picked.row.people_capacity - picked.row.people_used),
   };
@@ -532,7 +533,7 @@ export async function createWalkIn(
       headcount: input.headcount,
       present_headcount: input.headcount,
       ticket_type: input.ticketType,
-      amount_paid_cents: computeListTotalCents(input.ticketType, input.headcount),
+      amount_paid_cents: computeWalkInTotalCents(input.ticketType, input.headcount, wave.date),
       currency: CURRENCY,
       status: "paid",
       source: "walk_in",

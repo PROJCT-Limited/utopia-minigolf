@@ -6,9 +6,10 @@ import {
   MIN_HEADCOUNT,
   TICKET_TYPES,
   TICKET_TYPE_LABELS,
-  LIST_PRICE_PER_PERSON_CENTS,
+  walkInPriceTable,
   type TicketType,
 } from "@/lib/booking/pricing";
+import { todayInHongKong } from "@/lib/scoring/activeWindow";
 import { isValidPlayerName } from "@/lib/checkin/checkin";
 import { fetchWalkInWaveAction } from "@/lib/checkin/checkinActions";
 import styles from "./checkin.module.css";
@@ -25,7 +26,7 @@ export function WalkInScreen({
   const [leadName, setLeadName] = useState("");
   const [ticketType, setTicketType] = useState<TicketType>("standard");
   const [headcount, setHeadcount] = useState(1);
-  const [slot, setSlot] = useState<{ startTime: string; peopleLeft: number } | null>(null);
+  const [slot, setSlot] = useState<{ date: string; startTime: string; peopleLeft: number } | null>(null);
   const [slotLoaded, setSlotLoaded] = useState(false);
 
   // Which start time a walk-in lands in is the server's call (it's the one
@@ -34,7 +35,7 @@ export function WalkInScreen({
     let cancelled = false;
     fetchWalkInWaveAction().then((wave) => {
       if (cancelled) return;
-      setSlot(wave ? { startTime: wave.startTime, peopleLeft: wave.peopleLeft } : null);
+      setSlot(wave ? { date: wave.date, startTime: wave.startTime, peopleLeft: wave.peopleLeft } : null);
       setSlotLoaded(true);
     });
     return () => {
@@ -42,9 +43,10 @@ export function WalkInScreen({
     };
   }, []);
 
-  // List price, always: the pre-booking price is for people booking a venue
-  // that isn't built yet, not for someone already standing in it.
-  const total = (LIST_PRICE_PER_PERSON_CENTS[ticketType] * headcount) / 100;
+  // Door price for tonight (the soft-opening price during 8–22 Oct). Never the
+  // pre-booking price: that was for booking a venue that wasn't built yet.
+  const prices = walkInPriceTable(slot?.date ?? todayInHongKong());
+  const total = (prices[ticketType] * headcount) / 100;
   const tooMany = slot !== null && headcount > slot.peopleLeft;
 
   return (
@@ -83,7 +85,7 @@ export function WalkInScreen({
               onClick={() => setTicketType(type)}
             >
               {TICKET_TYPE_LABELS[type]}
-              <span className={styles.choicePrice}>${LIST_PRICE_PER_PERSON_CENTS[type] / 100} pp</span>
+              <span className={styles.choicePrice}>${prices[type] / 100} pp</span>
             </button>
           ))}
         </div>

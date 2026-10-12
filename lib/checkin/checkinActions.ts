@@ -114,7 +114,7 @@ export async function completeCheckInAction(bookingId: string): Promise<{ ok: bo
   return result;
 }
 
-export async function fetchWalkInWaveAction(): Promise<{ id: string; startTime: string; peopleLeft: number } | null> {
+export async function fetchWalkInWaveAction(): Promise<{ id: string; date: string; startTime: string; peopleLeft: number } | null> {
   return fetchWalkInWave();
 }
 

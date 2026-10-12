@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
 import {
   computeDisplayTotalCents,
+  isSoftOpeningDate,
   TICKET_TYPE_LABELS,
   MIN_HEADCOUNT,
   MAX_HEADCOUNT,
@@ -16,7 +17,7 @@ import sharedStyles from "../components/found/shared.module.css";
 import confirmationStyles from "../confirmation.module.css";
 import { loadWizardState, saveWizardState } from "./wizardState";
 import { WavePicker } from "./WavePicker";
-import { TicketTypeStep } from "./TicketTypeStep";
+import { TicketTypeStep, type SoftOpeningOffer } from "./TicketTypeStep";
 import { PaymentStep } from "./PaymentStep";
 import { StepProgress } from "./StepProgress";
 import styles from "./book.module.css";
@@ -104,6 +105,13 @@ export function BookingWizard({
   }, [restored, lockedWave, step, ticketType, headcount, selectedWaveId, partySettled, leadName, leadEmail, payment]);
 
   const selectedWave = waves.find((w) => w.id === selectedWaveId) ?? null;
+  // Whether the soft-opening price is on offer at all, and whether it's the only
+  // price on offer (a private link to a soft-opening evening).
+  const softOpening: SoftOpeningOffer = !waves.some((w) => isSoftOpeningDate(w.date))
+    ? "none"
+    : waves.every((w) => isSoftOpeningDate(w.date))
+      ? "only"
+      : "some";
 
   // Capacity is counted in people, so party size decides what's bookable:
   // growing the group can outgrow the start time already chosen, which then
@@ -184,7 +192,12 @@ export function BookingWizard({
               </p>
             )}
             <div className={styles.stepBody}>
-              <TicketTypeStep selected={ticketType} onSelect={setTicketType} prebooking={prebooking} />
+              <TicketTypeStep
+                selected={ticketType}
+                onSelect={setTicketType}
+                prebooking={prebooking}
+                softOpening={softOpening}
+              />
             </div>
           </div>
         </section>
@@ -293,9 +306,9 @@ export function BookingWizard({
                 </div>
                 <div className={`${confirmationStyles.row} ${sharedStyles.detailRowTotal}`}>
                   <span className={sharedStyles.detailLabel}>
-                    Total{prebooking ? " (pre-booking)" : ""}
+                    Total{selectedWave && isSoftOpeningDate(selectedWave.date) ? " (soft opening)" : prebooking ? " (pre-booking)" : ""}
                   </span>
-                  <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking))}</span>
+                  <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking, selectedWave?.date ?? ""))}</span>
                 </div>
               </div>
 
@@ -319,7 +332,7 @@ export function BookingWizard({
               <PaymentStep
                 bookingId={payment.bookingId}
                 clientSecret={payment.clientSecret}
-                amountLabel={formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking))}
+                amountLabel={formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking, selectedWave?.date ?? ""))}
               />
             </div>
           </div>

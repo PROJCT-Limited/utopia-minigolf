@@ -4,13 +4,17 @@ import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
 import { PrebookingCountdown } from "./components/found/PrebookingCountdown";
-import { PREBOOKING_NOTICE, RESCHEDULE_CUTOFF_DAYS } from "@/lib/booking/copy";
+import { PREBOOKING_NOTICE, RESCHEDULE_CUTOFF_DAYS, SOFT_OPENING_NOTICE } from "@/lib/booking/copy";
 import {
   PREBOOKING_DEADLINE_LABEL,
   PREBOOKING_ENDS_AT,
   LIST_PRICE_PER_PERSON_CENTS,
+  PUBLIC_LAUNCH_LABEL,
+  SOFT_OPENING_LABEL,
+  SOFT_OPENING_PRICE_PER_PERSON_CENTS,
   VENUE_TIME_ZONE,
   isPrebookingActive,
+  isSoftOpeningOn,
   priceTableFor,
   type TicketType,
 } from "@/lib/booking/pricing";
@@ -147,6 +151,9 @@ export default async function HomePage() {
   const now = new Date();
   const prebooking = isPrebookingActive(now);
   const prices = priceTableFor(prebooking);
+  // Same ISR caveat: the soft-opening rows and hero line can linger up to a
+  // minute into the 23rd. Harmless — the charge goes by the evening booked.
+  const softOpening = isSoftOpeningOn(now);
 
   const [dayRows, monthRows, allRows] = await Promise.all([
     fetchLeaderboard("day"),
@@ -189,7 +196,22 @@ export default async function HomePage() {
           </nav>
 
           <div className={styles.heroContent}>
-            <p className={styles.heroDates}>22 Oct &mdash; 22 Nov 2026</p>
+            {/* Two phases, launch first: it's the headline, and the soft-opening
+                line drops out by itself once the 22nd has passed. */}
+            <div className={styles.heroDates}>
+              <p>
+                <span className={styles.heroDatesPhase}>Public launch</span>
+                <span>23 Oct &mdash; 22 Nov 2026</span>
+              </p>
+              {softOpening && (
+                <p>
+                  <span className={styles.heroDatesPhase}>Soft opening</span>
+                  <span>
+                    8 &mdash; 22 Oct &middot; <span className={styles.nowrap}>Limited tickets</span>
+                  </span>
+                </p>
+              )}
+            </div>
             <Link href="/book" className={styles.heroCta}>
               Reserve your place
               <span className={styles.heroCtaArrow} aria-hidden>
@@ -311,6 +333,7 @@ export default async function HomePage() {
             {prebooking && (
               <p className={styles.prebookingNote}>{PREBOOKING_NOTICE}</p>
             )}
+            {!prebooking && softOpening && <p className={styles.prebookingNote}>{SOFT_OPENING_NOTICE}</p>}
           </div>
           <div>
             {/* Four rows while the offer runs, not two with a line through
@@ -333,6 +356,28 @@ export default async function HomePage() {
                   <span className={styles.tierGroupNote}>
                     From {DAY_AFTER_PREBOOKING_LABEL}
                   </span>
+                </div>
+              </>
+            )}
+            {/* The soft opening reuses the same two-group layout, but both groups
+                are on sale: the date picked decides which price applies. */}
+            {!prebooking && softOpening && (
+              <>
+                <div className={styles.tierGroupHead}>
+                  <span className={styles.prebookingTag}>Soft opening</span>
+                  <span className={styles.tierGroupNote}>{SOFT_OPENING_LABEL}, 6–9pm</span>
+                </div>
+                <div className={styles.tierRule} />
+                {TIERS.map((tier) => (
+                  <TierRow
+                    key={`soft-${tier.name}`}
+                    tier={tier}
+                    priceCents={SOFT_OPENING_PRICE_PER_PERSON_CENTS[tier.type]}
+                    bookable
+                  />
+                ))}
+                <div className={styles.tierGroupHead}>
+                  <span className={styles.tierGroupNote}>From {PUBLIC_LAUNCH_LABEL}</span>
                 </div>
               </>
             )}

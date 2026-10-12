@@ -74,7 +74,7 @@ export async function createBookingWithPaymentIntent(
     };
   }
 
-  const amountCents = computeBookingTotalCents(ticketType, headcount);
+  const amountCents = computeBookingTotalCents(ticketType, headcount, wave.date);
   const manageToken = generateManageToken();
   const referredBy = await resolveReferredBy();
 

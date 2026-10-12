@@ -9,7 +9,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "./wavesRepo";
 import type { WaveView } from "./waves";
-import type { TicketType } from "./pricing";
+import { isSoftOpeningDate, type TicketType } from "./pricing";
 import { hasRoomForGroup, reserveSeats, releaseSeats } from "./waveCapacity";
 import { RESCHEDULE_CUTOFF_DAYS } from "./copy";
 import { sendBookingRescheduled } from "@/lib/email/send";
@@ -90,6 +90,15 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
   }
   if (isPastRescheduleCutoff(newWave)) {
     return { ok: false, error: "That start time is too close to its date to book online — please contact us." };
+  }
+  // Soft-opening evenings sell for less than the rest of the season, and the
+  // price is fixed when the booking is paid — so a move across that line would
+  // either undercharge or overcharge. Staff can still do it by hand.
+  if (currentWave && isSoftOpeningDate(currentWave.date) !== isSoftOpeningDate(newWave.date)) {
+    return {
+      ok: false,
+      error: "Soft-opening evenings are priced differently, so this can't be moved online — please contact us.",
+    };
   }
 
   const { error: bookingUpdateError } = await supabaseAdmin
