@@ -7,7 +7,8 @@ import {
   TICKET_TYPE_LABELS,
   walkInPriceTable,
   ticketTypesForDate,
-  type TicketType,
+  isPerPersonTicketType,
+  type PerPersonTicketType,
 } from "@/lib/booking/pricing";
 import { todayInHongKong } from "@/lib/scoring/activeWindow";
 import { isValidPlayerName } from "@/lib/checkin/checkin";
@@ -19,12 +20,12 @@ export function WalkInScreen({
   busy,
   error,
 }: {
-  onCreate: (input: { leadName: string; ticketType: TicketType; headcount: number }) => void;
+  onCreate: (input: { leadName: string; ticketType: PerPersonTicketType; headcount: number }) => void;
   busy: boolean;
   error: string | null;
 }) {
   const [leadName, setLeadName] = useState("");
-  const [ticketType, setTicketType] = useState<TicketType>("standard");
+  const [ticketType, setTicketType] = useState<PerPersonTicketType>("standard");
   const [headcount, setHeadcount] = useState(1);
   const [slot, setSlot] = useState<{ date: string; startTime: string; peopleLeft: number } | null>(null);
   const [slotLoaded, setSlotLoaded] = useState(false);
@@ -47,8 +48,8 @@ export function WalkInScreen({
   // pre-booking price: that was for booking a venue that wasn't built yet.
   const tonight = slot?.date ?? todayInHongKong();
   const prices = walkInPriceTable(tonight);
-  // Just Standard during the soft opening.
-  const ticketTypes = ticketTypesForDate(tonight);
+  // Just Standard during the soft opening. Never Family: it's booked ahead.
+  const ticketTypes = ticketTypesForDate(tonight).filter(isPerPersonTicketType);
   const sold = ticketTypes.includes(ticketType) ? ticketType : ticketTypes[0];
   const total = (prices[sold] * headcount) / 100;
   const tooMany = slot !== null && headcount > slot.peopleLeft;

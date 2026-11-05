@@ -17,7 +17,7 @@ import {
   MonoLabel,
   bodyText,
 } from "./components/EmailPrimitives";
-import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
+import { describeTicket, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
 export interface BookingRescheduledEmailProps {
@@ -54,7 +54,7 @@ export function BookingRescheduledEmail({
 
       <EmailDetailBox
         rows={[
-          { label: "Ticket", value: TICKET_TYPE_LABELS[ticketType] },
+          { label: "Ticket", value: describeTicket(ticketType, headcount) },
           {
             label: "New date",
             value: newWaveIsConfirmed

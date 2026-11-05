@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
-import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
+import { describeTicket, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "../../utils/formatWave";
 import { ShareChallenge } from "./ShareChallenge";
 import sharedStyles from "../../components/found/shared.module.css";
@@ -103,7 +103,7 @@ export function ConfirmationView({
         </div>
         <div className={styles.row}>
           <span className={sharedStyles.detailLabel}>Ticket</span>
-          <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[initialBooking.ticketType]}</span>
+          <span className={sharedStyles.detailValue}>{describeTicket(initialBooking.ticketType, initialBooking.headcount)}</span>
         </div>
         <div className={styles.row}>
           <span className={sharedStyles.detailLabel}>Slot</span>

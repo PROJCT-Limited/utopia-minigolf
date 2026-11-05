@@ -13,11 +13,11 @@ import { stripe } from "@/lib/stripe/server";
 import {
   computeBookingTotalCents,
   derivePartyTypeFromHeadcount,
-  isValidHeadcount,
+  describeTicket,
+  familyParty,
   isValidTicketType,
-  isTicketTypeOnSale,
+  ticketRuleError,
   CURRENCY,
-  TICKET_TYPE_LABELS,
   type TicketType,
 } from "./pricing";
 import { hasRoomForGroup } from "./waveCapacity";
@@ -28,6 +28,8 @@ import { resolveReferredBy } from "@/lib/partners/partnersRepo";
 export interface CreateBookingInput {
   waveId: string;
   ticketType: TicketType;
+  /** Players in total. For a family, 2 adults + children — the children
+      count, and so the price, are worked out from this on the server. */
   headcount: number;
   leadName: string;
   leadEmail: string;
@@ -43,7 +45,8 @@ function describeBooking(
   headcount: number,
   wave: { date: string; timeLabel: string }
 ): string {
-  return `FOUND · ${headcount} × ${TICKET_TYPE_LABELS[ticketType]} · ${wave.date} ${wave.timeLabel}`;
+  const what = ticketType === "family" ? describeTicket(ticketType, headcount) : `${headcount} × ${describeTicket(ticketType, headcount)}`;
+  return `FOUND · ${what} · ${wave.date} ${wave.timeLabel}`;
 }
 
 export async function createBookingWithPaymentIntent(
@@ -57,15 +60,13 @@ export async function createBookingWithPaymentIntent(
   if (!isValidTicketType(ticketType)) {
     return { ok: false, error: "Invalid ticket type." };
   }
-  if (!isValidHeadcount(headcount)) {
-    return { ok: false, error: "Party size must be between 1 and 5." };
-  }
 
   const wave = await fetchWaveById(waveId);
   if (!wave) return { ok: false, error: "That start time no longer exists." };
-  if (!isTicketTypeOnSale(ticketType, wave.date)) {
-    return { ok: false, error: "Only one round (Standard) is on sale for soft-opening evenings, 8–22 Oct." };
-  }
+  // Party size for the ticket, soft-opening tickets, and the family ticket's
+  // early-only rule — the same check reschedule.ts runs.
+  const ruleError = ticketRuleError(ticketType, headcount, wave);
+  if (ruleError) return { ok: false, error: ruleError };
   // Capacity is people: a group of four needs four spaces, and the picker's
   // view of this start time may be seconds stale, so re-check server-side.
   if (!hasRoomForGroup(wave, headcount)) {
@@ -91,6 +92,12 @@ export async function createBookingWithPaymentIntent(
       party_type: derivePartyTypeFromHeadcount(headcount),
       headcount,
       ticket_type: ticketType,
+      // A family's split, for reporting (bookings_family_party keeps it equal
+      // to headcount). Only sent on family bookings, so Standard and Unlimited
+      // keep working on a database that hasn't run 027_family_ticket.sql yet.
+      ...(ticketType === "family"
+        ? { adults_count: familyParty(headcount).adults, children_count: familyParty(headcount).children }
+        : {}),
       amount_paid_cents: amountCents,
       currency: CURRENCY,
       status: "pending",

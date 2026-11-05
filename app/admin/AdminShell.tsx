@@ -5,14 +5,14 @@ import styles from "./admin.module.css";
  * The admin panel's frame: left-hand tabs, then whatever the page is.
  *
  * `active` is passed in rather than read from usePathname() so this stays a
- * server component — the nav is four links and a heading, and making the
+ * server component — the nav is a handful of links and a heading, and making the
  * whole shell client-side to highlight one of them would ship JS for nothing.
  *
  * Deliberately not a route layout: /admin/login lives under the same segment
  * and must not be wrapped in navigation to pages nobody signed in can open.
  */
 
-export type AdminTab = "calendar" | "waves" | "partners" | "checkin";
+export type AdminTab = "calendar" | "waves" | "signups" | "partners" | "checkin";
 
 // Labels only. Each tab briefly carried a line of grey explanation beneath
 // it — "Season at a glance", "Referral codes" — which restated the label
@@ -20,6 +20,7 @@ export type AdminTab = "calendar" | "waves" | "partners" | "checkin";
 const TABS: { id: AdminTab; href: string; label: string }[] = [
   { id: "calendar", href: "/admin/calendar", label: "Calendar" },
   { id: "waves", href: "/admin", label: "Start times" },
+  { id: "signups", href: "/admin/signups", label: "Sign-ups" },
   { id: "partners", href: "/admin/partners", label: "Partners" },
   { id: "checkin", href: "/checkin", label: "Check in" },
 ];

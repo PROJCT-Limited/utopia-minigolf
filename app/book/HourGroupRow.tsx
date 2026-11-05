@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { HourGroup } from "@/lib/booking/waves";
+import { isOfferable, type HourGroup, type SlotRule } from "@/lib/booking/waves";
 import { formatWaveDate } from "../utils/formatWave";
 import { WaveRow } from "./WaveRow";
 import styles from "./book.module.css";
@@ -18,19 +18,24 @@ export function HourGroupRow({
   selectedWaveId,
   onSelect,
   showDate = true,
+  slotRule = null,
 }: {
   hourGroup: HourGroup;
   headcount: number;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
   showDate?: boolean;
+  slotRule?: SlotRule | null;
 }) {
   const containsSelected = hourGroup.waves.some((w) => w.id === selectedWaveId);
   const [expanded, setExpanded] = useState(containsSelected);
   // Space doesn't pool across the hour's four start times — a group books one
   // of them — so an hour is closed to this group unless a single start time
   // inside it still fits them whole.
-  const closed = hourGroup.isFull || hourGroup.largestGroupThatFits < headcount;
+  const closed = hourGroup.isFull || !hourGroup.waves.some((w) => isOfferable(w, headcount, slotRule));
+  // The ticket rules the whole hour out (a family ticket in the evening):
+  // that's the reason worth giving, ahead of how much room is left.
+  const ruledOut = slotRule !== null && !hourGroup.waves.some((w) => slotRule.allows(w));
 
   return (
     <div className={styles.hourGroup}>
@@ -46,7 +51,7 @@ export function HourGroupRow({
             guests don't see exact availability counts. */}
         {closed && (
           <span className={styles.hourAvailability}>
-            {hourGroup.isFull ? "Sold out" : `No room for ${headcount}`}
+            {ruledOut ? slotRule.label : hourGroup.isFull ? "Sold out" : `No room for ${headcount}`}
           </span>
         )}
         {!closed && (
@@ -62,6 +67,7 @@ export function HourGroupRow({
               key={w.id}
               wave={w}
               headcount={headcount}
+              slotRule={slotRule}
               selected={selectedWaveId === w.id}
               onSelect={onSelect}
             />

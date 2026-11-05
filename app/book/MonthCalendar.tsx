@@ -7,7 +7,8 @@ import {
   monthGridDays,
   shiftMonthKey,
   groupByHour,
-  hasRoomFor,
+  isOfferable,
+  type SlotRule,
   type WaveView,
 } from "@/lib/booking/waves";
 import { formatMonthLabel } from "../utils/formatWave";
@@ -26,11 +27,13 @@ export function MonthCalendar({
   headcount,
   selectedWaveId,
   onSelect,
+  slotRule = null,
 }: {
   waves: WaveView[];
   headcount: number;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
+  slotRule?: SlotRule | null;
 }) {
   const [viewMonth, setViewMonth] = useState(() => (waves[0] ? waves[0].date.slice(0, 7) : todayMonthKey()));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -39,8 +42,8 @@ export function MonthCalendar({
   // A day is only offerable if one of its start times fits this group whole —
   // a day with ten spaces spread one-per-start-time seats nobody but a solo.
   const daysThatFit = useMemo(
-    () => new Set(waves.filter((w) => hasRoomFor(w, headcount)).map((w) => w.date)),
-    [waves, headcount]
+    () => new Set(waves.filter((w) => isOfferable(w, headcount, slotRule)).map((w) => w.date)),
+    [waves, headcount, slotRule]
   );
   const gridDays = useMemo(() => monthGridDays(viewMonth), [viewMonth]);
   const dayHourGroups = useMemo(
@@ -114,6 +117,7 @@ export function MonthCalendar({
                 selectedWaveId={selectedWaveId}
                 onSelect={onSelect}
                 showDate={false}
+                slotRule={slotRule}
               />
             ))
           )}

@@ -12,7 +12,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isValidTicketType, MAX_HEADCOUNT, type TicketType } from "@/lib/booking/pricing";
+import { isPerPersonTicketType, MAX_HEADCOUNT, type PerPersonTicketType } from "@/lib/booking/pricing";
 import { isValidBallTag, isValidPlayerName, isValidPresentHeadcount, normalizeBallTag } from "./checkin";
 import {
   completeCheckIn,
@@ -46,9 +46,8 @@ export async function setPresentHeadcountAction(
   bookingId: string,
   present: number
 ): Promise<{ ok: boolean; error?: string }> {
-  if (!isValidPresentHeadcount(present)) {
-    return { ok: false, error: `A group is 1 to ${MAX_HEADCOUNT} players.` };
-  }
+  // The limit depends on the booking's ticket (a family can be 6), so
+  // setPresentHeadcount checks it once it has read the booking.
   const result = await setPresentHeadcount(bookingId, present);
   if (result.ok) revalidatePath("/checkin");
   return result;
@@ -120,16 +119,17 @@ export async function fetchWalkInWaveAction(): Promise<{ id: string; date: strin
 
 export async function createWalkInAction(input: {
   leadName: string;
-  ticketType: TicketType;
+  ticketType: PerPersonTicketType;
   headcount: number;
 }): Promise<{ ok: true; bookingId: string } | { ok: false; error: string }> {
   if (!isValidPlayerName(input.leadName)) {
     return { ok: false, error: "Enter a name for the group." };
   }
-  if (!isValidTicketType(input.ticketType)) {
+  // Family tickets are booked ahead online, never sold at the door.
+  if (!isPerPersonTicketType(input.ticketType)) {
     return { ok: false, error: "Pick a ticket type." };
   }
-  if (!isValidPresentHeadcount(input.headcount)) {
+  if (!isValidPresentHeadcount(input.headcount, input.ticketType)) {
     return { ok: false, error: `A group is 1 to ${MAX_HEADCOUNT} players.` };
   }
 

@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { digestDayFor, summarizeDay, type DigestBookingRow, type DigestWaveRow } from "./dailyDigest";
 
 const WAVES: DigestWaveRow[] = [
-  { id: "in-season", date: "2026-10-09", start_time: "19:15:00", people_capacity: 15 },
-  { id: "in-season-2", date: "2026-10-10", start_time: "20:00:00", people_capacity: 15 },
+  { id: "in-season", date: "2026-11-09", start_time: "19:15:00", people_capacity: 15 },
+  { id: "in-season-2", date: "2026-11-10", start_time: "20:00:00", people_capacity: 15 },
   // Stranded on a date the season no longer covers — see migration 019.
   { id: "out-of-season", date: "2026-09-30", start_time: "16:30:00", people_capacity: 15 },
 ];
@@ -103,8 +103,8 @@ describe("summarizeDay", () => {
     });
 
     expect(stats.today.slots).toEqual([
-      { date: "2026-10-10", time: "20:00", people: 5 },
-      { date: "2026-10-09", time: "19:15", people: 2 },
+      { date: "2026-11-10", time: "20:00", people: 5 },
+      { date: "2026-11-09", time: "19:15", people: 2 },
     ]);
   });
 

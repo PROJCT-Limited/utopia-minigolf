@@ -14,7 +14,7 @@ export function SiteFooter() {
           </div>
           <div className="fr">
             <span>Minigolf Social Club by PROJCT</span>
-            <span>Unit 8-10, GF, 189 Queen&rsquo;s Road West, Sai Ying Pun, Hong Kong</span>
+            <span>Unit 8-10, G/F, 189 Queen&rsquo;s Road West, Sai Ying Pun, Hong Kong</span>
             <span className="navLinks">
               <Link href="/about">About PROJCT</Link>
               <Link href="/terms">Terms</Link>

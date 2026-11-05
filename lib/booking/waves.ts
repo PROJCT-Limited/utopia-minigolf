@@ -60,14 +60,33 @@ export function hasRoomFor(wave: Pick<WaveView, "peopleLeft" | "isFull">, headco
   return !wave.isFull && wave.peopleLeft >= headcount;
 }
 
+/**
+ * A restriction the chosen ticket puts on which start times can be picked —
+ * the family ticket's early-only rule. Start times it rules out are still
+ * shown, closed, rather than hidden: a guest should see why the evening is
+ * closed to them, not wonder where it went. `note` explains it once above the
+ * times; `label` is the short word on each closed row, which would otherwise
+ * repeat the whole sentence down a column of evenings.
+ */
+export interface SlotRule {
+  allows: (wave: Pick<WaveView, "startTime">) => boolean;
+  note: string;
+  label: string;
+}
+
+/** Can this party pick this start time: room for all of them, and allowed by the ticket? */
+export function isOfferable(wave: WaveView, headcount: number, rule: SlotRule | null): boolean {
+  return hasRoomFor(wave, headcount) && (rule?.allows(wave) ?? true);
+}
+
 // A start time with fewer than a full group's worth of space left is nearly
 // gone — that's the point where a walk-up group of five can no longer take it.
 const LOW_AVAILABILITY_PEOPLE = 5;
 export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
 /** The only bookable date range — nothing outside it is fetched or shown. */
-export const BOOKABLE_WINDOW_START = "2026-10-08";
-export const BOOKABLE_WINDOW_END = "2026-11-22";
+export const BOOKABLE_WINDOW_START = "2026-11-07";
+export const BOOKABLE_WINDOW_END = "2026-12-10";
 
 export function toWaveView(row: WaveRow): WaveView {
   const peopleLeft = Math.max(0, row.people_capacity - row.people_used);

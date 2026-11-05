@@ -76,23 +76,20 @@
 }
 
 /* ---------- HERO ---------- */
+/* The hero copy and the wordmark are laid out in one column (see
+   .heroInner), never positioned on top of each other, so they can't collide
+   at any width or zoom: the height below is a minimum, and the hero grows
+   when the copy needs more room. */
 .hero {
   position: relative;
-  height: clamp(480px, 52.1vw, 782px);
-  min-height: 480px;
+  display: flex;
+  min-height: clamp(480px, 52.1vw, 782px);
   overflow: hidden;
   background: #000;
 }
-/* Above 900px the two-column grid (and the top-anchored hero copy block)
-   is still active, but hero copy is set in near-fixed px sizes rather than
-   scaling 1:1 with hero height — raise the floor here so the "Reserve your
-   place" link never runs into the wordmark below it on 1024–1300px
-   viewports. Below 900px .heroContent switches to bottom-anchored
-   positioning (see the max-width: 900px block) and doesn't need this. */
 @media (min-width: 900px) {
   .hero {
-    height: clamp(640px, 52.1vw, 782px);
-    min-height: 640px;
+    min-height: clamp(640px, 52.1vw, 782px);
   }
 }
 .heroImage {
@@ -105,23 +102,55 @@
   background: linear-gradient(180deg, rgba(19, 18, 16, 0.55) 0%, rgba(19, 18, 16, 0.15) 40%, rgba(19, 18, 16, 0.65) 100%);
 }
 
-/* Caps the hero's foreground content (nav/copy/wordmark) at the same
-   1500px design width as .container, centred — only the background image
-   and overlay are truly full-bleed. Without this, the foreground would
-   drift off the page-content axis on viewports wider than 1500px. */
+/* Caps the hero's foreground (copy and wordmark) at the same 1500px design
+   width as .container, centred — only the background image and overlay are
+   truly full-bleed. Copy at the top, wordmark pushed to the bottom; the
+   space between them shrinks first, and once it's gone the hero gets taller.
+   The top padding clears the sticky nav that lies over the photograph. */
 .heroInner {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  width: 100%;
   max-width: 1500px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(110px, 11vw, 167px) var(--f-pad-x) clamp(24px, 3.3vw, 50px);
 }
 
+/* Sticky, and pulled up by its own height so it lies over the photograph at
+   the top of the page exactly where the old in-hero nav sat. The bar is clear
+   over the hero and fills in with ink as the page scrolls onto paper, where
+   white text would otherwise vanish; browsers without scroll-driven
+   animations get the filled bar from the start. */
+.navBar {
+  --nav-h: clamp(52px, 4vw, 64px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--nav-h);
+  margin-bottom: calc(-1 * var(--nav-h));
+  background: var(--f-ink);
+}
+@supports (animation-timeline: scroll()) {
+  .navBar {
+    background: transparent;
+    animation: navBarFill linear both;
+    animation-timeline: scroll();
+    animation-range: 0 300px;
+  }
+}
+@keyframes navBarFill {
+  to {
+    background: var(--f-ink);
+  }
+}
 .nav {
-  position: absolute;
-  top: clamp(20px, 2.9vw, 44px);
-  left: var(--f-pad-x);
-  right: var(--f-pad-x);
-  z-index: 2;
+  max-width: 1500px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--f-pad-x);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -153,15 +182,12 @@
 }
 
 .heroContent {
-  position: absolute;
-  z-index: 2;
   /* right column starts where every other two-column section's right column
-     starts: pad-x + left-column-width(0.95fr) + gap, as a fraction of the
-     inner (padding-excluded) content width — keeps this axis-aligned with
-     the rest of the page even though the hero isn't part of the grid. */
-  left: calc(var(--f-pad-x) + (100% - 2 * var(--f-pad-x)) * 0.51);
-  right: var(--f-pad-x);
-  top: 21.4%;
+     starts: left-column-width(0.95fr) + gap, as a fraction of the content
+     width — keeps this axis-aligned with the rest of the page even though
+     the hero isn't part of the grid. */
+  margin-left: 51%;
+  margin-bottom: clamp(32px, 4vw, 56px);
   color: var(--f-white);
 }
 .heroBody {
@@ -173,18 +199,16 @@
   line-height: 1.553;
   letter-spacing: 0;
 }
-/* Run dates, as the line that opens the hero — dateline, then the action it
-   belongs to, then the description. Sat under the paragraph it read as a
-   stray last line of it; sat beside the pill it crowded the button. Above,
-   with its own space, it reads as a heading and can't collide with either.
-   Small and wide-tracked so it never competes with the pill: Input Mono has
-   no true small-caps cut, so uppercase at 11px with 0.2em does that job. */
+/* When and where, as two quiet lines above the button: dates and hours,
+   then the neighbourhood as a map link. The full address and opening hours
+   are spelled out further down (map section, FAQ), so the hero only needs
+   enough to answer "can I come?" at a glance. Small and wide-tracked so it
+   never competes with the pill. */
 .heroDates {
-  display: grid;
-  grid-template-columns: max-content auto;
-  justify-content: start;
-  gap: 10px 1.2em;
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
   font-family: var(--f-mono);
   font-weight: 400;
   font-size: 12px;
@@ -193,29 +217,21 @@
   text-transform: uppercase;
   color: rgba(247, 247, 247, 0.85);
 }
-/* Each line is a phase name and its dates; the grid puts the names in one
-   column so both date ranges start at the same x. */
-.heroDates p {
-  display: contents;
+.heroAddress {
+  text-decoration: underline;
+  text-decoration-color: rgba(247, 247, 247, 0.4);
+  text-underline-offset: 3px;
 }
-.heroDatesPhase {
-  color: rgba(247, 247, 247, 0.55);
+.heroAddress:hover {
+  text-decoration-color: currentColor;
 }
-/* On a phone the hero copy is bottom-anchored, so every extra line pushes it
-   toward the logo: keep each phase on one line by tightening the tracking. */
+/* On a phone, tighten the tracking so each line wraps as little as possible. */
 @media (max-width: 560px) {
   .heroDates {
-    gap: 8px 0.8em;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
   }
-  /* ...and give the hero the extra line's worth of height it now needs. */
   .hero {
-    height: 560px;
-  }
-}
-@media (max-width: 360px) {
-  .hero {
-    height: 620px;
+    min-height: 560px;
   }
 }
 .nowrap {
@@ -262,47 +278,128 @@
 }
 
 .wordmark {
-  position: absolute;
-  z-index: 2;
-  left: var(--f-pad-x);
-  right: var(--f-pad-x);
-  bottom: 6.5%;
-  width: calc(100% - 2 * var(--f-pad-x));
+  display: block;
+  margin-top: auto;
+  width: 100%;
   height: auto;
   filter: brightness(0) invert(1);
 }
 
+/* One column below 900px: the copy runs the full width and sits just above
+   the wordmark, as before, rather than at the top of the photograph. */
 @media (max-width: 900px) {
+  .heroInner {
+    padding-top: calc(clamp(52px, 4vw, 64px) + 32px);
+  }
   .heroContent {
-    left: var(--f-pad-x);
-    top: auto;
-    bottom: clamp(140px, 24vw, 220px);
+    margin-left: 0;
+    margin-top: auto;
+  }
+  .wordmark {
+    margin-top: 0;
   }
 }
+/* Only FAQ and Reserve now, which fit side by side at any phone width. */
 @media (max-width: 640px) {
   .navLinks {
-    gap: 16px;
-  }
-  .navLinks a:not(:last-child) {
-    display: none;
+    gap: 20px;
   }
 }
 
-/* ---------- FIVE STATIONS ---------- */
-.stationsHeading {
-  align-self: end;
+/* ---------- NEW TO MINIGOLF ---------- */
+/* A strip, not a section: tighter than the --f-sec-pad rhythm, so it reads as
+   a footnote to the hero rather than the next chapter. */
+.newcomer {
+  composes: container;
+  display: grid;
+  grid-template-columns: 0.95fr 1fr;
+  gap: var(--f-gap);
+  align-items: baseline;
+  padding-top: clamp(40px, 4.5vw, 72px);
+  padding-bottom: clamp(40px, 4.5vw, 72px);
 }
-.stationsImageWrap {
+.newcomerBody {
+  max-width: 38ch;
+  font-family: var(--f-archivo);
+  font-weight: 400;
+  font-size: clamp(19px, 1.2vw + 10px, 26px);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+@media (max-width: 900px) {
+  .newcomer {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* ---------- SIGN UP ---------- */
+/* The ink band runs edge to edge; the text and button inside stay where they
+   were when the band was a boxed rectangle — on the 1500px content width,
+   inset by the old box padding. */
+.signupStrip {
+  background: var(--f-ink);
+  color: var(--f-white);
+}
+.signupStripInner {
+  max-width: 1500px;
+  margin: 0 auto;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 32px;
+  padding: clamp(28px, 3.5vw, 52px) calc(var(--f-pad-x) + clamp(24px, 3.5vw, 56px));
 }
-.stationsImage {
-  width: 74%;
-  height: auto;
-  aspect-ratio: 498 / 325;
-  object-fit: cover;
-  filter: grayscale(1);
-  border-radius: 16px;
+.signupStripText {
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: clamp(24px, 2.2vw + 8px, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+/* White pill on ink, the hero CTA's colours on a flat ground. */
+.signupStripCta {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 100px;
+  background: var(--f-white);
+  color: var(--f-ink) !important;
+  font-family: var(--f-archivo);
+  font-weight: 700;
+  font-size: 16.5px;
+  padding: 14px 26px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.signupStripCta:hover {
+  opacity: 0.85;
+}
+
+/* ---------- FIVE STATIONS ---------- */
+.stationsText {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 3vw, 44px);
+}
+/* Two columns of three: short enough to sit under the heading without
+   pushing the column taller than the plan beside it. */
+.stationsText .stationsLegend {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 14px 32px;
+}
+@media (max-width: 900px) {
+  /* Plan first, then its key, so the key is read with the plan in view. */
+  .stationsText {
+    display: contents;
+  }
+  .stationsPlan {
+    order: 1;
+  }
+  .stationsLegend {
+    order: 2;
+  }
 }
 
 /* ---------- CONCEPT ---------- */
@@ -584,6 +681,16 @@
   font-size: 16px;
   color: var(--f-stone);
 }
+/* The family row's terms, under its description. */
+.tierNote {
+  margin-top: 10px;
+  max-width: 48ch;
+  font-family: var(--f-archivo);
+  font-weight: 300;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--f-stone);
+}
 .tierRight {
   text-align: right;
   flex-shrink: 0;
@@ -689,8 +796,72 @@
   padding: 14px 26px;
   text-decoration: none;
 }
-.readyRight {
-  align-self: end;
+/* "Not ready yet?" sits under the Reserve button, in the left column, so the
+   right column is free for the map. */
+.readyNotify {
+  margin-top: clamp(48px, 5vw, 80px);
+  max-width: 440px;
+}
+
+/* Right column: map on top, then the address across the full width, then
+   the links. */
+.location {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.locationText {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.locationAddress {
+  font-style: normal;
+  font-family: var(--f-archivo);
+  font-weight: 500;
+  font-size: clamp(18px, 0.6vw + 12px, 22px);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.locationLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-family: var(--f-archivo);
+  font-size: 15.5px;
+}
+.locationLinks a {
+  text-decoration: underline;
+  text-decoration-color: rgba(19, 18, 16, 0.3);
+  text-underline-offset: 3px;
+}
+.locationLinks a:hover {
+  text-decoration-color: currentColor;
+}
+.mapWrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--f-stone);
+}
+/* Black and white like the hero photograph; colour comes back on hover so
+   the streets are easier to read when someone's actually using it. */
+.map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: grayscale(1) contrast(1.05);
+  transition: filter 0.3s;
+}
+.mapWrap:hover .map {
+  filter: none;
+}
+@media (max-width: 900px) {
+  .mapWrap {
+    aspect-ratio: 4 / 3;
+  }
 }
 .notifyRow {
   display: flex;
@@ -741,11 +912,6 @@
   color: var(--f-grey);
   max-width: 40ch;
 }
-@media (max-width: 900px) {
-  .readyRight {
-    align-self: start;
-  }
-}
 
 /* ---------- shared grid collapse ---------- */
 @media (max-width: 900px) {
@@ -755,15 +921,5 @@
   }
   .alignEnd {
     align-items: start;
-  }
-  .stationsHeading {
-    order: 2;
-  }
-  .stationsImageWrap {
-    order: 1;
-    justify-content: flex-start;
-  }
-  .stationsImage {
-    width: 100%;
   }
 }

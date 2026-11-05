@@ -1,11 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FoundLeaderboard } from "./components/FoundLeaderboard";
 import { FoundNotifySignup } from "./components/FoundNotifySignup";
 import { FoundFooter } from "./components/found/FoundFooter";
+import { FloorPlan, FloorPlanLegend } from "./components/found/FloorPlan";
+import { PhotoStrip, type StripPhoto } from "./components/found/PhotoStrip";
 import { PrebookingCountdown } from "./components/found/PrebookingCountdown";
-import { PREBOOKING_NOTICE, RESCHEDULE_CUTOFF_DAYS, SOFT_OPENING_NOTICE } from "@/lib/booking/copy";
 import {
+  FAMILY_TICKET_NOTE,
+  PREBOOKING_NOTICE,
+  RESCHEDULE_CUTOFF_DAYS,
+  SOFT_OPENING_NOTICE,
+} from "@/lib/booking/copy";
+import { PEOPLE_PER_START_TIME } from "@/lib/booking/capacityConfig";
+import {
+  FAMILY_ADULTS,
+  FAMILY_BASE_PRICE_CENTS,
+  FAMILY_MAX_CHILDREN,
+  MAX_HEADCOUNT,
   PREBOOKING_DEADLINE_LABEL,
   PREBOOKING_ENDS_AT,
   LIST_PRICE_PER_PERSON_CENTS,
@@ -18,14 +29,29 @@ import {
   isPrebookingActive,
   isSoftOpeningOn,
   priceTableFor,
-  type TicketType,
+  type PerPersonTicketType,
 } from "@/lib/booking/pricing";
-import { fetchLeaderboard } from "@/lib/scoring/leaderboardRepo";
 import styles from "./page.module.css";
 
-// Leaderboard data changes as rounds get scored — revalidate periodically
-// rather than making the whole marketing page dynamic on every request.
+// The price rows switch on the clock (pre-booking, soft opening) — revalidate
+// periodically rather than making the whole marketing page dynamic.
 export const revalidate = 60;
+
+const MAP_QUERY = "189 Queen's Road West, Sai Ying Pun, Hong Kong";
+const MAP_URL = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(MAP_QUERY);
+const DIRECTIONS_URL = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(MAP_QUERY);
+// Google's keyless embed: a pinned map, no API key or billing account needed.
+const MAP_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(MAP_QUERY)}&z=17&output=embed`;
+
+// The photo strip, in order: the room, a player, the bar, two stations. Wide
+// and tall shots alternate so the strip reads as a sequence, not a grid.
+const GALLERY: StripPhoto[] = [
+  { src: "/found/gallery-1-venue.jpg", alt: "The FOUND floor at night: a putter at a hole in the foreground, people talking by the bar behind", width: 1920, height: 1080 },
+  { src: "/found/gallery-2-putting.jpg", alt: "A player in a cap lining up a putt on a ramp station, the street visible through the glass", width: 1031, height: 1080 },
+  { src: "/found/gallery-3-drinks.jpg", alt: "Glasses with golf balls set into them on a steel bar table, beside a scoring tablet", width: 858, height: 1080 },
+  { src: "/found/gallery-4-mirror-station.jpg", alt: "A putt on a station with a curved mirrored wall, lit blue", width: 1922, height: 1080 },
+  { src: "/found/gallery-5-ramp.jpg", alt: "A ball rolling up a white ramp toward the hole, a putter just behind it", width: 858, height: 1267 },
+];
 
 // Occasions, not descriptions of occasions. Anyone reading this already knows
 // what a birthday is; what they don't know is whether their group fits, which
@@ -41,7 +67,7 @@ const COMMUNITY_OCCASIONS = [
   "Fun days",
 ];
 
-const TIERS: { type: TicketType; label: string; name: string; body: string }[] = [
+const TIERS: { type: PerPersonTicketType; label: string; name: string; body: string }[] = [
   {
     type: "standard",
     label: "ONE ROUND, PER PERSON",
@@ -56,9 +82,16 @@ const TIERS: { type: TicketType; label: string; name: string; body: string }[] =
   },
 ];
 
+// One price for the party rather than per person, so it sits outside TIERS.
+const FAMILY_TIER = {
+  label: "FAMILY, BEFORE 7PM",
+  name: "Family round",
+  body: "2 adults + 2 children, a drink each",
+};
+
 // Prices and the reschedule cutoff come from the same config the booking flow
 // charges and enforces, so an answer can't drift from what actually happens.
-function faqs(prices: Record<TicketType, number>): { q: string; a: string }[] {
+function faqs(prices: Record<PerPersonTicketType, number>): { q: string; a: string }[] {
   return [
     {
       q: "I've never played minigolf. Is that okay?",
@@ -75,7 +108,7 @@ function faqs(prices: Record<TicketType, number>): { q: string; a: string }[] {
     },
     {
       q: "How many people can come, and can I come alone?",
-      a: "Yes, you can come alone. Solo players and small groups may share a start time with other groups. Groups are up to 5 players, and each start time holds up to 10 people, so for a bigger group, book two groups at the same time.",
+      a: `Yes, you can come alone. Solo players and small groups may share a start time with other groups. Groups are up to ${MAX_HEADCOUNT} players (a family ticket covers up to ${FAMILY_ADULTS + FAMILY_MAX_CHILDREN}), and each start time holds up to ${PEOPLE_PER_START_TIME} people, so for a bigger group, book two groups at the same time.`,
     },
     {
       q: "When should I arrive, and what if I'm late?",
@@ -93,7 +126,8 @@ function faqs(prices: Record<TicketType, number>): { q: string; a: string }[] {
       q: "What's included with the drinks, and can kids play?",
       a: "Standard comes with one drink. Unlimited's free flow includes alcohol and soft drinks. Kids are welcome: players under 14 need to come with a parent, and we don't serve alcohol to anyone under 18.",
     },
-    { q: "Where is it?", a: "PROJCT, GF, 189 Queen's Road West, Sai Ying Pun." },
+    { q: "When are you open?", a: "Every day from 7 November to 10 December 2026, 5pm to 10pm." },
+    { q: "Where is it?", a: "PROJCT, G/F, 189 Queen's Road West, Sai Ying Pun, Hong Kong." },
     {
       q: "Can we hire it for a birthday or team night?",
       a: "Yes. Email hi@projct.co with the date, group size and what you have in mind.",
@@ -115,10 +149,13 @@ function TierRow({
   tier,
   priceCents,
   bookable,
+  note,
 }: {
-  tier: (typeof TIERS)[number];
+  tier: { label: string; name: string; body: string };
   priceCents: number;
   bookable: boolean;
+  /** A line under the row, for terms a name and a price can't carry. */
+  note?: string;
 }) {
   return (
     <>
@@ -127,6 +164,7 @@ function TierRow({
           <span className={styles.monoLabel}>{tier.label}</span>
           <div className={styles.tierName}>{tier.name}</div>
           <div className={styles.tierBody}>{tier.body}</div>
+          {note && <p className={styles.tierNote}>{note}</p>}
         </div>
         <div className={styles.tierRight}>
           <div className={styles.tierPrice}>
@@ -157,12 +195,6 @@ export default async function HomePage() {
   // minute into the 23rd. Harmless — the charge goes by the evening booked.
   const softOpening = isSoftOpeningOn(now);
 
-  const [dayRows, monthRows, allRows] = await Promise.all([
-    fetchLeaderboard("day"),
-    fetchLeaderboard("month"),
-    fetchLeaderboard("all"),
-  ]);
-
   return (
     <div className={styles.found}>
       {prebooking && (
@@ -171,6 +203,20 @@ export default async function HomePage() {
           serverNowMs={now.getTime()}
         />
       )}
+
+      {/* Sticky nav: overlays the hero at the top of the page, then stays
+          pinned (on an ink bar) once the photograph has scrolled away. */}
+      <div className={styles.navBar}>
+        <nav className={styles.nav}>
+          <Link href="/" className={styles.navLogo}>
+            <Image src="/found/logo-found.svg" alt="FOUND" width={90} height={18} className={styles.navLogoImg} />
+          </Link>
+          <div className={styles.navLinks}>
+            <a href="#faq">FAQ</a>
+            <Link href="/book">Reserve</Link>
+          </div>
+        </nav>
+      </div>
 
       {/* HERO */}
       <header className={styles.hero}>
@@ -185,34 +231,18 @@ export default async function HomePage() {
         <div className={styles.heroOverlay} />
 
         <div className={styles.heroInner}>
-          <nav className={styles.nav}>
-            <Link href="/" className={styles.navLogo}>
-              <Image src="/found/logo-found.svg" alt="FOUND" width={90} height={18} className={styles.navLogoImg} />
-            </Link>
-            <div className={styles.navLinks}>
-              <a href="#leaderboard">Leaderboard</a>
-              <a href="#pricing">Pricing</a>
-              <a href="#faq">FAQ</a>
-              <Link href="/book">Reserve</Link>
-            </div>
-          </nav>
-
           <div className={styles.heroContent}>
-            {/* Two phases, launch first: it's the headline, and the soft-opening
-                line drops out by itself once the 22nd has passed. */}
+            {/* When and where, before anything else: the two things someone
+                deciding whether they can come needs first. */}
             <div className={styles.heroDates}>
               <p>
-                <span className={styles.heroDatesPhase}>Public launch</span>
-                <span>23 Oct &mdash; 22 Nov 2026</span>
+                7 Nov &mdash; 10 Dec, <span className={styles.nowrap}>daily 5&ndash;10pm</span>
               </p>
-              {softOpening && (
-                <p>
-                  <span className={styles.heroDatesPhase}>Soft opening</span>
-                  <span>
-                    8 &mdash; 22 Oct &middot; <span className={styles.nowrap}>Limited tickets</span>
-                  </span>
-                </p>
-              )}
+              <p>
+                <a href={MAP_URL} target="_blank" rel="noopener noreferrer" className={styles.heroAddress}>
+                  Sai Ying Pun <span aria-hidden>↗</span>
+                </a>
+              </p>
             </div>
             <Link href="/book" className={styles.heroCta}>
               Reserve your place
@@ -237,23 +267,41 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* FIVE STATIONS */}
+      {/* NEW TO MINIGOLF — for anyone who doesn't know what minigolf is, or
+          hasn't played: answered before the page asks them to read on. */}
+      <section className={styles.newcomer}>
+        <span className={styles.monoLabel}>New to minigolf?</span>
+        <p className={styles.newcomerBody}>
+          Never played? You&rsquo;re in good company. It&rsquo;s an easy game for everyone, and a great way to
+          spend an evening with your friends trying something new. Just show up and have fun!
+        </p>
+      </section>
+
+      {/* FIVE STATIONS — heading and the key on the left, the floor plan on
+          the right; on a phone the plan comes before its key. */}
       <section className={`${styles.twoCol} ${styles.alignEnd}`}>
-        <div className={styles.stationsHeading}>
+        <div className={styles.stationsText}>
           <h2 className={styles.h48}>
             Five stations.
             <br />
             <span className={styles.stone}>Five fun challenges.</span>
           </h2>
+          <FloorPlanLegend className={styles.stationsLegend} />
         </div>
-        <div className={styles.stationsImageWrap}>
-          <Image
-            src="/found/image-2.png"
-            alt="A wooden box of golf balls"
-            width={498}
-            height={325}
-            className={styles.stationsImage}
-          />
+        <FloorPlan className={styles.stationsPlan} />
+      </section>
+
+      {/* PHOTOS — what an evening actually looks like, after the plan of
+          where everything is. */}
+      <PhotoStrip label="A night at FOUND" photos={GALLERY} />
+
+      {/* SIGN UP */}
+      <section className={styles.signupStrip}>
+        <div className={styles.signupStripInner}>
+          <p className={styles.signupStripText}>Sign up now to play with your friends.</p>
+          <Link href="/book" className={styles.signupStripCta}>
+            Reserve →
+          </Link>
         </div>
       </section>
 
@@ -279,16 +327,6 @@ export default async function HomePage() {
           <Link href="/book" className={styles.conceptCta}>
             Reserve your place →
           </Link>
-        </div>
-      </section>
-
-      {/* SEE WHO SCORED */}
-      <section className={styles.twoCol} id="leaderboard">
-        <div>
-          <h2 className={styles.h48}>See who scored</h2>
-        </div>
-        <div>
-          <FoundLeaderboard day={dayRows} month={monthRows} all={allRows} />
         </div>
       </section>
 
@@ -393,6 +431,7 @@ export default async function HomePage() {
                 bookable={!prebooking}
               />
             ))}
+            <TierRow tier={FAMILY_TIER} priceCents={FAMILY_BASE_PRICE_CENTS} bookable={!prebooking} note={FAMILY_TICKET_NOTE} />
           </div>
         </div>
       </section>
@@ -428,10 +467,37 @@ export default async function HomePage() {
           <Link href="/book" className={styles.readyCta}>
             Reserve your place →
           </Link>
+          <div className={styles.readyNotify}>
+            <span className={styles.monoLabel}>Not ready yet?</span>
+            <FoundNotifySignup />
+          </div>
         </div>
-        <div className={styles.readyRight}>
-          <span className={styles.monoLabel}>Not ready yet?</span>
-          <FoundNotifySignup />
+
+        {/* WHERE — the map, with the address and links underneath it. */}
+        <div className={styles.location}>
+          <div className={styles.mapWrap}>
+            <iframe
+              src={MAP_EMBED_URL}
+              title="Map: FOUND at 189 Queen’s Road West, Sai Ying Pun"
+              className={styles.map}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+          <div className={styles.locationText}>
+            <address className={styles.locationAddress}>
+              PROJCT, G/F, 189 Queen&rsquo;s Road West, Sai Ying Pun, Hong Kong
+            </address>
+            <div className={styles.locationLinks}>
+              <a href={DIRECTIONS_URL} target="_blank" rel="noopener noreferrer">
+                Get directions <span aria-hidden>↗</span>
+              </a>
+              <a href={MAP_URL} target="_blank" rel="noopener noreferrer">
+                Open in Google Maps <span aria-hidden>↗</span>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 

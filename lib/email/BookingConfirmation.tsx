@@ -16,8 +16,8 @@ import {
   MonoLabel,
   bodyText,
 } from "./components/EmailPrimitives";
-import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
-import { TICKET_TYPE_LABELS, type TicketType } from "@/lib/booking/pricing";
+import { FAMILY_DRINKS_NOTICE, FAMILY_SUPERVISION_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import { describeTicket, type TicketType } from "@/lib/booking/pricing";
 import { formatWaveDate } from "@/app/utils/formatWave";
 
 export interface BookingConfirmationEmailProps {
@@ -58,7 +58,7 @@ export function BookingConfirmationEmail({
 
       <EmailDetailBox
         rows={[
-          { label: "Ticket", value: TICKET_TYPE_LABELS[ticketType] },
+          { label: "Ticket", value: describeTicket(ticketType, headcount) },
           { label: "Amount paid", value: formatMoney(amountPaidCents, currency) },
           {
             label: "Slot",
@@ -67,6 +67,13 @@ export function BookingConfirmationEmail({
           },
         ]}
       />
+
+      {ticketType === "family" && (
+        <>
+          <Text style={bodyText}>{FAMILY_SUPERVISION_NOTICE}</Text>
+          <Text style={bodyText}>{FAMILY_DRINKS_NOTICE}</Text>
+        </>
+      )}
 
       <Text style={bodyText}>{RESCHEDULE_NOTICE}</Text>
 

@@ -1,17 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
+import { useEffect, useMemo, useState } from "react";
+import { isOfferable, type WaveView } from "@/lib/booking/waves";
+import { slotRuleFor } from "@/lib/booking/slotRules";
 import {
   computeDisplayTotalCents,
+  familyParty,
   isSoftOpeningDate,
   isTicketTypeOnSale,
+  isValidHeadcountFor,
+  maxHeadcountFor,
+  minHeadcountFor,
+  FAMILY_ADULTS,
+  FAMILY_BASE_PRICE_CENTS,
+  FAMILY_EXTRA_CHILD_CENTS,
+  FAMILY_MAX_CHILDREN,
+  FAMILY_MIN_CHILDREN,
   TICKET_TYPE_LABELS,
-  MIN_HEADCOUNT,
-  MAX_HEADCOUNT,
   type TicketType,
 } from "@/lib/booking/pricing";
-import { PREBOOKING_NOTICE, RESCHEDULE_NOTICE } from "@/lib/booking/copy";
+import {
+  FAMILY_SUPERVISION_NOTICE,
+  PREBOOKING_NOTICE,
+  RESCHEDULE_NOTICE,
+} from "@/lib/booking/copy";
 import { createBookingWithPaymentIntent } from "@/lib/booking/createBooking";
 import { formatWaveDate } from "../utils/formatWave";
 import sharedStyles from "../components/found/shared.module.css";
@@ -85,13 +97,19 @@ export function BookingWizard({
       const savedWave = saved.selectedWaveId
         ? (waves.find((w) => w.id === saved.selectedWaveId) ?? null)
         : null;
+      // A saved party size from before the ticket changed shape (or a stale
+      // tab) is put back into the range the ticket allows.
+      const savedHeadcount =
+        saved.ticketType && !isValidHeadcountFor(saved.ticketType, saved.headcount)
+          ? minHeadcountFor(saved.ticketType)
+          : saved.headcount;
       const waveUsable =
         savedWave !== null &&
-        hasRoomFor(savedWave, saved.headcount) &&
+        isOfferable(savedWave, savedHeadcount, slotRuleFor(saved.ticketType)) &&
         (saved.ticketType === null || isTicketTypeOnSale(saved.ticketType, savedWave.date));
 
       setTicketType(saved.ticketType);
-      setHeadcount(saved.headcount);
+      setHeadcount(savedHeadcount);
       setPartySettled(saved.partySettled);
       setLeadName(saved.leadName);
       setLeadEmail(saved.leadEmail);
@@ -112,6 +130,9 @@ export function BookingWizard({
   // Unlimited is shown the dates from the public launch on. A slot chosen
   // before switching to Unlimited drops out of the selection the same way.
   const offeredWaves = ticketType ? waves.filter((w) => isTicketTypeOnSale(ticketType, w.date)) : waves;
+  // Unlike the soft-opening rule above, the family ticket's early-only rule
+  // doesn't hide start times: the picker shows the evening, closed, with why.
+  const slotRule = useMemo(() => slotRuleFor(ticketType), [ticketType]);
   const selectedWave = offeredWaves.find((w) => w.id === selectedWaveId) ?? null;
   // Whether the soft-opening price is on offer at all, and whether it's the only
   // price on offer (a private link to a soft-opening evening).
@@ -132,15 +153,31 @@ export function BookingWizard({
     if (lockedWave) return;
 
     const stillSelected = waves.find((w) => w.id === selectedWaveId);
-    if (stillSelected && !hasRoomFor(stillSelected, next)) {
+    if (stillSelected && !isOfferable(stillSelected, next, slotRule)) {
+      setSelectedWaveId(null);
+    }
+  }
+
+  // Ticket types differ in who can come (Family is 2 adults + 2–4 children)
+  // and when (Family is early only), so switching can invalidate both the
+  // party size and the start time already picked. The party is moved into the
+  // new ticket's range; a start time it can no longer have is given up.
+  function changeTicketType(next: TicketType) {
+    setTicketType(next);
+    const nextHeadcount = Math.min(maxHeadcountFor(next), Math.max(minHeadcountFor(next), headcount));
+    setHeadcount(nextHeadcount);
+    if (lockedWave) return;
+
+    const stillSelected = waves.find((w) => w.id === selectedWaveId);
+    if (stillSelected && !isOfferable(stillSelected, nextHeadcount, slotRuleFor(next))) {
       setSelectedWaveId(null);
     }
   }
 
   const step1Valid = ticketType !== null;
   const step2Valid = partySettled
-    ? selectedWave !== null && hasRoomFor(selectedWave, headcount)
-    : true; // any group of 1–5 is a valid answer; the button just opens the times
+    ? selectedWave !== null && isOfferable(selectedWave, headcount, slotRule)
+    : true; // the stepper only offers valid sizes; the button just opens the times
   const step3Valid = leadName.trim().length > 0 && EMAIL_RE.test(leadEmail.trim());
 
   const recap: string[] = [];
@@ -154,7 +191,9 @@ export function BookingWizard({
         ? null
         : step === 2 && !step2Valid
           ? lockedWave
-            ? `Only ${lockedWave.peopleLeft} ${lockedWave.peopleLeft === 1 ? "space" : "spaces"} left at this start time`
+            ? slotRule && !slotRule.allows(lockedWave)
+              ? slotRule.note
+              : `Only ${lockedWave.peopleLeft} ${lockedWave.peopleLeft === 1 ? "space" : "spaces"} left at this start time`
             : "Pick a start time that fits your group to continue"
           : step === 3 && !step3Valid
             ? "Add your name and email to continue"
@@ -202,7 +241,7 @@ export function BookingWizard({
             <div className={styles.stepBody}>
               <TicketTypeStep
                 selected={ticketType}
-                onSelect={setTicketType}
+                onSelect={changeTicketType}
                 prebooking={prebooking}
                 softOpening={softOpening}
               />
@@ -218,30 +257,68 @@ export function BookingWizard({
               {lockedWave ? "Your group" : partySettled ? "Pick a slot" : "Who's playing?"}
             </h2>
             <div className={styles.stepBody}>
-              <div className={styles.field}>
-                <label>Players in your group</label>
-                <div className={sharedStyles.stepperRow}>
-                  <button
-                    type="button"
-                    className={sharedStyles.stepperBtn}
-                    onClick={() => changeHeadcount(Math.max(MIN_HEADCOUNT, headcount - 1))}
-                    disabled={headcount <= MIN_HEADCOUNT}
-                    aria-label="Fewer players"
-                  >
-                    −
-                  </button>
-                  <span className={sharedStyles.stepperCount}>{headcount}</span>
-                  <button
-                    type="button"
-                    className={sharedStyles.stepperBtn}
-                    onClick={() => changeHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))}
-                    disabled={headcount >= MAX_HEADCOUNT}
-                    aria-label="More players"
-                  >
-                    +
-                  </button>
+              {ticketType === "family" ? (
+                <>
+                  {/* Adults are fixed, so they're stated, not asked: only the
+                      children are a choice, and headcount follows from them. */}
+                  <div className={styles.field}>
+                    <label>Adults (18+)</label>
+                    <div className={sharedStyles.stepperRow}>
+                      <span className={sharedStyles.stepperCount}>{FAMILY_ADULTS}</span>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label>Children (3 to 11)</label>
+                    <div className={sharedStyles.stepperRow}>
+                      <button
+                        type="button"
+                        className={sharedStyles.stepperBtn}
+                        onClick={() => changeHeadcount(headcount - 1)}
+                        disabled={familyParty(headcount).children <= FAMILY_MIN_CHILDREN}
+                        aria-label="Fewer children"
+                      >
+                        −
+                      </button>
+                      <span className={sharedStyles.stepperCount}>{familyParty(headcount).children}</span>
+                      <button
+                        type="button"
+                        className={sharedStyles.stepperBtn}
+                        onClick={() => changeHeadcount(headcount + 1)}
+                        disabled={familyParty(headcount).children >= FAMILY_MAX_CHILDREN}
+                        aria-label="More children"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <p className={styles.familyNote}>{FAMILY_SUPERVISION_NOTICE}</p>
+                </>
+              ) : (
+                <div className={styles.field}>
+                  <label>Players in your group</label>
+                  <div className={sharedStyles.stepperRow}>
+                    <button
+                      type="button"
+                      className={sharedStyles.stepperBtn}
+                      onClick={() => changeHeadcount(headcount - 1)}
+                      disabled={!ticketType || headcount <= minHeadcountFor(ticketType)}
+                      aria-label="Fewer players"
+                    >
+                      −
+                    </button>
+                    <span className={sharedStyles.stepperCount}>{headcount}</span>
+                    <button
+                      type="button"
+                      className={sharedStyles.stepperBtn}
+                      onClick={() => changeHeadcount(headcount + 1)}
+                      disabled={!ticketType || headcount >= maxHeadcountFor(ticketType)}
+                      aria-label="More players"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
               {lockedWave ? (
                 <div className={styles.lockedSlot}>
                   <span className={sharedStyles.detailLabel}>Your start time</span>
@@ -260,6 +337,7 @@ export function BookingWizard({
                       headcount={headcount}
                       selectedWaveId={selectedWaveId}
                       onSelect={setSelectedWaveId}
+                      slotRule={slotRule}
                     />
                   </div>
                 )
@@ -296,16 +374,44 @@ export function BookingWizard({
             </p>
             <div className={styles.stepBody}>
               <div className={confirmationStyles.box}>
-                <div className={confirmationStyles.row}>
-                  <span className={sharedStyles.detailLabel}>Ticket</span>
-                  <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[ticketType]}</span>
-                </div>
-                <div className={confirmationStyles.row}>
-                  <span className={sharedStyles.detailLabel}>Party</span>
-                  <span className={sharedStyles.detailValue}>
-                    {headcount} {headcount === 1 ? "player" : "players"}
-                  </span>
-                </div>
+                {ticketType === "family" ? (
+                  <>
+                    <div className={confirmationStyles.row}>
+                      <span className={sharedStyles.detailLabel}>{TICKET_TYPE_LABELS.family}</span>
+                      <span className={sharedStyles.detailValue}>{formatMoney(FAMILY_BASE_PRICE_CENTS)}</span>
+                    </div>
+                    {familyParty(headcount).children > FAMILY_MIN_CHILDREN && (
+                      <div className={confirmationStyles.row}>
+                        <span className={sharedStyles.detailLabel}>
+                          Extra children ({familyParty(headcount).children - FAMILY_MIN_CHILDREN} ×{" "}
+                          {formatMoney(FAMILY_EXTRA_CHILD_CENTS)})
+                        </span>
+                        <span className={sharedStyles.detailValue}>
+                          {formatMoney((familyParty(headcount).children - FAMILY_MIN_CHILDREN) * FAMILY_EXTRA_CHILD_CENTS)}
+                        </span>
+                      </div>
+                    )}
+                    <div className={confirmationStyles.row}>
+                      <span className={sharedStyles.detailLabel}>Party</span>
+                      <span className={sharedStyles.detailValue}>
+                        {FAMILY_ADULTS} adults, {familyParty(headcount).children} children
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={confirmationStyles.row}>
+                      <span className={sharedStyles.detailLabel}>Ticket</span>
+                      <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[ticketType]}</span>
+                    </div>
+                    <div className={confirmationStyles.row}>
+                      <span className={sharedStyles.detailLabel}>Party</span>
+                      <span className={sharedStyles.detailValue}>
+                        {headcount} {headcount === 1 ? "player" : "players"}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div className={confirmationStyles.row}>
                   <span className={sharedStyles.detailLabel}>Slot</span>
                   <span className={sharedStyles.detailValue}>
@@ -319,6 +425,7 @@ export function BookingWizard({
                   <span className={sharedStyles.detailValue}>{formatMoney(computeDisplayTotalCents(ticketType, headcount, prebooking, selectedWave?.date ?? ""))}</span>
                 </div>
               </div>
+              {ticketType === "family" && <p className={styles.familyNote}>{FAMILY_SUPERVISION_NOTICE}</p>}
 
               <button type="button" className={sharedStyles.pillBtn} style={{ width: "100%", marginTop: 24 }} onClick={handlePay} disabled={submitting}>
                 {submitting ? "Starting payment…" : "Continue to payment →"}

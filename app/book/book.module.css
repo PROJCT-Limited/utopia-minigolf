@@ -256,6 +256,40 @@
 .tierRow.on .tierBody {
   color: var(--f-stone);
 }
+/* The family ticket's rules: small print, but on the card itself, so nobody
+   picks it without having read who it's for. */
+.tierNotes {
+  margin-top: 12px;
+  max-width: 52ch;
+  font-family: var(--f-archivo);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--f-grey);
+}
+.tierNotes p + p {
+  margin-top: 6px;
+}
+.tierRow.on .tierNotes {
+  color: var(--f-stone);
+}
+/* Above the times when the ticket closes some of them (Family: evenings). */
+.slotRuleNote {
+  margin-bottom: 14px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--f-ink);
+}
+/* Under the party stepper and the review summary for a family ticket. */
+.familyNote {
+  margin-top: 16px;
+  max-width: 52ch;
+  font-family: var(--f-archivo);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--f-grey);
+}
 .tierRight {
   text-align: right;
   flex-shrink: 0;

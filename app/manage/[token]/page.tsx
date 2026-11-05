@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchBookingByManageToken, isPastRescheduleCutoff } from "@/lib/booking/reschedule";
 import { fetchWaveById, fetchUpcomingWaves } from "@/lib/booking/wavesRepo";
+import { isStartTimeAllowedFor } from "@/lib/booking/pricing";
 import { FoundHeader } from "../../components/found/FoundHeader";
 import { FoundFooter } from "../../components/found/FoundFooter";
 import sharedStyles from "../../components/found/shared.module.css";
@@ -21,7 +22,14 @@ export default async function ManageBookingPage({ params }: { params: Promise<{ 
     booking.status === "paid" && !booking.rescheduleUsed && (!currentWave || !isPastRescheduleCutoff(currentWave));
 
   const availableWaves = eligibleForReschedule
-    ? (await fetchUpcomingWaves()).filter((w) => w.id !== booking.waveId && !w.isFull && !isPastRescheduleCutoff(w))
+    ? (await fetchUpcomingWaves()).filter(
+        (w) =>
+          w.id !== booking.waveId &&
+          !w.isFull &&
+          !isPastRescheduleCutoff(w) &&
+          // A family booking only moves to another early start time.
+          isStartTimeAllowedFor(booking.ticketType, w.startTime)
+      )
     : [];
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import type { TicketType } from "@/lib/booking/pricing";
+import type { PerPersonTicketType } from "@/lib/booking/pricing";
 import type { CheckInBooking, CheckInPlayer } from "@/lib/checkin/checkinRepo";
 import {
   completeCheckInAction,
@@ -294,7 +294,7 @@ export function CheckInFlow({ initialArrivals }: { initialArrivals: CheckInBooki
     backToArrivals();
   }
 
-  async function createWalkIn(input: { leadName: string; ticketType: TicketType; headcount: number }) {
+  async function createWalkIn(input: { leadName: string; ticketType: PerPersonTicketType; headcount: number }) {
     setBusy(true);
     setError(null);
     try {

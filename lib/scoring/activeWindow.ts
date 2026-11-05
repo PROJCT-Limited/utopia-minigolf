@@ -12,6 +12,7 @@ import type { TicketType } from "@/lib/booking/pricing";
 export const ROUND_DURATION_MINUTES: Record<TicketType, number> = {
   standard: 30, // one 30-min run
   unlimited: 60, // the full hour, with re-entry
+  family: 30, // one round, same as Standard
 };
 
 const CHECK_IN_BUFFER_MINUTES = 10;

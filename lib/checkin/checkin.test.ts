@@ -63,11 +63,16 @@ describe("rosterProgress", () => {
 
 describe("isValidPresentHeadcount", () => {
   it("holds the group to the same 1-5 the booking flow sells", () => {
-    expect(isValidPresentHeadcount(1)).toBe(true);
-    expect(isValidPresentHeadcount(5)).toBe(true);
-    expect(isValidPresentHeadcount(0)).toBe(false);
-    expect(isValidPresentHeadcount(6)).toBe(false);
-    expect(isValidPresentHeadcount(2.5)).toBe(false);
+    expect(isValidPresentHeadcount(1, "standard")).toBe(true);
+    expect(isValidPresentHeadcount(5, "standard")).toBe(true);
+    expect(isValidPresentHeadcount(0, "standard")).toBe(false);
+    expect(isValidPresentHeadcount(6, "standard")).toBe(false);
+    expect(isValidPresentHeadcount(2.5, "standard")).toBe(false);
+  });
+
+  it("lets a family register up to 6", () => {
+    expect(isValidPresentHeadcount(6, "family")).toBe(true);
+    expect(isValidPresentHeadcount(7, "family")).toBe(false);
   });
 });
 

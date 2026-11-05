@@ -16,12 +16,14 @@ import {
   isTicketTypeOnSale,
   derivePartyTypeFromHeadcount,
   CURRENCY,
+  maxHeadcountFor,
+  type PerPersonTicketType,
   type TicketType,
 } from "@/lib/booking/pricing";
 import { generateManageToken } from "@/lib/booking/token";
 import { adjustSeats, reserveSeats } from "@/lib/booking/waveCapacity";
 import { isCurrentlyActive, todayInHongKong } from "@/lib/scoring/activeWindow";
-import { normalizeBallTag, normalizePlayerName, pickWalkInWave } from "./checkin";
+import { isValidPresentHeadcount, normalizeBallTag, normalizePlayerName, pickWalkInWave } from "./checkin";
 
 export interface CheckInBooking {
   id: string;
@@ -203,13 +205,16 @@ export async function setPresentHeadcount(
 ): Promise<{ ok: boolean; error?: string }> {
   const { data: booking, error } = await supabaseAdmin
     .from("bookings")
-    .select("id, wave_id, headcount, present_headcount")
+    .select("id, wave_id, headcount, present_headcount, ticket_type")
     .eq("id", bookingId)
     .maybeSingle();
 
   if (error || !booking) {
     console.error("setPresentHeadcount: booking not found", bookingId, error?.message);
     return { ok: false, error: "Couldn't find that booking." };
+  }
+  if (!isValidPresentHeadcount(present, booking.ticket_type)) {
+    return { ok: false, error: `A group is 1 to ${maxHeadcountFor(booking.ticket_type)} players.` };
   }
 
   const heldBefore = Math.max(booking.headcount, booking.present_headcount ?? booking.headcount);
@@ -495,7 +500,7 @@ export async function fetchWalkInWave(): Promise<{ id: string; date: string; sta
 
 export interface WalkInInput {
   leadName: string;
-  ticketType: TicketType;
+  ticketType: PerPersonTicketType;
   headcount: number;
 }
 

@@ -1,4 +1,4 @@
-import { hasRoomFor, type WaveView } from "@/lib/booking/waves";
+import { isOfferable, type SlotRule, type WaveView } from "@/lib/booking/waves";
 import styles from "./book.module.css";
 
 /**
@@ -18,17 +18,20 @@ function cellLabel(wave: WaveView): string {
 export function WaveRow({
   wave,
   headcount,
+  slotRule = null,
   selected,
   onSelect,
 }: {
   wave: WaveView;
   /** Party size — a start time with 3 spaces left is closed to a four. */
   headcount: number;
+  slotRule?: SlotRule | null;
   selected: boolean;
   onSelect: (waveId: string) => void;
   showDate?: boolean;
 }) {
-  const fits = hasRoomFor(wave, headcount);
+  const fits = isOfferable(wave, headcount, slotRule);
+  const ruledOut = slotRule !== null && !slotRule.allows(wave);
 
   // A sold-out start time says so, rather than showing its own time crossed
   // out. Which quarter it was is still obvious from its place in the row of
@@ -41,7 +44,7 @@ export function WaveRow({
       className={`${styles.quarterCell} ${wave.isFull ? styles.quarterSoldOut : ""} ${selected ? styles.on : ""}`}
       disabled={!fits}
       onClick={() => onSelect(wave.id)}
-      title={fits ? undefined : wave.isFull ? "Sold out" : `Not enough room for ${headcount}`}
+      title={fits ? undefined : ruledOut ? slotRule.note : wave.isFull ? "Sold out" : `Not enough room for ${headcount}`}
     >
       {wave.isFull ? "Sold out" : cellLabel(wave)}
     </button>

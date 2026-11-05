@@ -1,0 +1,93 @@
+/* Full-bleed: the track runs to both screen edges, but the first photo (and
+   the label/arrows bar) start on the page's content edge — the same left
+   line as every heading above and below. */
+.strip {
+  --strip-inset: max(var(--f-pad-x), calc((100vw - 1500px) / 2 + var(--f-pad-x)));
+  --strip-h: clamp(300px, 36vw, 560px);
+  padding-bottom: var(--f-sec-pad);
+}
+
+.bar {
+  max-width: 1500px;
+  margin: 0 auto 18px;
+  padding: 0 var(--f-pad-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.label {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--f-grey);
+}
+.arrows {
+  display: flex;
+  gap: 10px;
+}
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--f-ink);
+  background: transparent;
+  color: var(--f-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+.arrow:hover:not(:disabled) {
+  background: var(--f-ink);
+  color: var(--f-paper);
+}
+.arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-inline: var(--strip-inset);
+  scroll-padding-inline: var(--strip-inset);
+  scrollbar-width: none;
+}
+.track::-webkit-scrollbar {
+  display: none;
+}
+.track:focus-visible {
+  outline: 2px solid var(--f-ink);
+  outline-offset: 4px;
+}
+
+.photo {
+  flex: none;
+  height: var(--strip-h);
+  width: auto;
+  object-fit: cover;
+  border-radius: 16px;
+  scroll-snap-align: start;
+}
+
+/* Swipe is the control on a phone; the arrows would only crowd the label. */
+@media (max-width: 640px) {
+  .strip {
+    --strip-h: 340px;
+  }
+  .arrows {
+    display: none;
+  }
+  /* A wide shot at full height would be wider than the screen: cap it so
+     the next photo always peeks in, which is what says "swipe". */
+  .photo {
+    max-width: 82vw;
+  }
+}

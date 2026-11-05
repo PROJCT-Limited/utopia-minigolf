@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchWaveAdminDetail } from "@/lib/admin/waves";
 import { privateBookingUrl } from "@/lib/admin/privateLink";
-import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
+import { describeTicket } from "@/lib/booking/pricing";
 import { AdminShell } from "../../AdminShell";
 import { AdminWaveForm } from "./AdminWaveForm";
 import { PrivateLinkCard } from "./PrivateLinkCard";
@@ -61,7 +61,8 @@ export default async function AdminWaveDetailPage({ params }: { params: Promise<
                   <br />
                   <span className="hint">{b.leadEmail}</span>
                 </td>
-                <td>{TICKET_TYPE_LABELS[b.ticketType]}</td>
+                {/* Family bookings show their adult/child split here. */}
+                <td>{describeTicket(b.ticketType, b.headcount)}</td>
                 <td>
                   {b.partyType}, {b.headcount} {b.headcount === 1 ? "person" : "people"}
                 </td>

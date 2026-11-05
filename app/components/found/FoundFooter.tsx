@@ -12,7 +12,7 @@ export function FoundFooter() {
         <div className={styles.footerMeta}>
           MINIGOLF SOCIAL CLUB BY PROJCT
           <br />
-          UNIT 8-10, GF, 189 QUEEN&rsquo;S ROAD WEST
+          UNIT 8-10, G/F, 189 QUEEN&rsquo;S ROAD WEST
           <br />
           SAI YING PUN, HONG KONG
         </div>

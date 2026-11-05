@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MAX_HEADCOUNT, MIN_HEADCOUNT, TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
+import { MIN_HEADCOUNT, describeTicket, maxHeadcountFor } from "@/lib/booking/pricing";
 import type { CheckInBooking } from "@/lib/checkin/checkinRepo";
 import styles from "./checkin.module.css";
 
@@ -20,6 +20,8 @@ export function ConfirmScreen({
 }) {
   const [adjusting, setAdjusting] = useState(false);
   const differs = present !== booking.bookedHeadcount;
+  // A family can be 6; every other ticket tops out at 5.
+  const maxPresent = maxHeadcountFor(booking.ticketType);
 
   return (
     <>
@@ -27,7 +29,8 @@ export function ConfirmScreen({
       <h1 className={styles.heading}>{booking.leadName}</h1>
 
       <div className={styles.detailBox}>
-        <Row label="Ticket" value={TICKET_TYPE_LABELS[booking.ticketType]} />
+        {/* "Family ticket: 2 adults, 3 children" — the door needs the split. */}
+        <Row label="Ticket" value={describeTicket(booking.ticketType, booking.bookedHeadcount)} />
         <Row
           label="Party size"
           value={
@@ -74,8 +77,8 @@ export function ConfirmScreen({
             <button
               type="button"
               className={styles.stepperBtn}
-              onClick={() => onPresentChange(Math.min(MAX_HEADCOUNT, present + 1))}
-              disabled={present >= MAX_HEADCOUNT}
+              onClick={() => onPresentChange(Math.min(maxPresent, present + 1))}
+              disabled={present >= maxPresent}
               aria-label="More players"
             >
               +

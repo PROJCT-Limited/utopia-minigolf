@@ -1,4 +1,6 @@
+import { FAMILY_DRINKS_NOTICE, FAMILY_SUPERVISION_NOTICE, FAMILY_TICKET_NOTE } from "@/lib/booking/copy";
 import {
+  FAMILY_BASE_PRICE_CENTS,
   LIST_PRICE_PER_PERSON_CENTS,
   PUBLIC_LAUNCH_LABEL,
   SOFT_OPENING_LABEL,
@@ -31,6 +33,12 @@ const TICKET_OPTIONS: { type: TicketType; label: string; name: string; body: str
     name: "A full hour",
     body: "Keep playing + free flow drinks",
   },
+  {
+    type: "family",
+    label: "FAMILY, BEFORE 7PM",
+    name: "Family round",
+    body: "2 adults + 2 children, a drink each",
+  },
 ];
 
 export function TicketTypeStep({
@@ -51,6 +59,8 @@ export function TicketTypeStep({
   const softTypes = ticketTypesForDate(SOFT_OPENING_FIRST_DATE);
   const options =
     softOpening === "only" ? TICKET_OPTIONS.filter((o) => softTypes.includes(o.type)) : TICKET_OPTIONS;
+  // Family is one price for the party, not per person, and no offer moves it.
+  const priceOf = (type: TicketType) => (type === "family" ? FAMILY_BASE_PRICE_CENTS : prices[type]);
 
   return (
     <div className={styles.tierRows}>
@@ -73,17 +83,24 @@ export function TicketTypeStep({
                 <div className={styles.tierRowText}>
                   <div className={styles.tierName}>{option.name}</div>
                   <div className={styles.tierBody}>{option.body}</div>
+                  {option.type === "family" && (
+                    <div className={styles.tierNotes}>
+                      <p>{FAMILY_TICKET_NOTE}</p>
+                      <p>{FAMILY_SUPERVISION_NOTICE}</p>
+                      <p>{FAMILY_DRINKS_NOTICE}</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className={styles.tierRight}>
                 <div className={styles.tierPrice}>
-                  {formatMoney(prices[option.type])} <span className={styles.tierCurrency}>HKD</span>
+                  {formatMoney(priceOf(option.type))} <span className={styles.tierCurrency}>HKD</span>
                 </div>
                 {/* The homepage puts the later prices in rows of their own,
                     which works on a price list. This is a chooser — a row
                     nobody can select would be a dead option — so the same
                     fact goes under the price instead. */}
-                {prebooking && (
+                {prebooking && option.type !== "family" && (
                   <span className={styles.tierAfter}>
                     {formatMoney(LIST_PRICE_PER_PERSON_CENTS[option.type])} from 21 Sept
                   </span>
@@ -91,7 +108,7 @@ export function TicketTypeStep({
                 {/* The date isn't picked yet, so the price above is the regular one
                     and the soft-opening evenings are flagged under it; the total
                     at step 4 is worked out from the evening actually chosen. */}
-                {softOpening === "some" && (
+                {softOpening === "some" && option.type !== "family" && (
                   <span className={styles.tierAfter}>
                     {softTypes.includes(option.type)
                       ? `${formatMoney(SOFT_OPENING_PRICE_PER_PERSON_CENTS[option.type])} for soft opening, ${SOFT_OPENING_LABEL}`

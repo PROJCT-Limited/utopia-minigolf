@@ -7,7 +7,7 @@ import type { BookingForManage } from "@/lib/booking/reschedule";
 import { rescheduleBookingAction } from "@/lib/booking/rescheduleAction";
 import { formatWaveDate } from "../../utils/formatWave";
 import { RESCHEDULE_NOTICE } from "@/lib/booking/copy";
-import { TICKET_TYPE_LABELS } from "@/lib/booking/pricing";
+import { describeTicket } from "@/lib/booking/pricing";
 import sharedStyles from "../../components/found/shared.module.css";
 import { HourGroupRow } from "../../book/HourGroupRow";
 import confirmationStyles from "../../confirmation.module.css";
@@ -64,7 +64,7 @@ export function ManageView({ token, booking, currentWave, eligibleForReschedule,
       <div className={confirmationStyles.box}>
         <div className={confirmationStyles.row}>
           <span className={sharedStyles.detailLabel}>Ticket</span>
-          <span className={sharedStyles.detailValue}>{TICKET_TYPE_LABELS[booking.ticketType]}</span>
+          <span className={sharedStyles.detailValue}>{describeTicket(booking.ticketType, booking.headcount)}</span>
         </div>
         <div className={confirmationStyles.row}>
           <span className={sharedStyles.detailLabel}>Booked for</span>

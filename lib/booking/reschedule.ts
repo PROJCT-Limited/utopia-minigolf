@@ -9,7 +9,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchWaveById } from "./wavesRepo";
 import type { WaveView } from "./waves";
-import { isSoftOpeningDate, type TicketType } from "./pricing";
+import { isSoftOpeningDate, ticketRuleError, type TicketType } from "./pricing";
 import { hasRoomForGroup, reserveSeats, releaseSeats } from "./waveCapacity";
 import { RESCHEDULE_CUTOFF_DAYS } from "./copy";
 import { sendBookingRescheduled } from "@/lib/email/send";
@@ -77,6 +77,10 @@ export async function rescheduleBooking(token: string, newWaveId: string): Promi
   // one. The picker never offers these (fetchUpcomingWaves filters them out);
   // this is the guard for an id posted straight at the action.
   if (!newWave || newWave.isHidden) return { ok: false, error: "That start time no longer exists." };
+  // The ticket's own rules hold on the move too: a family booking can only go
+  // to another early start time.
+  const ruleError = ticketRuleError(booking.ticketType, booking.headcount, newWave);
+  if (ruleError) return { ok: false, error: ruleError };
   // Capacity is people, so the same start time can have room for a pair and
   // none for this booking's group.
   if (!hasRoomForGroup(newWave, booking.headcount)) {

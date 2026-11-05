@@ -6,7 +6,7 @@
 // the door tablet. DB access lives in checkinRepo.ts.
 // -----------------------------------------------------------------------------
 
-import { MAX_HEADCOUNT, MIN_HEADCOUNT } from "@/lib/booking/pricing";
+import { MIN_HEADCOUNT, maxHeadcountFor, type TicketType } from "@/lib/booking/pricing";
 import { waveStartInstant } from "@/lib/scoring/activeWindow";
 
 /** How long before a start time the door will offer that slot to a walk-in. */
@@ -59,8 +59,9 @@ export function rosterProgress(registeredCount: number, presentHeadcount: number
   };
 }
 
-export function isValidPresentHeadcount(n: number): boolean {
-  return Number.isInteger(n) && n >= MIN_HEADCOUNT && n <= MAX_HEADCOUNT;
+/** Up to the ticket's own group max: 5 for Standard/Unlimited, 6 for a family. */
+export function isValidPresentHeadcount(n: number, ticketType: TicketType): boolean {
+  return Number.isInteger(n) && n >= MIN_HEADCOUNT && n <= maxHeadcountFor(ticketType);
 }
 
 /** A name is this player's leaderboard identity, so it's the one required

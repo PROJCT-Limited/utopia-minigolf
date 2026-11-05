@@ -13,8 +13,17 @@
 
 import { todayInHongKong } from "@/lib/scoring/activeWindow";
 
-export const TICKET_TYPES = ["standard", "unlimited"] as const;
+// Standard and Unlimited are priced per person; Family is one price for the
+// party (see FAMILY_* below), so it has no row in the per-person tables and is
+// never sold at the door.
+export const PER_PERSON_TICKET_TYPES = ["standard", "unlimited"] as const;
+export type PerPersonTicketType = (typeof PER_PERSON_TICKET_TYPES)[number];
+export const TICKET_TYPES = [...PER_PERSON_TICKET_TYPES, "family"] as const;
 export type TicketType = (typeof TICKET_TYPES)[number];
+
+export function isPerPersonTicketType(value: string): value is PerPersonTicketType {
+  return (PER_PERSON_TICKET_TYPES as readonly string[]).includes(value);
+}
 
 // Standard: one run (all 5 stations) + 1 drink. Deliberately not described
 // by a duration anywhere guest-facing — players aren't timed.
@@ -23,7 +32,7 @@ export type TicketType = (typeof TICKET_TYPES)[number];
 //
 // The door price, charged from opening day and to every walk-in. Until the
 // doors open it is the price a booking *becomes*, not one anybody pays.
-export const LIST_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
+export const LIST_PRICE_PER_PERSON_CENTS: Record<PerPersonTicketType, number> = {
   standard: 170_00,
   unlimited: 240_00,
 };
@@ -32,7 +41,7 @@ export const LIST_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
 // opens. It succeeded the early bird price (120/180), which ran until
 // 20 September and is closed — bookings made under it keep what they paid,
 // since a charge is stored on the booking, never recomputed.
-export const PREBOOKING_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
+export const PREBOOKING_PRICE_PER_PERSON_CENTS: Record<PerPersonTicketType, number> = {
   standard: 150_00,
   unlimited: 220_00,
 };
@@ -54,7 +63,7 @@ export const PREBOOKING_DEADLINE_LABEL = "7 October";
 // Only one round is sold during the soft opening (see isTicketTypeOnSale) — an
 // hour of play is a lot to ask while the scoring is still being tuned. The
 // Unlimited figure keeps the table whole and is never charged.
-export const SOFT_OPENING_PRICE_PER_PERSON_CENTS: Record<TicketType, number> = {
+export const SOFT_OPENING_PRICE_PER_PERSON_CENTS: Record<PerPersonTicketType, number> = {
   standard: 100_00,
   unlimited: 150_00,
 };
@@ -77,6 +86,98 @@ export function isTicketTypeOnSale(ticketType: TicketType, date: string): boolea
   return ticketTypesForDate(date).includes(ticketType);
 }
 
+// ---------- Family ticket ----------
+// Two adults (18+) and two to four children (3 to 11), one round, early
+// only. One price covers the two adults and the first two children; each child
+// after that adds a flat amount. Not touched by pre-booking or soft-opening
+// pricing, and never sold at the door.
+export const FAMILY_ADULTS = 2;
+export const FAMILY_MIN_CHILDREN = 2;
+export const FAMILY_MAX_CHILDREN = 4;
+export const FAMILY_BASE_PRICE_CENTS = 400_00;
+export const FAMILY_EXTRA_CHILD_CENTS = 50_00;
+
+/**
+ * Family bookings must START before this time, Hong Kong time ("HH:MM").
+ * Start times are stored as naive HK wall-clock strings, so this compares as
+ * text. The venue opens at 17:00, so families get the first two hours of
+ * the evening; this is the one value to change if that moves.
+ */
+export const FAMILY_STARTS_BEFORE = "19:00";
+
+export function isValidFamilyChildren(children: number): boolean {
+  return Number.isInteger(children) && children >= FAMILY_MIN_CHILDREN && children <= FAMILY_MAX_CHILDREN;
+}
+
+/** HKD cents for a family of two adults and `children` children. */
+export function familyTotalCents(children: number): number {
+  if (!isValidFamilyChildren(children)) {
+    throw new Error(`familyTotalCents: invalid children count ${children}`);
+  }
+  return FAMILY_BASE_PRICE_CENTS + FAMILY_EXTRA_CHILD_CENTS * (children - FAMILY_MIN_CHILDREN);
+}
+
+/**
+ * A family booking's adults and children, read off its headcount. Safe
+ * because adults are always FAMILY_ADULTS, and bookings_family_party
+ * (migrations/027) holds headcount = adults_count + children_count.
+ */
+export function familyParty(headcount: number): { adults: number; children: number } {
+  return { adults: FAMILY_ADULTS, children: headcount - FAMILY_ADULTS };
+}
+
+/** Is a start time ("HH:MM" or "HH:MM:SS") allowed for this ticket type? */
+export function isStartTimeAllowedFor(ticketType: TicketType, startTime: string): boolean {
+  return ticketType !== "family" || startTime.slice(0, 5) < FAMILY_STARTS_BEFORE;
+}
+
+/** The largest party this ticket type can be booked for. */
+export function maxHeadcountFor(ticketType: TicketType): number {
+  return ticketType === "family" ? FAMILY_ADULTS + FAMILY_MAX_CHILDREN : MAX_HEADCOUNT;
+}
+
+/** The smallest party this ticket type can be booked for. */
+export function minHeadcountFor(ticketType: TicketType): number {
+  return ticketType === "family" ? FAMILY_ADULTS + FAMILY_MIN_CHILDREN : MIN_HEADCOUNT;
+}
+
+export function isValidHeadcountFor(ticketType: TicketType, headcount: number): boolean {
+  return ticketType === "family"
+    ? isValidFamilyChildren(headcount - FAMILY_ADULTS)
+    : isValidHeadcount(headcount);
+}
+
+/**
+ * Why this party can't book this start time, or null if it can. The ticket
+ * rules only — capacity is checked separately against live numbers. Shared by
+ * createBooking and reschedule so the two can't disagree.
+ */
+export function ticketRuleError(
+  ticketType: TicketType,
+  headcount: number,
+  wave: { date: string; startTime: string }
+): string | null {
+  if (!isValidHeadcountFor(ticketType, headcount)) {
+    return ticketType === "family"
+      ? `A family ticket is ${FAMILY_ADULTS} adults and ${FAMILY_MIN_CHILDREN} to ${FAMILY_MAX_CHILDREN} children.`
+      : `Party size must be between ${MIN_HEADCOUNT} and ${MAX_HEADCOUNT}.`;
+  }
+  if (!isTicketTypeOnSale(ticketType, wave.date)) {
+    return `Only one round (Standard) is on sale for soft-opening evenings, ${SOFT_OPENING_LABEL}.`;
+  }
+  if (!isStartTimeAllowedFor(ticketType, wave.startTime)) {
+    return `Family tickets are available before ${FAMILY_STARTS_BEFORE}.`;
+  }
+  return null;
+}
+
+/** "Family ticket: 2 adults, 3 children", or just the ticket's name. */
+export function describeTicket(ticketType: TicketType, headcount: number): string {
+  if (ticketType !== "family") return TICKET_TYPE_LABELS[ticketType];
+  const { adults, children } = familyParty(headcount);
+  return `${TICKET_TYPE_LABELS.family}: ${adults} adults, ${children} ${children === 1 ? "child" : "children"}`;
+}
+
 /** Is the soft opening still running at the venue, i.e. are its prices still on sale? */
 export function isSoftOpeningOn(now: Date = new Date()): boolean {
   return todayInHongKong(now) <= SOFT_OPENING_LAST_DATE;
@@ -97,6 +198,7 @@ export const VENUE_TIME_ZONE_LABEL = "HKT";
 export const TICKET_TYPE_LABELS: Record<TicketType, string> = {
   standard: "Standard",
   unlimited: "Unlimited",
+  family: "Family ticket",
 };
 
 export const CURRENCY = "hkd";
@@ -136,17 +238,17 @@ export function isPrebookingActive(at: Date = new Date()): boolean {
 }
 
 /** The per-person prices in force, given whether pre-booking is still open. */
-export function priceTableFor(prebookingActive: boolean): Record<TicketType, number> {
+export function priceTableFor(prebookingActive: boolean): Record<PerPersonTicketType, number> {
   return prebookingActive ? PREBOOKING_PRICE_PER_PERSON_CENTS : LIST_PRICE_PER_PERSON_CENTS;
 }
 
 /** The per-person prices for one play date. The soft opening wins over everything. */
-export function priceTableForDate(date: string, prebookingActive: boolean): Record<TicketType, number> {
+export function priceTableForDate(date: string, prebookingActive: boolean): Record<PerPersonTicketType, number> {
   return isSoftOpeningDate(date) ? SOFT_OPENING_PRICE_PER_PERSON_CENTS : priceTableFor(prebookingActive);
 }
 
 function totalFromTable(
-  table: Record<TicketType, number>,
+  table: Record<PerPersonTicketType, number>,
   ticketType: TicketType,
   headcount: number,
   caller: string
@@ -154,9 +256,10 @@ function totalFromTable(
   if (!isValidTicketType(ticketType)) {
     throw new Error(`${caller}: invalid ticket type ${ticketType}`);
   }
-  if (!isValidHeadcount(headcount)) {
+  if (!isValidHeadcountFor(ticketType, headcount)) {
     throw new Error(`${caller}: invalid headcount ${headcount}`);
   }
+  if (ticketType === "family") return familyTotalCents(familyParty(headcount).children);
   return table[ticketType] * headcount;
 }
 
@@ -196,7 +299,7 @@ export function computeBookingTotalCents(
 }
 
 /** What a walk-in pays per person on a given play date. */
-export function walkInPriceTable(date: string): Record<TicketType, number> {
+export function walkInPriceTable(date: string): Record<PerPersonTicketType, number> {
   return isSoftOpeningDate(date) ? SOFT_OPENING_PRICE_PER_PERSON_CENTS : LIST_PRICE_PER_PERSON_CENTS;
 }
 
@@ -207,5 +310,8 @@ export function walkInPriceTable(date: string): Record<TicketType, number> {
  * the evening itself, so it applies at the door the same as online.
  */
 export function computeWalkInTotalCents(ticketType: TicketType, headcount: number, date: string): number {
+  if (!isPerPersonTicketType(ticketType)) {
+    throw new Error(`computeWalkInTotalCents: ${ticketType} isn't sold at the door`);
+  }
   return totalFromTable(walkInPriceTable(date), ticketType, headcount, "computeWalkInTotalCents");
 }

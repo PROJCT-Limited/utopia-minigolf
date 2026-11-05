@@ -2,7 +2,14 @@ import { FoundHeader } from "../components/found/FoundHeader";
 import { FoundFooter } from "../components/found/FoundFooter";
 import { PageHeaderBlock } from "../components/found/PageHeaderBlock";
 import sharedStyles from "../components/found/shared.module.css";
-import { RESCHEDULE_CUTOFF_DAYS } from "@/lib/booking/copy";
+import { FAMILY_SUPERVISION_NOTICE, RESCHEDULE_CUTOFF_DAYS } from "@/lib/booking/copy";
+import {
+  FAMILY_BASE_PRICE_CENTS,
+  FAMILY_EXTRA_CHILD_CENTS,
+  FAMILY_MAX_CHILDREN,
+  FAMILY_MIN_CHILDREN,
+  FAMILY_STARTS_BEFORE,
+} from "@/lib/booking/pricing";
 import styles from "../legal.module.css";
 
 export const metadata = { title: "Terms — FOUND" };
@@ -22,6 +29,15 @@ export default function TermsPage() {
                 cover one run across all five stations plus one drink; Unlimited tickets cover the full hour
                 with re-entry and bottomless drinks. No card details are stored by FOUND, payment is processed
                 securely by Stripe.
+              </p>
+              <p>
+                Family tickets cover one round for 2 adults (18 and over) and {FAMILY_MIN_CHILDREN} to{" "}
+                {FAMILY_MAX_CHILDREN} children aged 3 to 11, with the included drink for each adult and a soft drink
+                for each child. They cost HKD {FAMILY_BASE_PRICE_CENTS / 100} for 2 adults and{" "}
+                {FAMILY_MIN_CHILDREN} children, plus HKD {FAMILY_EXTRA_CHILD_CENTS / 100} for each further child,
+                and can only be booked for start times before {FAMILY_STARTS_BEFORE}, Hong Kong time, including
+                when rescheduling. A family ticket is for exactly 2 adults: anyone aged 12 or over, including
+                teenagers, books a Standard ticket separately.
               </p>
               <p>
                 Bookings made on or before 7 October 2026 (Hong Kong time) are charged at the pre-booking
@@ -66,7 +82,8 @@ export default function TermsPage() {
               <h2>At the venue</h2>
               <p>
                 Please arrive on time for your start time, late arrival may shorten your play time. Players under 14 must be accompanied by a parent, and
-                alcohol is not served to anyone under 18. FOUND reserves the
+                alcohol is not served to anyone under 18. On a family ticket, children are aged 3 to 11, and
+                anyone 12 or over books a Standard ticket. {FAMILY_SUPERVISION_NOTICE} FOUND reserves the
                 right to refuse entry to anyone who is intoxicated, disruptive, or a safety risk to staff or other
                 guests.
               </p>

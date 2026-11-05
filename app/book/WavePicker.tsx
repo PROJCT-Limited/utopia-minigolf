@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { groupByWeek, groupByHour, type WaveView } from "@/lib/booking/waves";
+import { groupByWeek, groupByHour, type SlotRule, type WaveView } from "@/lib/booking/waves";
 import { formatWeekLabel } from "../utils/formatWave";
 import { HourGroupRow } from "./HourGroupRow";
 import { MonthCalendar } from "./MonthCalendar";
@@ -12,12 +12,15 @@ export function WavePicker({
   headcount,
   selectedWaveId,
   onSelect,
+  slotRule = null,
 }: {
   waves: WaveView[];
   /** Party size: capacity is people, so this decides what's still bookable. */
   headcount: number;
   selectedWaveId: string | null;
   onSelect: (waveId: string) => void;
+  /** What the chosen ticket rules out (Family: evenings). */
+  slotRule?: SlotRule | null;
 }) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
 
@@ -34,8 +37,16 @@ export function WavePicker({
         </button>
       </div>
 
+      {slotRule && <p className={styles.slotRuleNote}>{slotRule.note}.</p>}
+
       {viewMode === "month" ? (
-        <MonthCalendar waves={waves} headcount={headcount} selectedWaveId={selectedWaveId} onSelect={onSelect} />
+        <MonthCalendar
+          waves={waves}
+          headcount={headcount}
+          selectedWaveId={selectedWaveId}
+          onSelect={onSelect}
+          slotRule={slotRule}
+        />
       ) : (
         <div className={styles.waveGroups}>
           {weekGroups.length === 0 && <p className={styles.hint}>No slots available yet — check back soon.</p>}
@@ -50,6 +61,7 @@ export function WavePicker({
                     headcount={headcount}
                     selectedWaveId={selectedWaveId}
                     onSelect={onSelect}
+                    slotRule={slotRule}
                   />
                 ))}
               </div>
