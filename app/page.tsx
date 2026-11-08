@@ -126,7 +126,7 @@ function faqs(prices: Record<PerPersonTicketType, number>): { q: string; a: stri
       q: "What's included with the drinks, and can kids play?",
       a: "Standard comes with one drink. Unlimited's free flow includes alcohol and soft drinks. Kids are welcome: players under 14 need to come with a parent, and we don't serve alcohol to anyone under 18.",
     },
-    { q: "When are you open?", a: "Every day from 7 November to 10 December 2026, 5pm to 10pm." },
+    { q: "When are you open?", a: "Every day from 7 November to 12 December 2026, 5pm to 10pm." },
     { q: "Where is it?", a: "PROJCT, G/F, 189 Queen's Road West, Sai Ying Pun, Hong Kong." },
     {
       q: "Can we hire it for a birthday or team night?",
@@ -236,7 +236,7 @@ export default async function HomePage() {
                 deciding whether they can come needs first. */}
             <div className={styles.heroDates}>
               <p>
-                7 Nov &mdash; 10 Dec, <span className={styles.nowrap}>daily 5&ndash;10pm</span>
+                7 Nov &mdash; 12 Dec, <span className={styles.nowrap}>daily 5&ndash;10pm</span>
               </p>
               <p>
                 <a href={MAP_URL} target="_blank" rel="noopener noreferrer" className={styles.heroAddress}>

@@ -86,7 +86,7 @@ export const PROVISIONAL_LABEL = "Opening soon — reserve your place";
 
 /** The only bookable date range — nothing outside it is fetched or shown. */
 export const BOOKABLE_WINDOW_START = "2026-11-07";
-export const BOOKABLE_WINDOW_END = "2026-12-10";
+export const BOOKABLE_WINDOW_END = "2026-12-12";
 
 export function toWaveView(row: WaveRow): WaveView {
   const peopleLeft = Math.max(0, row.people_capacity - row.people_used);
