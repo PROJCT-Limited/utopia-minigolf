@@ -36,6 +36,9 @@ async function fetchAll<T>(table: string, columns: string): Promise<T[]> {
     const { data, error } = await supabaseAdmin
       .from(table)
       .select(columns)
+      // Without a unique order Postgres may shuffle rows between pages, and
+      // one gets skipped or counted twice.
+      .order("id", { ascending: true })
       .range(from, from + pageSize - 1);
 
     if (error) {

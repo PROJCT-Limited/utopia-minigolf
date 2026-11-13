@@ -131,6 +131,7 @@ async function fetchAll<T>(
     if (where) query = query.eq(where.column, where.equals);
     const { data, error } = await query
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true }) // tie-break, so no row slips between pages
       .range(from, from + pageSize - 1);
 
     if (error) {

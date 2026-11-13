@@ -6,29 +6,37 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { readAllPages } from "@/lib/supabase/readAllPages";
 import { BOOKABLE_WINDOW_START, BOOKABLE_WINDOW_END, toWaveView, type WaveRow, type WaveView } from "./waves";
 
 const WAVE_COLUMNS = "id, date, start_time, people_capacity, people_used, wave_slots_used, status, visibility";
 
 export async function fetchUpcomingWaves(): Promise<WaveView[]> {
-  const { data, error } = await supabaseAdmin
-    .from("waves")
-    .select(WAVE_COLUMNS)
-    .gte("date", BOOKABLE_WINDOW_START) // nothing outside the open booking window is bookable
-    .lte("date", BOOKABLE_WINDOW_END)
-    // Unlisted start times are reachable only through their private link —
-    // never the calendar, and never a reschedule target. This is the one
-    // query that decides that, so it's the one place the rule lives.
-    .eq("visibility", "public")
-    .order("date", { ascending: true })
-    .order("start_time", { ascending: true });
+  // Paged: at 20 start times a day, a season past 50 days is more than one
+  // Supabase read carries, and the cut would silently drop its last dates.
+  const { rows, error } = await readAllPages<WaveRow>((from, to) =>
+    supabaseAdmin
+      .from("waves")
+      .select(WAVE_COLUMNS)
+      .gte("date", BOOKABLE_WINDOW_START) // nothing outside the open booking window is bookable
+      .lte("date", BOOKABLE_WINDOW_END)
+      // Unlisted start times are reachable only through their private link —
+      // never the calendar, and never a reschedule target. This is the one
+      // query that decides that, so it's the one place the rule lives.
+      .eq("visibility", "public")
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+      .returns<WaveRow[]>()
+  );
 
   if (error) {
     console.error("fetchUpcomingWaves: query failed:", error.message);
     return [];
   }
 
-  return (data as WaveRow[]).map(toWaveView);
+  return rows.map(toWaveView);
 }
 
 /**

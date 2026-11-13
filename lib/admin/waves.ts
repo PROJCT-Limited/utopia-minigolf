@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { readAllPages } from "@/lib/supabase/readAllPages";
 import { toWaveView, type WaveRow, type WaveView } from "@/lib/booking/waves";
 import type { TicketType } from "@/lib/booking/pricing";
 import {
@@ -44,31 +45,45 @@ export interface AdminWaveListItem extends WaveView {
   capacityCounterDrift: boolean;
 }
 
+// Both reads here run past Supabase's 1000-row cap — see readAllPages.ts.
 export async function listWavesForAdmin(): Promise<AdminWaveListItem[]> {
-  const { data: waveRows, error } = await supabaseAdmin
-    .from("waves")
-    .select(ADMIN_WAVE_COLUMNS)
-    .order("date", { ascending: true })
-    .order("start_time", { ascending: true });
+  const { rows: waveRows, error } = await readAllPages<AdminWaveRow>((from, to) =>
+    supabaseAdmin
+      .from("waves")
+      .select(ADMIN_WAVE_COLUMNS)
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to)
+      .returns<AdminWaveRow[]>()
+  );
 
-  if (error || !waveRows) {
-    console.error("listWavesForAdmin: waves query failed:", error?.message);
+  if (error) {
+    console.error("listWavesForAdmin: waves query failed:", error.message);
     return [];
   }
 
   // Paid and pending in one read, split below — two round trips to count two
   // statuses of the same table isn't worth the tidiness.
-  const { data: bookingRows, error: bookingsError } = await supabaseAdmin
-    .from("bookings")
-    .select("wave_id, headcount, status")
-    .in("status", ["paid", "pending"]);
+  const { rows: bookingRows, error: bookingsError } = await readAllPages<{
+    wave_id: string;
+    headcount: number;
+    status: string;
+  }>((from, to) =>
+    supabaseAdmin
+      .from("bookings")
+      .select("wave_id, headcount, status")
+      .in("status", ["paid", "pending"])
+      .order("id", { ascending: true })
+      .range(from, to)
+  );
 
   if (bookingsError) {
     console.error("listWavesForAdmin: bookings query failed:", bookingsError.message);
   }
 
   const byWave = new Map<string, WaveTally>();
-  for (const row of bookingRows ?? []) {
+  for (const row of bookingRows) {
     const tally = byWave.get(row.wave_id) ?? emptyTally();
     if (row.status === "pending") {
       tally.pendingGroups += 1;
@@ -81,7 +96,7 @@ export async function listWavesForAdmin(): Promise<AdminWaveListItem[]> {
     byWave.set(row.wave_id, tally);
   }
 
-  return (waveRows as AdminWaveRow[]).map((row) => {
+  return waveRows.map((row) => {
     const view = toWaveView(row);
     const tally = byWave.get(row.id) ?? emptyTally();
     return {
